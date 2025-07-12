@@ -137,4 +137,10 @@ final class Err implements Result
     {
         return $this->error === $error;
     }
+
+    #[\Override]
+    public function flatten(): Result
+    {
+        return $this;
+    }
 }

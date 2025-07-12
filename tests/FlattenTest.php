@@ -1,0 +1,332 @@
+<?php
+
+use Mizumi\Result\Ok;
+use Mizumi\Result\Err;
+use PHPUnit\Framework\TestCase;
+
+class FlattenTest extends TestCase
+{
+    // 基本的なflatten()メソッドの動作テスト
+
+    public function testOkOkFlattensToOk(): void
+    {
+        $inner = new Ok(42);
+        $outer = new Ok($inner);
+        $flattened = $outer->flatten();
+
+        $this->assertInstanceOf(Ok::class, $flattened);
+        $this->assertSame($inner, $flattened);
+        $this->assertEquals(42, $flattened->unwrap());
+    }
+
+    public function testOkErrFlattensToErr(): void
+    {
+        $inner = new Err('inner error');
+        $outer = new Ok($inner);
+        $flattened = $outer->flatten();
+
+        $this->assertInstanceOf(Err::class, $flattened);
+        $this->assertSame($inner, $flattened);
+        $this->assertEquals('inner error', $flattened->unwrapErr());
+    }
+
+    public function testErrFlattensToSelf(): void
+    {
+        $err = new Err('original error');
+        $flattened = $err->flatten();
+
+        $this->assertSame($err, $flattened);
+        $this->assertEquals('original error', $flattened->unwrapErr());
+    }
+
+    public function testOkWithNonResultFlattensToSelf(): void
+    {
+        $ok = new Ok('simple value');
+        $flattened = $ok->flatten();
+
+        $this->assertSame($ok, $flattened);
+        $this->assertEquals('simple value', $flattened->unwrap());
+    }
+
+    // 型別テスト
+
+    public function testFlattenWithStringValue(): void
+    {
+        $inner = new Ok('hello world');
+        $outer = new Ok($inner);
+        $flattened = $outer->flatten();
+
+        $this->assertInstanceOf(Ok::class, $flattened);
+        $this->assertEquals('hello world', $flattened->unwrap());
+    }
+
+    public function testFlattenWithIntegerValue(): void
+    {
+        $inner = new Ok(123);
+        $outer = new Ok($inner);
+        $flattened = $outer->flatten();
+
+        $this->assertInstanceOf(Ok::class, $flattened);
+        $this->assertEquals(123, $flattened->unwrap());
+    }
+
+    public function testFlattenWithArrayValue(): void
+    {
+        $array = [1, 2, 3];
+        $inner = new Ok($array);
+        $outer = new Ok($inner);
+        $flattened = $outer->flatten();
+
+        $this->assertInstanceOf(Ok::class, $flattened);
+        $this->assertEquals($array, $flattened->unwrap());
+    }
+
+    public function testFlattenWithObjectValue(): void
+    {
+        $obj = new \stdClass();
+        $obj->value = 'test';
+        $inner = new Ok($obj);
+        $outer = new Ok($inner);
+        $flattened = $outer->flatten();
+
+        $this->assertInstanceOf(Ok::class, $flattened);
+        $this->assertSame($obj, $flattened->unwrap());
+    }
+
+    // エラー型別テスト
+
+    public function testFlattenWithStringError(): void
+    {
+        $inner = new Err('string error');
+        $outer = new Ok($inner);
+        $flattened = $outer->flatten();
+
+        $this->assertInstanceOf(Err::class, $flattened);
+        $this->assertEquals('string error', $flattened->unwrapErr());
+    }
+
+    public function testFlattenWithIntegerError(): void
+    {
+        $inner = new Err(404);
+        $outer = new Ok($inner);
+        $flattened = $outer->flatten();
+
+        $this->assertInstanceOf(Err::class, $flattened);
+        $this->assertEquals(404, $flattened->unwrapErr());
+    }
+
+    public function testFlattenWithArrayError(): void
+    {
+        $errorArray = ['code' => 500, 'message' => 'server error'];
+        $inner = new Err($errorArray);
+        $outer = new Ok($inner);
+        $flattened = $outer->flatten();
+
+        $this->assertInstanceOf(Err::class, $flattened);
+        $this->assertEquals($errorArray, $flattened->unwrapErr());
+    }
+
+    // エッジケーステスト
+
+    public function testFlattenWithNullValue(): void
+    {
+        $inner = new Ok(null);
+        $outer = new Ok($inner);
+        $flattened = $outer->flatten();
+
+        $this->assertInstanceOf(Ok::class, $flattened);
+        $this->assertSame(null, $flattened->unwrap());
+    }
+
+    public function testFlattenWithNullError(): void
+    {
+        $inner = new Err(null);
+        $outer = new Ok($inner);
+        $flattened = $outer->flatten();
+
+        $this->assertInstanceOf(Err::class, $flattened);
+        $this->assertSame(null, $flattened->unwrapErr());
+    }
+
+    public function testFlattenNonResultWithNull(): void
+    {
+        $ok = new Ok(null);
+        $flattened = $ok->flatten();
+
+        $this->assertSame($ok, $flattened);
+        $this->assertSame(null, $flattened->unwrap());
+    }
+
+    // 多重ネストテスト（一段階のみ平坦化されることを確認）
+
+    public function testFlattenOnlyRemovesOneLevel(): void
+    {
+        $innermost = new Ok(42);
+        $middle = new Ok($innermost);
+        $outer = new Ok($middle);
+        
+        $flattened = $outer->flatten();
+
+        $this->assertInstanceOf(Ok::class, $flattened);
+        $this->assertSame($middle, $flattened);
+        $this->assertInstanceOf(Ok::class, $flattened->unwrap());
+        $this->assertEquals(42, $flattened->unwrap()->unwrap());
+    }
+
+    public function testMultipleFlattenCalls(): void
+    {
+        $innermost = new Ok(42);
+        $middle = new Ok($innermost);
+        $outer = new Ok($middle);
+        
+        $firstFlatten = $outer->flatten();
+        $secondFlatten = $firstFlatten->flatten();
+
+        $this->assertInstanceOf(Ok::class, $secondFlatten);
+        $this->assertSame($innermost, $secondFlatten);
+        $this->assertEquals(42, $secondFlatten->unwrap());
+    }
+
+    // 型安全性テスト
+
+    public function testFlattenReturnTypeIsResult(): void
+    {
+        $inner = new Ok('test');
+        $outer = new Ok($inner);
+        $flattened = $outer->flatten();
+
+        $this->assertInstanceOf(\Mizumi\Result\Result::class, $flattened);
+    }
+
+    public function testErrFlattenReturnTypeIsResult(): void
+    {
+        $err = new Err('error');
+        $flattened = $err->flatten();
+
+        $this->assertInstanceOf(\Mizumi\Result\Result::class, $flattened);
+    }
+
+    // メソッドチェーンテスト
+
+    public function testFlattenInMethodChain(): void
+    {
+        $innerValue = 42;
+        $inner = new Ok($innerValue);
+        $outer = new Ok($inner);
+
+        $flattened = $outer->flatten();
+        $this->assertInstanceOf(Ok::class, $flattened);
+        $this->assertEquals(42, $flattened->unwrap());
+
+        $mapped = $flattened->map(fn(mixed $x): string => "Value: " . print_r($x, true));
+        $result = $mapped->unwrap();
+
+        $this->assertEquals("Value: 42", $result);
+    }
+
+    public function testFlattenWithErrorInMethodChain(): void
+    {
+        $inner = new Err('calculation failed');
+        $outer = new Ok($inner);
+
+        $flattened = $outer->flatten();
+        $this->assertInstanceOf(Err::class, $flattened);
+        $this->assertEquals('calculation failed', $flattened->unwrapErr());
+
+        $mapped = $flattened->map(fn(mixed $x): string => "Value: " . print_r($x, true));
+        $result = $mapped->unwrapOr('default');
+
+        $this->assertEquals('default', $result);
+    }
+
+    // 実用的なユースケーステスト
+
+    public function testFlattenInValidationScenario(): void
+    {
+        // バリデーション結果がネストしている場合
+        $validationResult = function($input): \Mizumi\Result\Result {
+            if ($input > 0) {
+                return new Ok(new Ok($input));
+            } else {
+                return new Ok(new Err('Value must be positive'));
+            }
+        };
+
+        // 正常ケース
+        $result1 = $validationResult(10)->flatten();
+        $this->assertInstanceOf(Ok::class, $result1);
+        $this->assertEquals(10, $result1->unwrap());
+
+        // エラーケース
+        $result2 = $validationResult(-5)->flatten();
+        $this->assertInstanceOf(Err::class, $result2);
+        $this->assertEquals('Value must be positive', $result2->unwrapErr());
+    }
+
+    // パフォーマンステスト
+
+    public function testFlattenPerformanceWithLargeData(): void
+    {
+        $largeArray = range(1, 1000);
+        $inner = new Ok($largeArray);
+        $outer = new Ok($inner);
+
+        $startTime = microtime(true);
+        $flattened = $outer->flatten();
+        $endTime = microtime(true);
+
+        $this->assertInstanceOf(Ok::class, $flattened);
+        $this->assertEquals($largeArray, $flattened->unwrap());
+        $this->assertLessThan(0.01, $endTime - $startTime, 'flatten() should be fast for large data');
+    }
+
+    // 参照の整合性テスト
+
+    public function testFlattenPreservesObjectReferences(): void
+    {
+        $sharedObject = new \stdClass();
+        $sharedObject->id = 123;
+        
+        $inner = new Ok($sharedObject);
+        $outer = new Ok($inner);
+        $flattened = $outer->flatten();
+
+        $this->assertSame($sharedObject, $flattened->unwrap());
+        
+        // オブジェクトの変更が反映されることを確認
+        $sharedObject->modified = true;
+        $this->assertTrue($flattened->unwrap()->modified ?? false);
+    }
+
+    // 境界値テスト
+
+    public function testFlattenWithBooleanValues(): void
+    {
+        // true値
+        $trueInner = new Ok(true);
+        $trueOuter = new Ok($trueInner);
+        $trueFlattened = $trueOuter->flatten();
+        $this->assertTrue($trueFlattened->unwrap());
+
+        // false値
+        $falseInner = new Ok(false);
+        $falseOuter = new Ok($falseInner);
+        $falseFlattened = $falseOuter->flatten();
+        $this->assertFalse($falseFlattened->unwrap());
+    }
+
+    public function testFlattenWithEmptyArrayAndString(): void
+    {
+        // 空配列
+        $emptyArrayInner = new Ok([]);
+        $emptyArrayOuter = new Ok($emptyArrayInner);
+        $emptyArrayFlattened = $emptyArrayOuter->flatten();
+        $this->assertEquals([], $emptyArrayFlattened->unwrap());
+
+        // 空文字列
+        $emptyStringInner = new Ok('');
+        $emptyStringOuter = new Ok($emptyStringInner);
+        $emptyStringFlattened = $emptyStringOuter->flatten();
+        $this->assertEquals('', $emptyStringFlattened->unwrap());
+    }
+}

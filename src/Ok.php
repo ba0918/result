@@ -137,4 +137,10 @@ final class Ok implements Result
     {
         return false;
     }
+
+    #[\Override]
+    public function flatten(): Result
+    {
+        return $this->value instanceof Result ? $this->value : $this;
+    }
 }

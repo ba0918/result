@@ -158,4 +158,11 @@ interface Result
      * @return bool Err値が指定エラーと厳密に等価な場合true、それ以外はfalse
      */
     public function containsErr(mixed $error): bool;
+
+    /**
+     * ネストしたResultを一段階平坦化する
+     *
+     * @return Result<T, E>
+     */
+    public function flatten(): Result;
 }

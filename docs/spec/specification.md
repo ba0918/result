@@ -71,6 +71,7 @@ interface Result
 - `inspectErr(callable $fn)`: 何もせず自身をそのまま返す
 - `or(Result $res)`: 自身をそのまま返す（代替Resultは無視）
 - `orElse(callable $fn)`: 自身をそのまま返す（関数は実行されない）
+- `flatten()`: 値がResultなら内部のResultを返し、非Resultなら自身を返す
 
 ### Err&lt;E&gt; クラス
 
@@ -95,6 +96,7 @@ interface Result
 - `inspectErr(callable $fn)`: エラー値に関数を適用して副作用を実行し、自身を返す
 - `or(Result $res)`: 引数の代替Resultを返す（即座評価）
 - `orElse(callable $fn)`: エラー値を引数として関数を実行し、その結果のResultを返す（遅延評価）
+- `flatten()`: 自身をそのまま返す（何もしない）
 
 ## 設計原則
 
@@ -268,6 +270,60 @@ $final = $intResult->and($stringResult);
 echo $final->unwrap(); // "処理完了"
 ```
 
+### flatten()メソッドの使用例
+
+```php
+// flatten(): ネストしたResultを一段階平坦化
+$okOk = new Ok(new Ok(42));
+$flattened = $okOk->flatten();
+echo $flattened->unwrap(); // 42
+
+// ネストしたエラーの平坦化
+$okErr = new Ok(new Err("内部エラー"));
+$flattened = $okErr->flatten();
+echo $flattened->unwrapErr(); // "内部エラー"
+
+// Errは自身をそのまま返す
+$err = new Err("外部エラー");
+$flattened = $err->flatten();
+echo $flattened->unwrapErr(); // "外部エラー"
+
+// 非Resultの値はそのまま
+$simple = new Ok("単純な値");
+$flattened = $simple->flatten();
+echo $flattened->unwrap(); // "単純な値"
+
+// 多重ネストの段階的平坦化
+$tripleNested = new Ok(new Ok(new Ok("深い値")));
+$firstFlatten = $tripleNested->flatten();
+$secondFlatten = $firstFlatten->flatten();
+echo $secondFlatten->unwrap(); // "深い値"
+
+// 実用例：バリデーション結果の平坦化
+function validateAndParse(string $input): \Mizumi\Result\Result {
+    if (empty($input)) {
+        return new Ok(new Err("入力が空です"));
+    }
+    
+    $parsed = intval($input);
+    if ($parsed === 0 && $input !== "0") {
+        return new Ok(new Err("数値変換に失敗しました"));
+    }
+    
+    return new Ok(new Ok($parsed));
+}
+
+$result = validateAndParse("42")
+    ->flatten()
+    ->map(fn($x) => $x * 2);
+echo $result->unwrap(); // 84
+
+$errorResult = validateAndParse("")
+    ->flatten()
+    ->unwrapOr(0);
+echo $errorResult; // 0
+```
+
 ## 型注釈の詳細
 
 ### Genericsの表現方法
@@ -316,10 +372,10 @@ final class Err implements Result { }
 - ✅ `or()` / `or_else()` - 代替Resultの提供
 - ✅ `and()` - 連続的な成功チェック
 - ✅ `contains()` / `containsErr()` - 値の存在確認（PHP独自実装）
+- ✅ `flatten()` - ネストしたResultの平坦化
 
 ### 未実装機能
 - ❌ `transpose()` - Option型との相互変換
-- ❌ `flatten()` - ネストしたResultの平坦化
 
 ### 違いと制約
 - PHPの型システムの制約により、コンパイル時型チェックは限定的
@@ -376,6 +432,27 @@ class ValidationError implements ErrorType {
     }
 }
 ```
+
+## 実装履歴と注意点
+
+### flatten() メソッド (2025-07-13 実装)
+- **機能**: ネストしたResultの一段階平坦化
+- **Rust対応**: `Result<Result<T, E>, E>` → `Result<T, E>` の変換
+- **動作**: Ok(Result) → Result、Ok(non-Result) → Ok、Err → Err
+- **特徴**: 一段階のみ平坦化、多重ネストは段階的処理
+- **型チェック**: `instanceof Result`による実行時判定
+- **テスト**: 25テストケース、エッジケース・パフォーマンステスト含む
+
+### contains() / containsErr() メソッド (2025-07-13 実装)
+- **機能**: 値の存在確認（PHP独自実装、Rustには存在しない）
+- **比較方法**: 厳密比較（`===`）を採用
+- **動作**: Ok値での`containsErr()`、Err値での`contains()`は常に`false`
+- **テスト**: 包括的エッジケーステスト実装済み（null、オブジェクト、配列、型変換）
+
+### and() メソッド (2025-07-13 実装)
+- **機能**: 連続的な成功チェック（即座評価）
+- **動作**: Okの場合は引数のResult、Errの場合は自身を返す
+- **チェーン**: 複数のResultを順次結合可能
 
 ## 制限事項
 
