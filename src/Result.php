@@ -1,0 +1,115 @@
+<?php
+
+namespace Mizumi\Result;
+
+use Mizumi\Result\Exception\UnwrapException;
+
+/**
+ * 成功/失敗を表現する為の型
+ *
+ * @template T 成功時の値の型
+ * @template E 失敗時のエラーの型
+ */
+interface Result
+{
+    /**
+     * 成功しているか確認する
+     *
+     * @return bool
+     */
+    public function isOk(): bool;
+
+    /**
+     * 失敗しているか確認する
+     *
+     * @return bool
+     */
+    public function isErr(): bool;
+
+    /**
+     * 成功している場合、中の値に関数を適用する
+     *
+     * @template U
+     * @param callable(T): U $fn
+     * @return Result<U, E>
+     */
+    public function map(callable $fn): Result;
+
+    /**
+     * 失敗している場合、中のエラーに関数を適用する
+     *
+     * @template F
+     * @param callable(E): F $fn
+     * @return Result<T, F>
+     */
+    public function mapErr(callable $fn): Result;
+
+    /**
+     * 成功している場合、中の値に関数を適用し、その結果を返す
+     *
+     * @template U
+     * @template F
+     * @param callable(T): Result<U, F> $fn
+     * @return Result<U, E|F>
+     */
+    public function andThen(callable $fn): Result;
+
+    /**
+     * 成功していれば値を返し、失敗していれば例外をスローする
+     *
+     * @return T
+     * @throws UnwrapException
+     */
+    public function unwrap(): mixed;
+
+    /**
+     * 失敗していれば値を返し、成功していれば例外をスローする
+     *
+     * @return E
+     * @throws UnwrapException
+     */
+    public function unwrapErr(): mixed;
+
+    /**
+     * 成功していれば値を返し、失敗していればデフォルト値を返す
+     *
+     * @template U
+     * @param U $default
+     * @return T|U
+     */
+    public function unwrapOr(mixed $default): mixed;
+
+    /**
+     * 成功していれば値を返し、失敗していればクロージャの結果を返す
+     *
+     * @template U
+     * @param callable(E): U $fn
+     * @return T|U
+     */
+    public function unwrapOrElse(callable $fn): mixed;
+
+    /**
+     * 成功していれば値を返し、失敗していれば指定されたメッセージで例外をスローする
+     *
+     * @param string $message
+     * @return T
+     * @throws UnwrapException
+     */
+    public function expect(string $message): mixed;
+
+    /**
+     * 成功値を検査し、副作用を実行する（値は変更しない）
+     *
+     * @param callable(T): void $fn
+     * @return Result<T, E>
+     */
+    public function inspect(callable $fn): Result;
+
+    /**
+     * エラー値を検査し、副作用を実行する（エラーは変更しない）
+     *
+     * @param callable(E): void $fn
+     * @return Result<T, E>
+     */
+    public function inspectErr(callable $fn): Result;
+}
