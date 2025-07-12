@@ -107,4 +107,16 @@ final class Err implements Result
         $fn($this->error);
         return $this;
     }
+
+    #[\Override]
+    public function or(Result $res): Result
+    {
+        return $res;
+    }
+
+    #[\Override]
+    public function orElse(callable $fn): Result
+    {
+        return $fn($this->error);
+    }
 }

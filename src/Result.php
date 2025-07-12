@@ -112,4 +112,24 @@ interface Result
      * @return Result<T, E>
      */
     public function inspectErr(callable $fn): Result;
+
+    /**
+     * Errの場合に代替のResultを返す（即座評価）
+     *
+     * @template U
+     * @template F
+     * @param Result<U, F> $res
+     * @return Result<T|U, F>
+     */
+    public function or(Result $res): Result;
+
+    /**
+     * Errの場合に代替のResultを返す（遅延評価）
+     *
+     * @template U
+     * @template F
+     * @param callable(E): Result<U, F> $fn
+     * @return Result<T|U, F>
+     */
+    public function orElse(callable $fn): Result;
 }

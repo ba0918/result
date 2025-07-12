@@ -107,4 +107,16 @@ final class Ok implements Result
     {
         return $this;
     }
+
+    #[\Override]
+    public function or(Result $res): Result
+    {
+        return $this;
+    }
+
+    #[\Override]
+    public function orElse(callable $fn): Result
+    {
+        return $this;
+    }
 }
