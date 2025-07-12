@@ -43,6 +43,10 @@ interface Result
     public function inspectErr(callable $fn): Result;
     public function or(Result $res): Result;
     public function orElse(callable $fn): Result;
+    public function and(Result $res): Result;
+    public function contains(mixed $value): bool;
+    public function containsErr(mixed $error): bool;
+    public function flatten(): Result;
 }
 ```
 
@@ -227,6 +231,7 @@ $obj = new stdClass();
 $ok = new Ok($obj);
 var_dump($ok->contains($obj)); // true (同じ参照)
 var_dump($ok->contains(new stdClass())); // false (異なる参照)
+```
 
 ### and()メソッドの使用例
 
