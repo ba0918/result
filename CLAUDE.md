@@ -46,6 +46,7 @@ composer install
 - `or()` / `orElse()` - 代替Resultの提供
 - `and()` - 連続的な成功チェック（即座評価）
 - `contains()` / `containsErr()` - 値の存在確認（厳密比較）
+- `flatten()` - ネストしたResultの一段階平坦化
 
 ### コード規約
 
@@ -71,6 +72,13 @@ composer install
 - **機能**: 連続的な成功チェック（即座評価）
 - **動作**: Okの場合は引数のResult、Errの場合は自身を返す
 - **チェーン**: 複数のResultを順次結合可能
+
+#### flatten() メソッド (2025-07-13 実装)
+- **機能**: ネストしたResultの一段階平坦化（Rust互換）
+- **型チェック**: `instanceof Result`による実行時判定が必要
+- **PHPStan注意**: 型推論でmixed型の扱いに注意、キャスト時は安全な変換を使用
+- **テスト戦略**: 25テストケースで包括的検証（基本動作、エッジケース、パフォーマンス）
+- **実装パターン**: Ok(Result) → Result、Ok(non-Result) → self、Err → self
 
 ### プロジェクトメモリの更新検討について
 
