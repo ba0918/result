@@ -193,6 +193,81 @@ $result = new Err("主処理失敗")
     ->unwrap(); // "最終的な代替値"
 ```
 
+### contains/containsErrメソッドの使用例
+
+```php
+// Ok値での値確認
+$ok = new Ok("success");
+var_dump($ok->contains("success")); // true
+var_dump($ok->contains("failure")); // false
+var_dump($ok->containsErr("error")); // false (Okは常にエラーを含まない)
+
+// Err値でのエラー確認
+$err = new Err("network error");
+var_dump($err->containsErr("network error")); // true
+var_dump($err->containsErr("database error")); // false
+var_dump($err->contains("success")); // false (Errは常に値を含まない)
+
+// 厳密比較の動作
+$intOk = new Ok(42);
+var_dump($intOk->contains(42)); // true
+var_dump($intOk->contains("42")); // false (型が異なる)
+var_dump($intOk->contains(42.0)); // false (型が異なる)
+
+// 複雑なデータ構造での確認
+$userData = ["id" => 123, "name" => "Alice"];
+$ok = new Ok($userData);
+var_dump($ok->contains(["id" => 123, "name" => "Alice"])); // true
+var_dump($ok->contains(["id" => 123, "name" => "Bob"])); // false
+
+// オブジェクト参照の確認
+$obj = new stdClass();
+$ok = new Ok($obj);
+var_dump($ok->contains($obj)); // true (同じ参照)
+var_dump($ok->contains(new stdClass())); // false (異なる参照)
+
+### and()メソッドの使用例
+
+```php
+// and(): 即座評価での連続的な成功チェック
+$validation = new Ok("ユーザー認証成功");
+$authorization = new Ok("権限確認完了");
+
+$result = $validation->and($authorization);
+echo $result->unwrap(); // "権限確認完了"
+
+// 一つでも失敗すると最初のエラーが返される
+$authOk = new Ok("認証成功");
+$authErr = new Err("権限不足");
+
+$result = $authOk->and($authErr);
+echo $result->unwrapErr(); // "権限不足"
+
+// エラーが最初にあると後続は評価されない
+$firstErr = new Err("最初のエラー");
+$secondResult = new Ok("到達しない値");
+
+$result = $firstErr->and($secondResult);
+echo $result->unwrapErr(); // "最初のエラー"
+
+// 複数のチェックポイント
+$userValidation = new Ok("ユーザー有効");
+$sessionValidation = new Ok("セッション有効");  
+$permissionValidation = new Ok("権限有効");
+
+$result = $userValidation
+    ->and($sessionValidation)
+    ->and($permissionValidation);
+echo $result->unwrap(); // "権限有効"
+
+// 型の異なるResult間での使用
+$intResult = new Ok(42);
+$stringResult = new Ok("処理完了");
+
+$final = $intResult->and($stringResult);
+echo $final->unwrap(); // "処理完了"
+```
+
 ## 型注釈の詳細
 
 ### Genericsの表現方法
@@ -239,10 +314,10 @@ final class Err implements Result { }
 - ✅ `expect()` - カスタムメッセージ付き値取り出し
 - ✅ `inspect()` / `inspect_err()` - デバッグ用副作用実行
 - ✅ `or()` / `or_else()` - 代替Resultの提供
+- ✅ `and()` - 連続的な成功チェック
+- ✅ `contains()` / `containsErr()` - 値の存在確認（PHP独自実装）
 
 ### 未実装機能
-- ❌ `and()` - 連続的な成功チェック
-- ❌ `contains()` / `contains_err()` - 値の存在確認
 - ❌ `transpose()` - Option型との相互変換
 - ❌ `flatten()` - ネストしたResultの平坦化
 

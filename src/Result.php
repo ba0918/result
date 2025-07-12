@@ -132,4 +132,30 @@ interface Result
      * @return Result<T|U, F>
      */
     public function orElse(callable $fn): Result;
+
+    /**
+     * Okの場合に別のResultを返し、Errの場合は自身を返す（即座評価）
+     *
+     * @template U
+     * @template F
+     * @param Result<U, F> $res
+     * @return Result<U, E|F>
+     */
+    public function and(Result $res): Result;
+
+    /**
+     * Ok値が指定された値を含むかどうかを確認する
+     *
+     * @param mixed $value 確認したい値
+     * @return bool Ok値が指定値と厳密に等価な場合true、それ以外はfalse
+     */
+    public function contains(mixed $value): bool;
+
+    /**
+     * Err値が指定されたエラーを含むかどうかを確認する
+     *
+     * @param mixed $error 確認したいエラー値
+     * @return bool Err値が指定エラーと厳密に等価な場合true、それ以外はfalse
+     */
+    public function containsErr(mixed $error): bool;
 }

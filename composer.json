@@ -5,12 +5,6 @@
             "Mizumi\\Result\\": "src/"
         }
     },
-    "authors": [
-        {
-            "name": "ba0918",
-            "email": "pub.dev.delusions@gmail.com"
-        }
-    ],
     "require-dev": {
         "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^12.2"

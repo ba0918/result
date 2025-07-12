@@ -119,4 +119,22 @@ final class Err implements Result
     {
         return $fn($this->error);
     }
+
+    #[\Override]
+    public function and(Result $res): Result
+    {
+        return $this;
+    }
+
+    #[\Override]
+    public function contains(mixed $value): bool
+    {
+        return false;
+    }
+
+    #[\Override]
+    public function containsErr(mixed $error): bool
+    {
+        return $this->error === $error;
+    }
 }

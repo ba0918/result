@@ -119,4 +119,22 @@ final class Ok implements Result
     {
         return $this;
     }
+
+    #[\Override]
+    public function and(Result $res): Result
+    {
+        return $res;
+    }
+
+    #[\Override]
+    public function contains(mixed $value): bool
+    {
+        return $this->value === $value;
+    }
+
+    #[\Override]
+    public function containsErr(mixed $error): bool
+    {
+        return false;
+    }
 }

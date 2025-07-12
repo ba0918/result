@@ -49,10 +49,11 @@ composer install
 - プロパティは`readonly`でimmutable
 - PHPDoc アノテーションでGenericsを表現
 - 日本語コメントを使用
+- 詳細は `docs/spec/coding_guideline.md` を参照してください
 
 ### 詳細仕様
 
-`@docs/spec/specification.md` を参照してください
+`docs/spec/specification.md` を参照してください
 
 ### プロジェクトメモリの更新検討について
 
