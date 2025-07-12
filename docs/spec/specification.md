@@ -39,6 +39,10 @@ interface Result
     public function unwrapOr(mixed $default): mixed;
     public function unwrapOrElse(callable $fn): mixed;
     public function expect(string $message): mixed;
+    public function inspect(callable $fn): Result;
+    public function inspectErr(callable $fn): Result;
+    public function or(Result $res): Result;
+    public function orElse(callable $fn): Result;
 }
 ```
 
@@ -63,6 +67,10 @@ interface Result
 - `unwrapOr(mixed $default)`: 格納されている値を返す（デフォルト値は無視）
 - `unwrapOrElse(callable $fn)`: 格納されている値を返す（関数は実行されない）
 - `expect(string $message)`: 格納されている値を返す
+- `inspect(callable $fn)`: 値に関数を適用して副作用を実行し、自身を返す
+- `inspectErr(callable $fn)`: 何もせず自身をそのまま返す
+- `or(Result $res)`: 自身をそのまま返す（代替Resultは無視）
+- `orElse(callable $fn)`: 自身をそのまま返す（関数は実行されない）
 
 ### Err&lt;E&gt; クラス
 
@@ -83,6 +91,10 @@ interface Result
 - `unwrapOr(mixed $default)`: デフォルト値を返す
 - `unwrapOrElse(callable $fn)`: エラー値を引数として関数を実行し、その結果を返す
 - `expect(string $message)`: カスタムメッセージ付きで`UnwrapException`をスロー
+- `inspect(callable $fn)`: 何もせず自身をそのまま返す
+- `inspectErr(callable $fn)`: エラー値に関数を適用して副作用を実行し、自身を返す
+- `or(Result $res)`: 引数の代替Resultを返す（即座評価）
+- `orElse(callable $fn)`: エラー値を引数として関数を実行し、その結果のResultを返す（遅延評価）
 
 ## 設計原則
 
@@ -127,8 +139,58 @@ echo $result->unwrapOr(0); // 0
 ```php
 $result = new Ok(10)
     ->map(fn($x) => $x * 2)
+    ->inspect(fn($value) => echo "中間値: $value\n") // デバッグ出力
     ->andThen(fn($x) => $x > 15 ? new Ok($x) : new Err("値が小さすぎます"))
     ->unwrapOr(0);
+```
+
+### inspect/inspectErrメソッドの使用例
+
+```php
+// デバッグ用途での値確認
+$result = new Ok("重要なデータ")
+    ->inspect(fn($value) => error_log("処理中のデータ: $value"))
+    ->map(fn($value) => strtoupper($value));
+
+// エラー時のログ出力
+$result = new Err("ネットワークエラー")
+    ->inspectErr(fn($error) => error_log("エラー発生: $error"))
+    ->or(new Ok("デフォルト値"));
+
+// メソッドチェーンでの段階的デバッグ
+$result = new Ok(100)
+    ->map(fn($x) => $x / 2)
+    ->inspect(fn($value) => echo "Step 1: $value\n")
+    ->map(fn($x) => $x - 10)
+    ->inspect(fn($value) => echo "Step 2: $value\n")
+    ->andThen(fn($x) => $x > 0 ? new Ok($x) : new Err("負の値"))
+    ->inspectErr(fn($error) => echo "エラー: $error\n");
+```
+
+### or/orElseメソッドの使用例
+
+```php
+// or(): 即座評価での代替値提供
+$primaryResult = new Err("データベース接続失敗");
+$fallbackResult = new Ok("キャッシュからのデータ");
+
+$result = $primaryResult->or($fallbackResult);
+echo $result->unwrap(); // "キャッシュからのデータ"
+
+// orElse(): 遅延評価での動的な代替値生成
+function createFallback(string $error): Result {
+    error_log("代替処理実行: $error");
+    return new Ok("代替データ: " . date('Y-m-d H:i:s'));
+}
+
+$result = new Err("API呼び出し失敗")
+    ->orElse(fn($error) => createFallback($error));
+
+// 複数の代替戦略の組み合わせ
+$result = new Err("主処理失敗")
+    ->or(new Err("代替処理1も失敗"))
+    ->orElse(fn($error) => new Ok("最終的な代替値"))
+    ->unwrap(); // "最終的な代替値"
 ```
 
 ## 型注釈の詳細
@@ -169,18 +231,18 @@ final class Err implements Result { }
 ## Rust標準ライブラリとの比較
 
 ### 実装済み機能
-- ✅ `is_ok()` / `is_err()`
-- ✅ `map()` / `map_err()`
-- ✅ `and_then()`
-- ✅ `unwrap()` / `unwrap_err()`
-- ✅ `unwrap_or()` / `unwrap_or_else()`
-- ✅ `expect()`
+- ✅ `is_ok()` / `is_err()` - 成功/失敗の判定
+- ✅ `map()` / `map_err()` - 値/エラーの変換
+- ✅ `and_then()` - モナド的チェーン処理
+- ✅ `unwrap()` / `unwrap_err()` - 値/エラーの取り出し（例外あり）
+- ✅ `unwrap_or()` / `unwrap_or_else()` - 安全な値取り出し
+- ✅ `expect()` - カスタムメッセージ付き値取り出し
+- ✅ `inspect()` / `inspect_err()` - デバッグ用副作用実行
+- ✅ `or()` / `or_else()` - 代替Resultの提供
 
 ### 未実装機能
-- ❌ `or()` / `or_else()` - 代替Resultの提供
 - ❌ `and()` - 連続的な成功チェック
 - ❌ `contains()` / `contains_err()` - 値の存在確認
-- ❌ `inspect()` / `inspect_err()` - デバッグ用副作用実行
 - ❌ `transpose()` - Option型との相互変換
 - ❌ `flatten()` - ネストしたResultの平坦化
 
