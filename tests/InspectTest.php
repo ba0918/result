@@ -1,0 +1,154 @@
+<?php
+
+use Mizumi\Result\Ok;
+use Mizumi\Result\Err;
+use PHPUnit\Framework\TestCase;
+
+class InspectTest extends TestCase
+{
+    public function testInspectOnOkExecutesFunction(): void
+    {
+        $sideEffectExecuted = false;
+        $inspectedValue = null;
+        
+        $result = new Ok(42);
+        $returnedResult = $result->inspect(function($value) use (&$sideEffectExecuted, &$inspectedValue) {
+            $sideEffectExecuted = true;
+            $inspectedValue = $value;
+        });
+
+        $this->assertTrue($sideEffectExecuted, 'inspect() should execute function on Ok');
+        $this->assertEquals(42, $inspectedValue, 'inspect() should pass the value to the function');
+        $this->assertSame($result, $returnedResult, 'inspect() should return the same instance');
+    }
+
+    public function testInspectOnErrDoesNotExecute(): void
+    {
+        $sideEffectExecuted = false;
+        
+        $result = new Err('error message');
+        $returnedResult = $result->inspect(function($value) use (&$sideEffectExecuted) {
+            $sideEffectExecuted = true;
+        });
+
+        $this->assertFalse($sideEffectExecuted, 'inspect() should not execute function on Err');
+        $this->assertSame($result, $returnedResult, 'inspect() should return the same instance');
+    }
+
+    public function testInspectErrOnOkDoesNotExecute(): void
+    {
+        $sideEffectExecuted = false;
+        
+        $result = new Ok(42);
+        $returnedResult = $result->inspectErr(function($error) use (&$sideEffectExecuted) {
+            $sideEffectExecuted = true;
+        });
+
+        $this->assertFalse($sideEffectExecuted, 'inspectErr() should not execute function on Ok');
+        $this->assertSame($result, $returnedResult, 'inspectErr() should return the same instance');
+    }
+
+    public function testInspectErrOnErrExecutesFunction(): void
+    {
+        $sideEffectExecuted = false;
+        $inspectedError = null;
+        
+        $result = new Err('error message');
+        $returnedResult = $result->inspectErr(function($error) use (&$sideEffectExecuted, &$inspectedError) {
+            $sideEffectExecuted = true;
+            $inspectedError = $error;
+        });
+
+        $this->assertTrue($sideEffectExecuted, 'inspectErr() should execute function on Err');
+        $this->assertEquals('error message', $inspectedError, 'inspectErr() should pass the error to the function');
+        $this->assertSame($result, $returnedResult, 'inspectErr() should return the same instance');
+    }
+
+    public function testInspectReturnsOriginalResult(): void
+    {
+        $okResult = new Ok(100);
+        $errResult = new Err('test error');
+
+        $okInspected = $okResult->inspect(fn($value) => null);
+        $errInspected = $errResult->inspect(fn($value) => null);
+
+        $this->assertSame($okResult, $okInspected, 'inspect() should return the same Ok instance');
+        $this->assertSame($errResult, $errInspected, 'inspect() should return the same Err instance');
+    }
+
+    public function testInspectErrReturnsOriginalResult(): void
+    {
+        $okResult = new Ok(100);
+        $errResult = new Err('test error');
+
+        $okInspected = $okResult->inspectErr(fn($error) => null);
+        $errInspected = $errResult->inspectErr(fn($error) => null);
+
+        $this->assertSame($okResult, $okInspected, 'inspectErr() should return the same Ok instance');
+        $this->assertSame($errResult, $errInspected, 'inspectErr() should return the same Err instance');
+    }
+
+    public function testInspectInMethodChain(): void
+    {
+        $inspectedValues = [];
+        
+        $result = new Ok(10)
+            ->map(fn($x) => $x * 2)
+            ->inspect(function($value) use (&$inspectedValues) {
+                $inspectedValues[] = $value;
+            })
+            ->map(fn($x) => $x + 5)
+            ->inspect(function($value) use (&$inspectedValues) {
+                $inspectedValues[] = $value;
+            });
+
+        $this->assertEquals([20, 25], $inspectedValues, 'inspect() should work correctly in method chains');
+        $this->assertEquals(25, $result->unwrap(), 'Method chain should continue normally after inspect()');
+    }
+
+    public function testInspectDoesNotModifyValue(): void
+    {
+        $originalValue = 'original';
+        $result = new Ok($originalValue);
+        
+        $result->inspect(function($value) {
+            // 値を変更しようとしても効果がないことを確認するため
+            $value = 'modified';
+        });
+
+        $this->assertEquals($originalValue, $result->unwrap(), 'inspect() should not modify the original value');
+    }
+
+    public function testInspectErrDoesNotModifyError(): void
+    {
+        $originalError = 'original error';
+        $result = new Err($originalError);
+        
+        $result->inspectErr(function($error) {
+            // エラーを変更しようとしても効果がないことを確認するため  
+            $error = 'modified error';
+        });
+
+        $this->assertEquals($originalError, $result->unwrapErr(), 'inspectErr() should not modify the original error');
+    }
+
+    public function testInspectSideEffectExecution(): void
+    {
+        $log = [];
+        
+        new Ok('test value')->inspect(function($value) use (&$log) {
+            $log[] = "Inspected value: $value";
+        });
+        
+        new Err('test error')->inspectErr(function($error) use (&$log) {
+            $log[] = "Inspected error: $error";
+        });
+
+        $expectedLog = [
+            'Inspected value: test value',
+            'Inspected error: test error'
+        ];
+        
+        $this->assertEquals($expectedLog, $log, 'inspect methods should execute side effects correctly');
+    }
+}
