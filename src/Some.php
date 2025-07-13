@@ -266,4 +266,29 @@ final class Some implements Option
     {
         return $this->value instanceof Option ? $this->value : $this;
     }
+
+    /**
+     * 排他的OR操作：片方のみSomeの場合にSome、両方Some/両方Noneの場合にNone
+     *
+     * @template U
+     * @param Option<U> $opt
+     * @return Option<T|U>
+     */
+    public function xor(Option $opt): Option
+    {
+        return $opt->isNone() ? $this : None::instance();
+    }
+
+    /**
+     * 2つのOptionを結合：両方Someの場合にタプル、片方でもNoneの場合にNone
+     *
+     * @template U
+     * @param Option<U> $opt
+     * @return Option<array{T, U}>
+     */
+    public function zip(Option $opt): Option
+    {
+        /** @phpstan-ignore return.type,argument.type */
+        return $opt->isSome() ? Some::of([$this->value, $opt->unwrap()]) : None::instance();
+    }
 }

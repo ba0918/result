@@ -172,4 +172,27 @@ interface Result
      * @return Option<mixed>
      */
     public function transpose(): Option;
+
+    /**
+     * 成功値をOptionとして取得する
+     *
+     * @return Option<T>
+     */
+    public function ok(): Option;
+
+    /**
+     * エラー値をOptionとして取得する
+     *
+     * @return Option<E>
+     */
+    public function err(): Option;
+
+    /**
+     * 失敗していればエラー値を返し、成功していれば指定されたメッセージで例外をスローする
+     *
+     * @param string $message
+     * @return E
+     * @throws UnwrapException
+     */
+    public function expectErr(string $message): mixed;
 }

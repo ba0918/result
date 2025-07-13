@@ -258,4 +258,28 @@ final class None implements Option
     {
         return $this;
     }
+
+    /**
+     * 排他的OR操作：片方のみSomeの場合にSome、両方Some/両方Noneの場合にNone
+     *
+     * @template U
+     * @param Option<U> $opt
+     * @return Option<U>
+     */
+    public function xor(Option $opt): Option
+    {
+        return $opt;
+    }
+
+    /**
+     * 2つのOptionを結合：両方Someの場合にタプル、片方でもNoneの場合にNone
+     *
+     * @template U
+     * @param Option<U> $opt
+     * @return Option<never>
+     */
+    public function zip(Option $opt): Option
+    {
+        return $this;
+    }
 }

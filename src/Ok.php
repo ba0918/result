@@ -164,4 +164,23 @@ final class Ok implements Result
         // Ok(non-Option) → Some(Ok(value))
         return Some::of($this);
     }
+
+    #[\Override]
+    public function ok(): Option
+    {
+        /** @phpstan-ignore return.type */
+        return Some::of($this->value);
+    }
+
+    #[\Override]
+    public function err(): Option
+    {
+        return None::instance();
+    }
+
+    #[\Override]
+    public function expectErr(string $message): mixed
+    {
+        throw new UnwrapException($message . ': ' . print_r($this->value, true));
+    }
 }

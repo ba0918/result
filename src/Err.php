@@ -153,4 +153,23 @@ final class Err implements Result
         // Err(error) → Some(Err(error))
         return Some::of($this);
     }
+
+    #[\Override]
+    public function ok(): Option
+    {
+        return None::instance();
+    }
+
+    #[\Override]
+    public function err(): Option
+    {
+        /** @phpstan-ignore return.type */
+        return Some::of($this->error);
+    }
+
+    #[\Override]
+    public function expectErr(string $message): mixed
+    {
+        return $this->error;
+    }
 }
