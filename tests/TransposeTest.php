@@ -5,6 +5,8 @@ namespace Mizumi\Result\Tests;
 use Mizumi\Result\Err;
 use Mizumi\Result\None;
 use Mizumi\Result\Ok;
+use Mizumi\Result\Option;
+use Mizumi\Result\Result;
 use Mizumi\Result\Some;
 use PHPUnit\Framework\TestCase;
 
@@ -20,6 +22,7 @@ final class TransposeTest extends TestCase
         $result = $optionResult->transpose();
         
         $this->assertTrue($result->isOk());
+        /** @var Option<mixed> $unwrapped */
         $unwrapped = $result->unwrap();
         $this->assertTrue($unwrapped->isSome());
         $this->assertSame('test', $unwrapped->unwrap());
@@ -42,6 +45,7 @@ final class TransposeTest extends TestCase
         $result = $option->transpose();
         
         $this->assertTrue($result->isOk());
+        /** @var Option<mixed> $unwrapped */
         $unwrapped = $result->unwrap();
         $this->assertTrue($unwrapped->isNone());
     }
@@ -53,6 +57,7 @@ final class TransposeTest extends TestCase
         $result = $option->transpose();
         
         $this->assertTrue($result->isOk());
+        /** @var Option<mixed> $unwrapped */
         $unwrapped = $result->unwrap();
         $this->assertTrue($unwrapped->isSome());
         $this->assertSame('plain_value', $unwrapped->unwrap());
@@ -65,6 +70,7 @@ final class TransposeTest extends TestCase
         $option = $resultOption->transpose();
         
         $this->assertTrue($option->isSome());
+        /** @var Result<mixed,mixed> $unwrapped */
         $unwrapped = $option->unwrap();
         $this->assertTrue($unwrapped->isOk());
         $this->assertSame('test', $unwrapped->unwrap());
@@ -86,6 +92,7 @@ final class TransposeTest extends TestCase
         $option = $result->transpose();
         
         $this->assertTrue($option->isSome());
+        /** @var Result<mixed,mixed> $unwrapped */
         $unwrapped = $option->unwrap();
         $this->assertTrue($unwrapped->isErr());
         $this->assertSame('error', $unwrapped->unwrapErr());
@@ -98,6 +105,7 @@ final class TransposeTest extends TestCase
         $option = $result->transpose();
         
         $this->assertTrue($option->isSome());
+        /** @var Result<mixed,mixed> $unwrapped */
         $unwrapped = $option->unwrap();
         $this->assertTrue($unwrapped->isOk());
         $this->assertSame('plain_value', $unwrapped->unwrap());
@@ -112,6 +120,7 @@ final class TransposeTest extends TestCase
         
         // Some(Ok(value)) → Ok(Some(value)) → Some(Ok(value))
         $this->assertTrue($doubleTransposed->isSome());
+        /** @var Result<mixed,mixed> $result */
         $result = $doubleTransposed->unwrap();
         $this->assertTrue($result->isOk());
         $this->assertSame('value', $result->unwrap());
@@ -124,8 +133,10 @@ final class TransposeTest extends TestCase
         $result = $nested->transpose(); // Ok(Some(Some('nested')))
         
         $this->assertTrue($result->isOk());
+        /** @var Option<mixed> $innerOption */
         $innerOption = $result->unwrap();
         $this->assertTrue($innerOption->isSome());
+        /** @var Option<mixed> $innerValue */
         $innerValue = $innerOption->unwrap();
         $this->assertTrue($innerValue->isSome());
         $this->assertSame('nested', $innerValue->unwrap());
@@ -138,6 +149,7 @@ final class TransposeTest extends TestCase
         $result = $option->transpose();
         
         $this->assertTrue($result->isOk());
+        /** @var Option<mixed> $innerOption */
         $innerOption = $result->unwrap();
         $this->assertTrue($innerOption->isSome());
         $this->assertNull($innerOption->unwrap());
@@ -151,6 +163,7 @@ final class TransposeTest extends TestCase
         $result = $option->transpose();
         
         $this->assertTrue($result->isOk());
+        /** @var Option<mixed> $innerOption */
         $innerOption = $result->unwrap();
         $this->assertTrue($innerOption->isSome());
         $this->assertSame($array, $innerOption->unwrap());
@@ -166,6 +179,7 @@ final class TransposeTest extends TestCase
         $result = $option->transpose();
         
         $this->assertTrue($result->isOk());
+        /** @var Option<mixed> $innerOption */
         $innerOption = $result->unwrap();
         $this->assertTrue($innerOption->isSome());
         $this->assertSame($obj, $innerOption->unwrap());
@@ -188,11 +202,19 @@ final class TransposeTest extends TestCase
     public function testTransposeChaining(): void
     {
         // メソッドチェーンでのtranspose()テスト
-        $value = Some::of(Ok::of(42))
-            ->transpose()
-            ->map(fn($opt) => $opt->map(fn($x) => $x * 2))
-            ->unwrap()
-            ->unwrap();
+        $transposed = Some::of(Ok::of(42))->transpose();
+        
+        $mapped = $transposed->map(function(mixed $opt) {
+            /** @var Option<mixed> $opt */
+            return $opt->map(function(mixed $x): int {
+                /** @var int $x */
+                return $x * 2;
+            });
+        });
+        
+        /** @var Option<mixed> $unwrapped */
+        $unwrapped = $mapped->unwrap();
+        $value = $unwrapped->unwrap();
             
         $this->assertSame(84, $value);
     }

@@ -80,7 +80,10 @@ final class OptionBasicTest extends TestCase
     public function testSomeMap(): void
     {
         $option = Some::of(5);
-        $mapped = $option->map(fn($x) => $x * 2);
+        $mapped = $option->map(function(mixed $x): int {
+            assert(is_int($x));
+            return $x * 2;
+        });
         
         $this->assertTrue($mapped->isSome());
         $this->assertSame(10, $mapped->unwrap());
@@ -97,7 +100,10 @@ final class OptionBasicTest extends TestCase
     public function testSomeMapOr(): void
     {
         $option = Some::of(3);
-        $result = $option->mapOr(fn($x) => $x * 3, 'default');
+        $result = $option->mapOr(function(mixed $x): int {
+            assert(is_int($x));
+            return $x * 3;
+        }, 'default');
         
         $this->assertSame(9, $result);
     }
@@ -113,7 +119,10 @@ final class OptionBasicTest extends TestCase
     public function testSomeMapOrElse(): void
     {
         $option = Some::of(4);
-        $result = $option->mapOrElse(fn($x) => $x + 1, fn() => 'fallback');
+        $result = $option->mapOrElse(function(mixed $x): int {
+            assert(is_int($x));
+            return $x + 1;
+        }, fn() => 'fallback');
         
         $this->assertSame(5, $result);
     }
@@ -129,10 +138,13 @@ final class OptionBasicTest extends TestCase
     public function testSomeAndThen(): void
     {
         $option = Some::of(10);
-        $result = $option->andThen(fn($x) => Some::of($x / 2));
+        $result = $option->andThen(function(mixed $x) {
+            assert(is_int($x));
+            return Some::of((float)$x / 2);
+        });
         
         $this->assertTrue($result->isSome());
-        $this->assertSame(5, $result->unwrap());
+        $this->assertSame(5.0, $result->unwrap());
     }
 
     public function testSomeAndThenToNone(): void
@@ -270,7 +282,9 @@ final class OptionBasicTest extends TestCase
     {
         $option = None::instance();
         
+        // @phpstan-ignore method.impossibleType
         $this->assertFalse($option->contains(42));
+        // @phpstan-ignore method.impossibleType
         $this->assertFalse($option->contains(null));
     }
 

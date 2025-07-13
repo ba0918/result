@@ -140,14 +140,20 @@ final class OptionResultConversionTest extends TestCase
         // メソッドチェーンテスト
         $value = Some::of(42)
             ->okOr('error')
-            ->map(fn($x) => $x * 2)
+            ->map(function(mixed $x): int {
+                assert(is_int($x));
+                return $x * 2;
+            })
             ->unwrap();
             
         $this->assertSame(84, $value);
         
         $error = None::instance()
             ->okOr('original_error')
-            ->mapErr(fn($e) => "wrapped_{$e}")
+            ->mapErr(function(mixed $e): string {
+                assert(is_string($e));
+                return "wrapped_{$e}";
+            })
             ->unwrapErr();
             
         $this->assertSame('wrapped_original_error', $error);
