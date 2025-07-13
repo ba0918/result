@@ -256,4 +256,14 @@ final class Some implements Option
     {
         return Ok::of($this->value);
     }
+
+    /**
+     * ネストしたOptionを一段階平坦化する
+     *
+     * @return Option<mixed>
+     */
+    public function flatten(): Option
+    {
+        return $this->value instanceof Option ? $this->value : $this;
+    }
 }

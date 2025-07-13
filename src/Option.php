@@ -171,4 +171,11 @@ interface Option
      * @return Result<mixed, mixed>
      */
     public function okOrElse(callable $fn): Result;
+
+    /**
+     * ネストしたOptionを一段階平坦化する
+     *
+     * @return Option<mixed>
+     */
+    public function flatten(): Option;
 }

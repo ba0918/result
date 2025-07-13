@@ -248,4 +248,14 @@ final class None implements Option
     {
         return Err::of($fn());
     }
+
+    /**
+     * ネストしたOptionを一段階平坦化する
+     *
+     * @return Option<mixed>
+     */
+    public function flatten(): Option
+    {
+        return $this;
+    }
 }
