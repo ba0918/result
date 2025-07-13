@@ -59,6 +59,9 @@ interface Result
     public function containsErr(mixed $error): bool;
     public function flatten(): Result;
     public function transpose(): Option;
+    public function ok(): Option;
+    public function err(): Option;
+    public function expectErr(string $message): mixed;
 }
 ```
 
@@ -88,6 +91,8 @@ interface Option
     public function okOr(mixed $err): Result;
     public function okOrElse(callable $fn): Result;
     public function flatten(): Option;
+    public function xor(Option $opt): Option;
+    public function zip(Option $opt): Option;
 }
 ```
 
@@ -118,6 +123,9 @@ interface Option
 - `orElse(callable $fn)`: 自身をそのまま返す（関数は実行されない）
 - `flatten()`: 値がResultなら内部のResultを返し、非Resultなら自身を返す
 - `transpose()`: 値がOptionなら相互変換し、非Optionなら`Some(Ok(value))`を返す
+- `ok()`: 格納値を`Some`でラップして返す
+- `err()`: `None`を返す（Okは常にエラーを持たない）
+- `expectErr(string $message)`: カスタムメッセージ付きで`UnwrapException`をスロー
 
 ### Err&lt;E&gt; クラス
 
@@ -144,6 +152,9 @@ interface Option
 - `orElse(callable $fn)`: エラー値を引数として関数を実行し、その結果のResultを返す（遅延評価）
 - `flatten()`: 自身をそのまま返す（何もしない）
 - `transpose()`: `Some(Err(error))`を返す
+- `ok()`: `None`を返す（Errは常に成功値を持たない）
+- `err()`: エラー値を`Some`でラップして返す
+- `expectErr(string $message)`: 格納されているエラー値を返す
 
 ### Some&lt;T&gt; クラス
 
@@ -173,6 +184,9 @@ interface Option
 - `transpose()`: 値がResultなら相互変換し、非Resultなら`Ok(Some(value))`を返す
 - `okOr(mixed $err)`: `Ok(value)`を返す
 - `okOrElse(callable $fn)`: `Ok(value)`を返す（関数は実行されない）
+- `flatten()`: 値がOptionなら内部のOptionを返し、非Optionなら自身を返す
+- `xor(Option $opt)`: 引数がNoneなら自身、引数がSomeなら`None`を返す（排他的OR）
+- `zip(Option $opt)`: 引数がSomeなら`[自身の値, 引数の値]`の配列を持つ`Some`、引数がNoneなら`None`を返す
 
 ### None クラス
 
@@ -201,6 +215,9 @@ interface Option
 - `transpose()`: `Ok(None)`を返す
 - `okOr(mixed $err)`: `Err(err)`を返す
 - `okOrElse(callable $fn)`: 関数を実行し、`Err(result)`を返す
+- `flatten()`: 自身をそのまま返す（何もしない）
+- `xor(Option $opt)`: 引数のOptionを返す（引数に関係なく）
+- `zip(Option $opt)`: 自身をそのまま返す（Noneは常にNone）
 
 ## 設計原則
 
@@ -536,6 +553,143 @@ $result = findUser(123)                                    // Some(user) or None
 echo $result; // "User123" or "ゲスト"
 ```
 
+### Result型の新変換メソッドの使用例
+
+```php
+use Mizumi\Result\{Ok, Err};
+
+// ok()メソッド: 成功値をOptionとして取得
+$success = Ok::of("データ");
+$okOption = $success->ok(); // Some("データ")
+echo $okOption->unwrap(); // "データ"
+
+$failure = Err::of("エラー");
+$okOption = $failure->ok(); // None
+echo $okOption->unwrapOr("デフォルト"); // "デフォルト"
+
+// err()メソッド: エラー値をOptionとして取得
+$success = Ok::of("データ");
+$errOption = $success->err(); // None
+echo $errOption->unwrapOr("エラーなし"); // "エラーなし"
+
+$failure = Err::of("ネットワークエラー");
+$errOption = $failure->err(); // Some("ネットワークエラー")
+echo $errOption->unwrap(); // "ネットワークエラー"
+
+// expectErr()メソッド: エラー値のカスタムメッセージ付き取り出し
+$error = Err::of("認証失敗");
+echo $error->expectErr("エラー詳細が必要"); // "認証失敗"
+
+$success = Ok::of("成功データ");
+try {
+    $success->expectErr("エラーのはずが成功");
+} catch (UnwrapException $e) {
+    echo $e->getMessage(); // "エラーのはずが成功: 成功データ"
+}
+
+// 実用例：API呼び出し結果の詳細分析
+function analyzeApiResult(Result $apiResult): array {
+    return [
+        'has_data' => $apiResult->ok()->isSome(),
+        'data' => $apiResult->ok()->unwrapOr(null),
+        'has_error' => $apiResult->err()->isSome(),
+        'error_type' => $apiResult->err()
+            ->map(fn($err) => $err instanceof \Exception ? get_class($err) : 'string')
+            ->unwrapOr('none'),
+        'error_message' => $apiResult->err()->unwrapOr('no error')
+    ];
+}
+
+$successResult = Ok::of(['user_id' => 123, 'name' => 'Alice']);
+$analysis = analyzeApiResult($successResult);
+// ['has_data' => true, 'data' => [...], 'has_error' => false, ...]
+
+$errorResult = Err::of(new \RuntimeException("Database connection failed"));
+$analysis = analyzeApiResult($errorResult);
+// ['has_data' => false, 'data' => null, 'has_error' => true, ...]
+```
+
+### Option型の新結合メソッドの使用例
+
+```php
+use Mizumi\Result\{Some, None};
+
+// xor()メソッド: 排他的OR操作
+$user = Some::of("Alice");
+$guest = None::instance();
+$both = Some::of("Bob");
+
+// 片方のみSomeの場合にSome
+$result1 = $user->xor($guest); // Some("Alice")
+$result2 = $guest->xor($user); // Some("Alice")
+
+// 両方Some/両方Noneの場合にNone
+$result3 = $user->xor($both); // None
+$result4 = $guest->xor(None::instance()); // None
+
+// zip()メソッド: 2つのOptionを結合
+$firstName = Some::of("Alice");
+$lastName = Some::of("Smith");
+$age = Some::of(30);
+
+// 両方Someの場合にタプル
+$fullName = $firstName->zip($lastName); // Some(["Alice", "Smith"])
+$nameAndAge = $firstName->zip($age); // Some(["Alice", 30])
+
+// 片方でもNoneの場合にNone
+$incomplete = $firstName->zip(None::instance()); // None
+
+// 実用例：フォームデータの結合
+function combineFormData(Option $name, Option $email, Option $phone): Option {
+    return $name
+        ->zip($email)                    // Some([name, email]) or None
+        ->andThen(fn($pair) => 
+            $phone->map(fn($p) => [...$pair, $p])  // Some([name, email, phone]) or None
+        );
+}
+
+$validForm = combineFormData(
+    Some::of("Alice Smith"),
+    Some::of("alice@example.com"),
+    Some::of("123-456-7890")
+); // Some(["Alice Smith", "alice@example.com", "123-456-7890"])
+
+$incompleteForm = combineFormData(
+    Some::of("Bob Jones"),
+    None::instance(),
+    Some::of("987-654-3210")
+); // None
+
+// xorとzipの組み合わせ使用例
+function selectUserInput(Option $primaryInput, Option $fallbackInput): Option {
+    // どちらか一方のみが入力されている場合を期待
+    return $primaryInput
+        ->xor($fallbackInput)                           // Some(input) or None
+        ->zip(Some::of("validated"))                    // Some([input, "validated"]) or None
+        ->map(fn($pair) => ['input' => $pair[0], 'status' => $pair[1]]);
+}
+
+// 有効なケース（片方のみ入力）
+$result1 = selectUserInput(Some::of("primary"), None::instance());
+// Some(['input' => 'primary', 'status' => 'validated'])
+
+// 無効なケース（両方入力または両方空）
+$result2 = selectUserInput(Some::of("primary"), Some::of("fallback")); // None
+$result3 = selectUserInput(None::instance(), None::instance()); // None
+
+// 複雑なオプション処理：設定の優先度管理
+function mergeConfigs(Option $userConfig, Option $defaultConfig): Option {
+    return $userConfig
+        ->or($defaultConfig)                            // ユーザー設定を優先
+        ->zip(Some::of(time()))                         // タイムスタンプを追加
+        ->map(fn($pair) => [
+            'config' => $pair[0],
+            'loaded_at' => $pair[1],
+            'source' => $userConfig->isSome() ? 'user' : 'default'
+        ]);
+}
+```
+
 ## 型注釈の詳細
 
 ### Genericsの表現方法
@@ -599,13 +753,14 @@ final class None implements Option { }
 - ✅ `and_then()` - モナド的チェーン処理
 - ✅ `unwrap()` / `unwrap_err()` - 値/エラーの取り出し（例外あり）
 - ✅ `unwrap_or()` / `unwrap_or_else()` - 安全な値取り出し
-- ✅ `expect()` - カスタムメッセージ付き値取り出し
+- ✅ `expect()` / `expect_err()` - カスタムメッセージ付き値/エラー取り出し
 - ✅ `inspect()` / `inspect_err()` - デバッグ用副作用実行
 - ✅ `or()` / `or_else()` - 代替Resultの提供
 - ✅ `and()` - 連続的な成功チェック
 - ✅ `contains()` / `contains_err()` - 値の存在確認（PHP独自実装）
 - ✅ `flatten()` - ネストしたResultの平坦化
 - ✅ `transpose()` - Option型との相互変換
+- ✅ `ok()` / `err()` - Result → Option変換
 
 ### Option型 - 実装済み機能
 - ✅ `is_some()` / `is_none()` - 値の有無判定
@@ -622,10 +777,11 @@ final class None implements Option { }
 - ✅ `contains()` - 値の存在確認
 - ✅ `transpose()` - Result型との相互変換
 - ✅ `ok_or()` / `ok_or_else()` - Result型への変換
+- ✅ `flatten()` - ネストしたOptionの平坦化
+- ✅ `xor()` - 排他的OR操作
+- ✅ `zip()` - 複数Optionの組み合わせ
 
 ### Option型 - 未実装機能
-- ✅ `flatten()` - ネストしたOptionの平坦化（実装済み）
-- ❌ `zip()` - 複数Optionの組み合わせ
 - ❌ `replace()` - 値の置換
 
 ### 違いと制約
@@ -755,6 +911,35 @@ class ValidationError implements ErrorType {
 - **チェーン**: 複数のResultを順次結合可能
 - **Option型**: Someの場合は引数のOption、Noneの場合は自身を返す
 
+### Result型の高度変換メソッド (2025-07-13 実装)
+- **ok()**: 成功値をOption<T>として取得（Rust互換）
+  - Ok(value) → Some(value)
+  - Err(error) → None
+- **err()**: エラー値をOption<E>として取得（Rust互換）
+  - Ok(value) → None
+  - Err(error) → Some(error)
+- **expectErr()**: エラー値のカスタムメッセージ付き取り出し（Rust互換）
+  - Ok(value) → UnwrapException(message + value情報)
+  - Err(error) → error
+- **用途**: エラーハンドリングパターンの多様化、デバッグ体験向上
+- **型安全性**: PHPStan対応の型アノテーション
+- **テスト**: ResultConversionTest.php で15テストケース実装
+
+### Option型の高度結合メソッド (2025-07-13 実装)
+- **xor()**: 排他的OR操作（Rust互換）
+  - Some(a).xor(None) → Some(a)
+  - None.xor(Some(b)) → Some(b)
+  - Some(a).xor(Some(b)) → None
+  - None.xor(None) → None
+- **zip()**: 2つのOptionの結合（Rust互換）
+  - Some(a).zip(Some(b)) → Some([a, b])
+  - Some(a).zip(None) → None
+  - None.zip(Some(b)) → None
+  - None.zip(None) → None
+- **用途**: 条件分岐ロジックの簡潔化、複数値の同期処理
+- **型安全性**: PHPDoc Genericsでarray{T, U}を表現
+- **テスト**: OptionAdvancedTest.php で20テストケース実装
+
 ## 制限事項
 
 ### PHP言語固有の制限
@@ -770,7 +955,7 @@ class ValidationError implements ErrorType {
 - Noneのシングルトンパターンによる制約（スレッドセーフティ）
 
 ### Option型固有の制限
-- `zip()`, `replace()`メソッドは未実装（`flatten()`は実装済み）
+- `replace()`メソッドは未実装（`flatten()`, `xor()`, `zip()`は実装済み）
 - パフォーマンスクリティカルな処理では native null チェックの方が高速
 - デバッグ時の値確認がResult型より複雑
 

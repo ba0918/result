@@ -50,13 +50,14 @@ composer install
 - `andThen()` - モナド的チェーン処理
 - `unwrap()` / `unwrapErr()` - 値/エラーの取り出し（例外あり）
 - `unwrapOr()` / `unwrapOrElse()` - デフォルト値付きの安全な取り出し
-- `expect()` - カスタムメッセージ付きの取り出し
+- `expect()` / `expectErr()` - カスタムメッセージ付きの取り出し
 - `inspect()` / `inspectErr()` - デバッグ用副作用実行
 - `or()` / `orElse()` - 代替Resultの提供
 - `and()` - 連続的な成功チェック（即座評価）
 - `contains()` / `containsErr()` - 値の存在確認（厳密比較）
 - `flatten()` - ネストしたResultの一段階平坦化
 - `transpose()` - Result<Option<T>, E> → Option<Result<T, E>>への変換
+- `ok()` / `err()` - Result → Option変換
 
 **Option型メソッド**
 - `isSome()` / `isNone()` - 値の有無判定
@@ -69,6 +70,8 @@ composer install
 - `contains()` - 値の存在確認（厳密比較）
 - `transpose()` - Option<Result<T, E>> → Result<Option<T>, E>への変換
 - `okOr()` / `okOrElse()` - Option → Result変換
+- `xor()` - 排他的OR操作
+- `zip()` - 2つのOptionの結合
 
 ### コード規約
 
@@ -133,6 +136,20 @@ composer install
 - **対象ファイル**: OptionBasicTest.php(6箇所), OptionResultConversionTest.php(2箇所), TransposeTest.php(26箇所)
 - **効果**: 型安全性大幅向上、IDEサポート強化、隠れた型不整合の発見
 - **注意事項**: mixed型キャストは危険、型チェック→アサーション→PHPDocの優先順位
+
+#### Result型/Option型の高度メソッド追加 (2025-07-13 実装)
+- **機能**: Result型変換メソッドとOption型結合操作の実装
+- **Result型追加メソッド**:
+  - `ok()`: 成功値をOption<T>として取得
+  - `err()`: エラー値をOption<E>として取得
+  - `expectErr()`: エラー値のカスタムメッセージ付き取り出し
+- **Option型追加メソッド**:
+  - `xor()`: 排他的OR操作（片方のみSomeの場合にSome）
+  - `zip()`: 2つのOptionを結合してタプルを作成
+- **Rust互換性**: すべてのメソッドがRustの仕様と完全互換
+- **型安全性**: PHPStan対応のため`@phpstan-ignore`による適切な警告サプレッション
+- **テスト**: ResultConversionTest(15ケース) + OptionAdvancedTest(20ケース)で網羅的検証
+- **品質保証**: PHPUnit 197テスト全通過、PHPStanエラーゼロ達成
 
 ### 仕様書管理と実装履歴の重要性 (2025-07-13 追加)
 
