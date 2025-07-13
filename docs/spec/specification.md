@@ -38,8 +38,12 @@ interface Result
 {
     public function isOk(): bool;
     public function isErr(): bool;
+    public function isOkAnd(callable $predicate): bool;
+    public function isErrAnd(callable $predicate): bool;
     public function map(callable $fn): Result;
     public function mapErr(callable $fn): Result;
+    public function mapOr(callable $fn, mixed $default): mixed;
+    public function mapOrElse(callable $fn, callable $defaultFn): mixed;
     public function andThen(callable $fn): Result;
     public function unwrap(): mixed;
     public function unwrapErr(): mixed;
@@ -65,6 +69,7 @@ interface Option
 {
     public function isSome(): bool;
     public function isNone(): bool;
+    public function isSomeAnd(callable $predicate): bool;
     public function map(callable $fn): Option;
     public function mapOr(callable $fn, mixed $default): mixed;
     public function mapOrElse(callable $fn, callable $defaultFn): mixed;
@@ -82,6 +87,7 @@ interface Option
     public function transpose(): Result;
     public function okOr(mixed $err): Result;
     public function okOrElse(callable $fn): Result;
+    public function flatten(): Option;
 }
 ```
 
@@ -587,7 +593,9 @@ final class None implements Option { }
 
 ### Result型 - 実装済み機能
 - ✅ `is_ok()` / `is_err()` - 成功/失敗の判定
+- 🔄 `is_ok_and()` / `is_err_and()` - 成功/失敗判定+条件チェック（実装予定）
 - ✅ `map()` / `map_err()` - 値/エラーの変換
+- 🔄 `map_or()` / `map_or_else()` - 成功時変換+失敗時デフォルト値（実装予定）
 - ✅ `and_then()` - モナド的チェーン処理
 - ✅ `unwrap()` / `unwrap_err()` - 値/エラーの取り出し（例外あり）
 - ✅ `unwrap_or()` / `unwrap_or_else()` - 安全な値取り出し
@@ -601,6 +609,7 @@ final class None implements Option { }
 
 ### Option型 - 実装済み機能
 - ✅ `is_some()` / `is_none()` - 値の有無判定
+- 🔄 `is_some_and()` - 値の有無判定+条件チェック（実装予定）
 - ✅ `map()` / `map_or()` / `map_or_else()` - 値の変換
 - ✅ `and_then()` - モナド的チェーン処理
 - ✅ `filter()` - 条件によるフィルタリング
@@ -615,7 +624,7 @@ final class None implements Option { }
 - ✅ `ok_or()` / `ok_or_else()` - Result型への変換
 
 ### Option型 - 未実装機能
-- ❌ `flatten()` - ネストしたOptionの平坦化
+- ✅ `flatten()` - ネストしたOptionの平坦化（実装済み）
 - ❌ `zip()` - 複数Optionの組み合わせ
 - ❌ `replace()` - 値の置換
 
@@ -712,12 +721,26 @@ class ValidationError implements ErrorType {
 - **型安全性**: 戻り値型Result<mixed,mixed>でPHPStan対応
 
 ### flatten() メソッド (2025-07-13 実装)
+
+#### Result型flatten()
 - **機能**: ネストしたResultの一段階平坦化
 - **Rust対応**: `Result<Result<T, E>, E>` → `Result<T, E>` の変換
 - **動作**: Ok(Result) → Result、Ok(non-Result) → Ok、Err → Err
 - **特徴**: 一段階のみ平坦化、多重ネストは段階的処理
 - **型チェック**: `instanceof Result`による実行時判定
 - **テスト**: 25テストケース、エッジケース・パフォーマンステスト含む
+
+#### Option型flatten() (2025-07-13 実装)
+- **機能**: ネストしたOptionの一段階平坦化（Rust互換）
+- **Rust対応**: `Option<Option<T>>` → `Option<T>` の変換
+- **動作ルール**:
+  - Some(Some(value)) → Some(value)
+  - Some(None) → None
+  - Some(非Option値) → Some(非Option値) (自身を返す)
+  - None → None (自身を返す)
+- **型チェック**: `instanceof Option`による実行時判定
+- **実装場所**: Option(interface), Some(final), None(final)
+- **テスト**: 15テストケース（基本4 + エッジ7 + 型安全2 + パフォーマンス1 + 実用1）、1038アサーション
 
 ### contains() / containsErr() メソッド (2025-07-13 実装)
 - **機能**: 値の存在確認（PHP独自実装、Rustには存在しない）
@@ -747,8 +770,167 @@ class ValidationError implements ErrorType {
 - Noneのシングルトンパターンによる制約（スレッドセーフティ）
 
 ### Option型固有の制限
-- `flatten()`, `zip()`, `replace()`メソッドは未実装
+- `zip()`, `replace()`メソッドは未実装（`flatten()`は実装済み）
 - パフォーマンスクリティカルな処理では native null チェックの方が高速
 - デバッグ時の値確認がResult型より複雑
+
+## ショートハンドメソッド群（実装予定）
+
+### 概要
+コードの簡潔性と可読性を向上させるためのショートハンドメソッド群を実装予定です。これらのメソッドは既存メソッドの組み合わせを一つのメソッドで実現し、一般的なパターンを効率化します。
+
+### Result型ショートハンドメソッド
+
+#### isOkAnd(callable $predicate): bool
+成功時のみ述語関数を実行し、その結果を返します。
+
+```php
+// 従来の書き方
+if ($result->isOk() && $predicate($result->unwrap())) {
+    // ...
+}
+
+// ショートハンドメソッド
+if ($result->isOkAnd($predicate)) {
+    // ...
+}
+```
+
+**動作:**
+- `Ok`の場合: 格納値に述語関数を適用し、その結果を返す
+- `Err`の場合: 常に`false`を返す（述語関数は実行されない）
+
+#### isErrAnd(callable $predicate): bool
+失敗時のみ述語関数を実行し、その結果を返します。
+
+```php
+// 従来の書き方
+if ($result->isErr() && $predicate($result->unwrapErr())) {
+    // ...
+}
+
+// ショートハンドメソッド
+if ($result->isErrAnd($predicate)) {
+    // ...
+}
+```
+
+**動作:**
+- `Err`の場合: 格納エラーに述語関数を適用し、その結果を返す
+- `Ok`の場合: 常に`false`を返す（述語関数は実行されない）
+
+#### mapOr(callable $fn, mixed $default): mixed
+成功時は値を変換し、失敗時はデフォルト値を返します。
+
+```php
+// 従来の書き方
+$value = $result->isOk() 
+    ? $fn($result->unwrap()) 
+    : $default;
+
+// ショートハンドメソッド
+$value = $result->mapOr($fn, $default);
+```
+
+**動作:**
+- `Ok`の場合: 格納値に関数を適用した結果を返す
+- `Err`の場合: デフォルト値をそのまま返す
+
+#### mapOrElse(callable $fn, callable $defaultFn): mixed
+成功時は値を変換し、失敗時はエラー値を使ってデフォルト関数を実行します。
+
+```php
+// 従来の書き方
+$value = $result->isOk() 
+    ? $fn($result->unwrap()) 
+    : $defaultFn($result->unwrapErr());
+
+// ショートハンドメソッド
+$value = $result->mapOrElse($fn, $defaultFn);
+```
+
+**動作:**
+- `Ok`の場合: 格納値に変換関数を適用した結果を返す
+- `Err`の場合: エラー値をデフォルト関数に渡した結果を返す（遅延評価）
+
+### Option型ショートハンドメソッド
+
+#### isSomeAnd(callable $predicate): bool
+値を持ち、かつ述語関数を満たす場合のみtrueを返します。
+
+```php
+// 従来の書き方
+if ($option->isSome() && $predicate($option->unwrap())) {
+    // ...
+}
+
+// ショートハンドメソッド
+if ($option->isSomeAnd($predicate)) {
+    // ...
+}
+```
+
+**動作:**
+- `Some`の場合: 格納値に述語関数を適用し、その結果を返す
+- `None`の場合: 常に`false`を返す（述語関数は実行されない）
+
+### 使用例
+
+#### 数値範囲チェック
+```php
+// Result型での使用
+$parseResult = parseInteger($input);
+$isValidRange = $parseResult->isOkAnd(fn($n) => $n >= 1 && $n <= 100);
+
+// Option型での使用
+$maybeAge = findUserAge($userId);
+$isAdult = $maybeAge->isSomeAnd(fn($age) => $age >= 18);
+```
+
+#### エラータイプ判定
+```php
+$apiResult = callExternalAPI();
+$isNetworkError = $apiResult->isErrAnd(fn($err) => $err instanceof NetworkException);
+```
+
+#### 変換とデフォルト値
+```php
+// Result型でのmapOr
+$displayValue = $parseResult->mapOr(
+    fn($num) => "値: $num",
+    "無効な入力"
+);
+
+// Result型でのmapOrElse（動的デフォルト値）
+$result = $apiCall->mapOrElse(
+    fn($data) => processData($data),
+    fn($error) => "エラー[{$error->getCode()}]: {$error->getMessage()}"
+);
+```
+
+### 型安全性
+全てのショートハンドメソッドは適切なPHPDoc型注釈を持ち、PHPStanレベルMAXでの型安全性を保証します。
+
+```php
+/**
+ * @template T
+ * @param callable(T): bool $predicate
+ * @return bool
+ */
+public function isOkAnd(callable $predicate): bool;
+
+/**
+ * @template U
+ * @param callable(T): U $fn
+ * @param U $default
+ * @return U
+ */
+public function mapOr(callable $fn, mixed $default): mixed;
+```
+
+### パフォーマンス特性
+- 既存メソッドと同等のパフォーマンス
+- 条件によっては関数実行がスキップされ、効率的
+- メモリオーバーヘッドなし
 
 この仕様書は、現在の実装状況と将来の拡張計画を含む、PHP Result/Option型ライブラリの完全な技術仕様を提供します。
