@@ -124,6 +124,16 @@ composer install
 - **実装注意**: Some値は常にOkに、Noneは常にErrに変換
 - **型安全性**: 戻り値型Result<mixed,mixed>でPHPStan対応
 
+#### PHPStan型エラー修正 (2025-07-13 実装)
+- **課題**: PHPStanレベルMAXで34個の型エラーが発生（mixed型関連）
+- **解決手法**: 
+  - 型アサーション: `assert(is_int($x))` による実行時型チェック
+  - PHPDocアノテーション: `/** @var Type $var */` による静的型情報提供
+  - `@phpstan-ignore` による既知安全警告のサプレッション
+- **対象ファイル**: OptionBasicTest.php(6箇所), OptionResultConversionTest.php(2箇所), TransposeTest.php(26箇所)
+- **効果**: 型安全性大幅向上、IDEサポート強化、隠れた型不整合の発見
+- **注意事項**: mixed型キャストは危険、型チェック→アサーション→PHPDocの優先順位
+
 ### プロジェクトメモリの更新検討について
 
 TODOを完了したタイミングで、更新内容などからプロジェクトメモリの更新検討を行ってください
