@@ -20,11 +20,19 @@ composer install
 
 ## アーキテクチャ
 
-このライブラリはRustのResult型を模倣したPHP実装です：
+このライブラリはRustのResult型とOption型を模倣したPHP実装です：
 
+**Result型（成功/失敗の表現）**
 - `Mizumi\Result\Result` - 成功/失敗を表現するためのインターフェース（Generics対応）
 - `Mizumi\Result\Ok` - 成功値を格納するimmutableクラス
 - `Mizumi\Result\Err` - エラー値を格納するimmutableクラス
+
+**Option型（値の有無の表現）**
+- `Mizumi\Result\Option` - 値の有無を表現するためのインターフェース（Generics対応）
+- `Mizumi\Result\Some` - 値を持つimmutableクラス
+- `Mizumi\Result\None` - 値を持たないimmutableクラス（シングルトン）
+
+**共通**
 - `Mizumi\Result\Exception\UnwrapException` - unwrap系メソッドの失敗時にスローされる例外
 
 ## 技術スタック
@@ -36,6 +44,7 @@ composer install
 
 ### 主要メソッド
 
+**Result型メソッド**
 - `isOk()` / `isErr()` - 成功/失敗判定
 - `map()` / `mapErr()` - 値/エラーの変換
 - `andThen()` - モナド的チェーン処理
@@ -47,6 +56,19 @@ composer install
 - `and()` - 連続的な成功チェック（即座評価）
 - `contains()` / `containsErr()` - 値の存在確認（厳密比較）
 - `flatten()` - ネストしたResultの一段階平坦化
+- `transpose()` - Result<Option<T>, E> → Option<Result<T, E>>への変換
+
+**Option型メソッド**
+- `isSome()` / `isNone()` - 値の有無判定
+- `map()` / `mapOr()` / `mapOrElse()` - 値の変換
+- `andThen()` - モナド的チェーン処理
+- `filter()` - 条件による値のフィルタリング
+- `unwrap()` / `unwrapOr()` / `unwrapOrElse()` / `expect()` - 値の取り出し
+- `inspect()` - デバッグ用副作用実行
+- `or()` / `orElse()` / `and()` - Option間の結合操作
+- `contains()` - 値の存在確認（厳密比較）
+- `transpose()` - Option<Result<T, E>> → Result<Option<T>, E>への変換
+- `okOr()` / `okOrElse()` - Option → Result変換
 
 ### コード規約
 
@@ -79,6 +101,28 @@ composer install
 - **PHPStan注意**: 型推論でmixed型の扱いに注意、キャスト時は安全な変換を使用
 - **テスト戦略**: 25テストケースで包括的検証（基本動作、エッジケース、パフォーマンス）
 - **実装パターン**: Ok(Result) → Result、Ok(non-Result) → self、Err → self
+
+#### Option型完全実装 (2025-07-13 実装)
+- **アーキテクチャ**: Rust互換のOption<T>型をPHPで実現
+- **実装クラス**: Option(interface), Some(final), None(final singleton)
+- **主要メソッド**: isSome/isNone, map系, unwrap系, andThen, filter, inspect, 結合操作, contains
+- **None設計**: シングルトンパターンでメモリ効率化
+- **テスト**: 59テストケース（基本33 + transpose15 + 変換11）で網羅的検証
+
+#### transpose() メソッド (2025-07-13 実装)
+- **機能**: Option/Result間の相互変換（Rust互換）
+- **変換ルール**: 
+  - Option側: Some(Ok(v))→Ok(Some(v)), Some(Err(e))→Err(e), None→Ok(None)
+  - Result側: Ok(Some(v))→Some(Ok(v)), Ok(None)→None, Err(e)→Some(Err(e))
+- **型安全性**: PHPStan対応のため戻り値型を`Result<mixed,mixed>`/`Option<mixed>`で明示
+- **実装場所**: Result/Option両インターフェースとすべての実装クラス
+- **テスト戦略**: 相互変換の完全性、エラー伝播、複合ケースを15テストで検証
+
+#### Option-Result相互変換 (2025-07-13 実装)
+- **okOr()**: Option→Result変換（Noneを指定エラーでErr化）
+- **okOrElse()**: Option→Result変換（Noneをクロージャ結果でErr化、遅延評価）
+- **実装注意**: Some値は常にOkに、Noneは常にErrに変換
+- **型安全性**: 戻り値型Result<mixed,mixed>でPHPStan対応
 
 ### プロジェクトメモリの更新検討について
 

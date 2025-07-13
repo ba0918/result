@@ -1,8 +1,8 @@
-# PHP Result型ライブラリ 仕様書
+# PHP Result/Option型ライブラリ 仕様書
 
 ## 概要
 
-このライブラリは、RustのResult型をPHPで実装したものです。成功(`Ok`)と失敗(`Err`)を型安全に表現し、エラーハンドリングを関数型プログラミングのアプローチで行うことができます。
+このライブラリは、RustのResult型とOption型をPHPで実装したものです。Result型は成功(`Ok`)と失敗(`Err`)を、Option型は値の有無(`Some`と`None`)を型安全に表現し、エラーハンドリングとnull安全性を関数型プログラミングのアプローチで実現します。
 
 ## アーキテクチャ
 
@@ -10,17 +10,24 @@
 
 ```
 Mizumi\Result\
-├── Result.php                     # 基底インターフェース
+├── Result.php                     # Result型基底インターフェース
 ├── Ok.php                        # 成功値を表現するクラス
 ├── Err.php                       # エラー値を表現するクラス
+├── Option.php                     # Option型基底インターフェース
+├── Some.php                      # 値を持つOption実装クラス
+├── None.php                      # 値を持たないOption実装クラス（シングルトン）
 └── Exception\
     └── UnwrapException.php       # unwrap系メソッドで発生する例外
 ```
 
 ### 型パラメータ
 
+**Result型:**
 - `T`: 成功時の値の型
 - `E`: 失敗時のエラーの型
+
+**Option型:**
+- `T`: 値の型（Someの場合）
 
 ## インターフェース定義
 
@@ -47,6 +54,34 @@ interface Result
     public function contains(mixed $value): bool;
     public function containsErr(mixed $error): bool;
     public function flatten(): Result;
+    public function transpose(): Option;
+}
+```
+
+### Option&lt;T&gt;
+
+```php
+interface Option
+{
+    public function isSome(): bool;
+    public function isNone(): bool;
+    public function map(callable $fn): Option;
+    public function mapOr(callable $fn, mixed $default): mixed;
+    public function mapOrElse(callable $fn, callable $defaultFn): mixed;
+    public function andThen(callable $fn): Option;
+    public function filter(callable $predicate): Option;
+    public function unwrap(): mixed;
+    public function unwrapOr(mixed $default): mixed;
+    public function unwrapOrElse(callable $fn): mixed;
+    public function expect(string $message): mixed;
+    public function inspect(callable $fn): Option;
+    public function or(Option $opt): Option;
+    public function orElse(callable $fn): Option;
+    public function and(Option $opt): Option;
+    public function contains(mixed $value): bool;
+    public function transpose(): Result;
+    public function okOr(mixed $err): Result;
+    public function okOrElse(callable $fn): Result;
 }
 ```
 
@@ -76,6 +111,7 @@ interface Result
 - `or(Result $res)`: 自身をそのまま返す（代替Resultは無視）
 - `orElse(callable $fn)`: 自身をそのまま返す（関数は実行されない）
 - `flatten()`: 値がResultなら内部のResultを返し、非Resultなら自身を返す
+- `transpose()`: 値がOptionなら相互変換し、非Optionなら`Some(Ok(value))`を返す
 
 ### Err&lt;E&gt; クラス
 
@@ -101,6 +137,64 @@ interface Result
 - `or(Result $res)`: 引数の代替Resultを返す（即座評価）
 - `orElse(callable $fn)`: エラー値を引数として関数を実行し、その結果のResultを返す（遅延評価）
 - `flatten()`: 自身をそのまま返す（何もしない）
+- `transpose()`: `Some(Err(error))`を返す
+
+### Some&lt;T&gt; クラス
+
+値を持つOptionを表現するimmutableなクラス。
+
+**コンストラクタ:**
+- `__construct(mixed $value)` - 値を受け取り初期化
+- `static of(mixed $value): self` - 静的ファクトリーメソッド
+
+**主要メソッドの動作:**
+- `isSome()`: 常に `true` を返す
+- `isNone()`: 常に `false` を返す
+- `map(callable $fn)`: 値に関数を適用した新しい`Some`を返す
+- `mapOr(callable $fn, mixed $default)`: 値に関数を適用した結果を返す
+- `mapOrElse(callable $fn, callable $defaultFn)`: 値に関数を適用した結果を返す
+- `andThen(callable $fn)`: 値に関数を適用し、その結果を返す
+- `filter(callable $predicate)`: 述語を満たす場合は自身、満たさない場合は`None`を返す
+- `unwrap()`: 格納されている値を返す
+- `unwrapOr(mixed $default)`: 格納されている値を返す（デフォルト値は無視）
+- `unwrapOrElse(callable $fn)`: 格納されている値を返す（関数は実行されない）
+- `expect(string $message)`: 格納されている値を返す
+- `inspect(callable $fn)`: 値に関数を適用して副作用を実行し、自身を返す
+- `or(Option $opt)`: 自身をそのまま返す（代替Optionは無視）
+- `orElse(callable $fn)`: 自身をそのまま返す（関数は実行されない）
+- `and(Option $opt)`: 引数のOptionを返す
+- `contains(mixed $value)`: 格納値と厳密比較（`===`）し、結果を返す
+- `transpose()`: 値がResultなら相互変換し、非Resultなら`Ok(Some(value))`を返す
+- `okOr(mixed $err)`: `Ok(value)`を返す
+- `okOrElse(callable $fn)`: `Ok(value)`を返す（関数は実行されない）
+
+### None クラス
+
+値を持たないOptionを表現するimmutableなシングルトンクラス。
+
+**インスタンス取得:**
+- `static instance(): self` - シングルトンインスタンスを取得
+
+**主要メソッドの動作:**
+- `isSome()`: 常に `false` を返す
+- `isNone()`: 常に `true` を返す
+- `map(callable $fn)`: 自身をそのまま返す（何もしない）
+- `mapOr(callable $fn, mixed $default)`: デフォルト値を返す
+- `mapOrElse(callable $fn, callable $defaultFn)`: デフォルト関数の結果を返す
+- `andThen(callable $fn)`: 自身をそのまま返す（何もしない）
+- `filter(callable $predicate)`: 自身をそのまま返す（何もしない）
+- `unwrap()`: `UnwrapException`をスロー
+- `unwrapOr(mixed $default)`: デフォルト値を返す
+- `unwrapOrElse(callable $fn)`: 関数の結果を返す
+- `expect(string $message)`: カスタムメッセージ付きで`UnwrapException`をスロー
+- `inspect(callable $fn)`: 何もせず自身をそのまま返す
+- `or(Option $opt)`: 引数の代替Optionを返す（即座評価）
+- `orElse(callable $fn)`: 関数を実行し、その結果のOptionを返す（遅延評価）
+- `and(Option $opt)`: 自身をそのまま返す（何もしない）
+- `contains(mixed $value)`: 常に `false` を返す
+- `transpose()`: `Ok(None)`を返す
+- `okOr(mixed $err)`: `Err(err)`を返す
+- `okOrElse(callable $fn)`: 関数を実行し、`Err(result)`を返す
 
 ## 設計原則
 
@@ -127,6 +221,7 @@ interface Result
 
 ### 基本的な使用法
 
+**Result型:**
 ```php
 use Mizumi\Result\Ok;
 use Mizumi\Result\Err;
@@ -140,14 +235,40 @@ $result = new Err("エラーメッセージ");
 echo $result->unwrapOr(0); // 0
 ```
 
+**Option型:**
+```php
+use Mizumi\Result\Some;
+use Mizumi\Result\None;
+
+// 値を持つケース
+$option = Some::of("Hello World");
+echo $option->unwrap(); // "Hello World"
+
+// 値を持たないケース
+$option = None::instance();
+echo $option->unwrapOr("デフォルト値"); // "デフォルト値"
+```
+
 ### チェーン処理
 
+**Result型:**
 ```php
 $result = new Ok(10)
     ->map(fn($x) => $x * 2)
     ->inspect(fn($value) => echo "中間値: $value\n") // デバッグ出力
     ->andThen(fn($x) => $x > 15 ? new Ok($x) : new Err("値が小さすぎます"))
     ->unwrapOr(0);
+```
+
+**Option型:**
+```php
+$result = Some::of("hello")
+    ->map(fn($s) => strtoupper($s))
+    ->filter(fn($s) => strlen($s) > 3)
+    ->inspect(fn($value) => echo "処理中: $value\n")
+    ->andThen(fn($s) => Some::of($s . " WORLD"))
+    ->unwrapOr("デフォルト");
+echo $result; // "HELLO WORLD"
 ```
 
 ### inspect/inspectErrメソッドの使用例
@@ -329,6 +450,86 @@ $errorResult = validateAndParse("")
 echo $errorResult; // 0
 ```
 
+### Option型の使用例
+
+```php
+// filter()での条件フィルタリング
+$age = Some::of(25)
+    ->filter(fn($age) => $age >= 18)
+    ->map(fn($age) => "成人（$age歳）")
+    ->unwrapOr("未成年");
+echo $age; // "成人（25歳）"
+
+// Noneでのor()による代替値提供
+$userName = None::instance()
+    ->or(Some::of("guest"))
+    ->unwrap(); // "guest"
+
+// orElse()での動的な代替値生成
+$config = None::instance()
+    ->orElse(fn() => Some::of(loadDefaultConfig()))
+    ->unwrap();
+
+// contains()での値確認
+$data = Some::of([1, 2, 3]);
+if ($data->contains([1, 2, 3])) {
+    echo "期待した配列です";
+}
+```
+
+### transpose()とOption-Result相互変換
+
+```php
+use Mizumi\Result\{Ok, Err, Some, None};
+
+// Option<Result> → Result<Option> への変換
+$optionResult = Some::of(Ok::of("成功データ"));
+$resultOption = $optionResult->transpose(); // Ok(Some("成功データ"))
+
+$errorCase = Some::of(Err::of("エラー発生"));
+$errorResult = $errorCase->transpose(); // Err("エラー発生")
+
+$noneCase = None::instance();
+$noneResult = $noneCase->transpose(); // Ok(None)
+
+// Result<Option> → Option<Result> への変換
+$resultSome = Ok::of(Some::of("値"));
+$optionResult = $resultSome->transpose(); // Some(Ok("値"))
+
+$resultNone = Ok::of(None::instance());
+$optionEmpty = $resultNone->transpose(); // None
+
+$resultErr = Err::of("エラー");
+$optionErr = $resultErr->transpose(); // Some(Err("エラー"))
+
+// Option → Result 変換
+$someValue = Some::of("データ");
+$result = $someValue->okOr("エラーメッセージ"); // Ok("データ")
+
+$noneValue = None::instance();
+$result = $noneValue->okOr("値がありません"); // Err("値がありません")
+
+$result = $noneValue->okOrElse(fn() => "動的エラー:" . time()); // Err("動的エラー:...")
+
+// 実用例：データベース検索とバリデーション
+function findUser(int $id): Option {
+    // データベース検索のシミュレーション
+    return $id > 0 ? Some::of(["id" => $id, "name" => "User$id"]) : None::instance();
+}
+
+function validateUser(array $user): Result {
+    return empty($user['name']) ? Err::of("名前が空です") : Ok::of($user);
+}
+
+$result = findUser(123)                                    // Some(user) or None
+    ->okOr("ユーザーが見つかりません")                      // Ok(user) or Err("...")
+    ->andThen(fn($user) => validateUser($user))            // Ok(user) or Err("...")
+    ->map(fn($user) => $user['name'])                      // Ok(name) or Err("...")
+    ->unwrapOr("ゲスト");
+
+echo $result; // "User123" or "ゲスト"
+```
+
 ## 型注釈の詳細
 
 ### Genericsの表現方法
@@ -336,6 +537,7 @@ echo $errorResult; // 0
 PHPDocを使用したGenerics表現：
 
 ```php
+// Result型の実装
 /**
  * @template T
  * @implements Result<T, never>
@@ -347,12 +549,29 @@ final class Ok implements Result { }
  * @implements Result<never, E>
  */
 final class Err implements Result { }
+
+// Option型の実装
+/**
+ * @template T
+ * @implements Option<T>
+ */
+final class Some implements Option { }
+
+/**
+ * @implements Option<never>
+ */
+final class None implements Option { }
 ```
 
 ### never型の使用
 
+**Result型:**
 - `Ok<T>`は`Result<T, never>`を実装（エラー型は存在しない）
 - `Err<E>`は`Result<never, E>`を実装（成功型は存在しない）
+
+**Option型:**
+- `Some<T>`は`Option<T>`を実装
+- `None`は`Option<never>`を実装（値型は存在しない）
 
 ## パフォーマンス特性
 
@@ -366,7 +585,7 @@ final class Err implements Result { }
 
 ## Rust標準ライブラリとの比較
 
-### 実装済み機能
+### Result型 - 実装済み機能
 - ✅ `is_ok()` / `is_err()` - 成功/失敗の判定
 - ✅ `map()` / `map_err()` - 値/エラーの変換
 - ✅ `and_then()` - モナド的チェーン処理
@@ -376,43 +595,72 @@ final class Err implements Result { }
 - ✅ `inspect()` / `inspect_err()` - デバッグ用副作用実行
 - ✅ `or()` / `or_else()` - 代替Resultの提供
 - ✅ `and()` - 連続的な成功チェック
-- ✅ `contains()` / `containsErr()` - 値の存在確認（PHP独自実装）
+- ✅ `contains()` / `contains_err()` - 値の存在確認（PHP独自実装）
 - ✅ `flatten()` - ネストしたResultの平坦化
+- ✅ `transpose()` - Option型との相互変換
 
-### 未実装機能
-- ❌ `transpose()` - Option型との相互変換
+### Option型 - 実装済み機能
+- ✅ `is_some()` / `is_none()` - 値の有無判定
+- ✅ `map()` / `map_or()` / `map_or_else()` - 値の変換
+- ✅ `and_then()` - モナド的チェーン処理
+- ✅ `filter()` - 条件によるフィルタリング
+- ✅ `unwrap()` - 値の取り出し（例外あり）
+- ✅ `unwrap_or()` / `unwrap_or_else()` - 安全な値取り出し
+- ✅ `expect()` - カスタムメッセージ付き値取り出し
+- ✅ `inspect()` - デバッグ用副作用実行
+- ✅ `or()` / `or_else()` - 代替Optionの提供
+- ✅ `and()` - 連続的な値チェック
+- ✅ `contains()` - 値の存在確認
+- ✅ `transpose()` - Result型との相互変換
+- ✅ `ok_or()` / `ok_or_else()` - Result型への変換
+
+### Option型 - 未実装機能
+- ❌ `flatten()` - ネストしたOptionの平坦化
+- ❌ `zip()` - 複数Optionの組み合わせ
+- ❌ `replace()` - 値の置換
 
 ### 違いと制約
 - PHPの型システムの制約により、コンパイル時型チェックは限定的
 - `never`型は完全にはサポートされていない
 - パターンマッチングは利用できない
+- Noneはシングルトンパターンで実装（Rustは値型）
 
 ## エラーメッセージ仕様
 
 ### UnwrapExceptionのメッセージ形式
 
-**Ok値でunwrapErr()を呼んだ場合:**
-```
-Called unwrapErr() on an Ok value: [値のprint_r表現]
-```
+**Result型:**
+- Ok値でunwrapErr()を呼んだ場合:
+  ```
+  Called unwrapErr() on an Ok value: [値のprint_r表現]
+  ```
+- Err値でunwrap()を呼んだ場合:
+  ```
+  Called unwrap() on an Err value: [エラーのprint_r表現]
+  ```
+- expect()でのカスタムメッセージ:
+  ```
+  [カスタムメッセージ]: [エラーのprint_r表現]
+  ```
 
-**Err値でunwrap()を呼んだ場合:**
-```
-Called unwrap() on an Err value: [エラーのprint_r表現]
-```
-
-**expect()でのカスタムメッセージ:**
-```
-[カスタムメッセージ]: [エラーのprint_r表現]
-```
+**Option型:**
+- None値でunwrap()を呼んだ場合:
+  ```
+  None value
+  ```
+- None値でexpect()を呼んだ場合:
+  ```
+  [カスタムメッセージ]
+  ```
 
 ## 拡張可能性
 
 ### 今後の拡張予定
-1. 追加メソッドの実装（or系、inspect系）
-2. より良いエラー表現（構造化エラー情報）
-3. デバッグ支援機能の強化
-4. Option型との連携機能
+1. **Option型の追加メソッド**: `flatten()`, `zip()`, `replace()`
+2. **より良いエラー表現**: 構造化エラー情報、詳細なスタックトレース
+3. **デバッグ支援機能の強化**: より詳細な inspect 機能
+4. **パフォーマンス最適化**: メモリ使用量の削減、実行速度の向上
+5. **相互運用性**: 既存のPHPライブラリとの統合サポート
 
 ### カスタムエラー型の推奨パターン
 
@@ -440,6 +688,29 @@ class ValidationError implements ErrorType {
 
 ## 実装履歴と注意点
 
+### Option型完全実装 (2025-07-13 実装)
+- **アーキテクチャ**: Rust互換のOption<T>型をPHPで実現
+- **実装クラス**: Option(interface), Some(final), None(final singleton)
+- **主要メソッド**: isSome/isNone, map系, unwrap系, andThen, filter, inspect, 結合操作, contains
+- **None設計**: シングルトンパターンでメモリ効率化
+- **テスト**: 59テストケース（基本33 + transpose15 + 変換11）で網羅的検証
+- **特徴**: Rustの仕様に忠実、既存のResult型との完全互換性
+
+### transpose() メソッド (2025-07-13 実装)
+- **機能**: Option/Result間の相互変換（Rust互換）
+- **変換ルール**: 
+  - Option側: Some(Ok(v))→Ok(Some(v)), Some(Err(e))→Err(e), None→Ok(None)
+  - Result側: Ok(Some(v))→Some(Ok(v)), Ok(None)→None, Err(e)→Some(Err(e))
+- **型安全性**: PHPStan対応のため戻り値型を`Result<mixed,mixed>`/`Option<mixed>`で明示
+- **実装場所**: Result/Option両インターフェースとすべての実装クラス
+- **テスト戦略**: 相互変換の完全性、エラー伝播、複合ケースを15テストで検証
+
+### Option-Result相互変換 (2025-07-13 実装)
+- **okOr()**: Option→Result変換（Noneを指定エラーでErr化）
+- **okOrElse()**: Option→Result変換（Noneをクロージャ結果でErr化、遅延評価）
+- **実装注意**: Some値は常にOkに、Noneは常にErrに変換
+- **型安全性**: 戻り値型Result<mixed,mixed>でPHPStan対応
+
 ### flatten() メソッド (2025-07-13 実装)
 - **機能**: ネストしたResultの一段階平坦化
 - **Rust対応**: `Result<Result<T, E>, E>` → `Result<T, E>` の変換
@@ -453,11 +724,13 @@ class ValidationError implements ErrorType {
 - **比較方法**: 厳密比較（`===`）を採用
 - **動作**: Ok値での`containsErr()`、Err値での`contains()`は常に`false`
 - **テスト**: 包括的エッジケーステスト実装済み（null、オブジェクト、配列、型変換）
+- **Option型**: Some/Noneでも同様の動作、Noneでのcontains()は常にfalse
 
 ### and() メソッド (2025-07-13 実装)
 - **機能**: 連続的な成功チェック（即座評価）
 - **動作**: Okの場合は引数のResult、Errの場合は自身を返す
 - **チェーン**: 複数のResultを順次結合可能
+- **Option型**: Someの場合は引数のOption、Noneの場合は自身を返す
 
 ## 制限事項
 
@@ -471,5 +744,11 @@ class ValidationError implements ErrorType {
 - `print_r()`を使った単純なエラー表示
 - 例外スタックトレースの情報は限定的
 - メモリ使用量の最適化余地
+- Noneのシングルトンパターンによる制約（スレッドセーフティ）
 
-この仕様書は、現在の実装状況と将来の拡張計画を含む、PHP Result型ライブラリの完全な技術仕様を提供します。
+### Option型固有の制限
+- `flatten()`, `zip()`, `replace()`メソッドは未実装
+- パフォーマンスクリティカルな処理では native null チェックの方が高速
+- デバッグ時の値確認がResult型より複雑
+
+この仕様書は、現在の実装状況と将来の拡張計画を含む、PHP Result/Option型ライブラリの完全な技術仕様を提供します。
