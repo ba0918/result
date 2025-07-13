@@ -165,4 +165,11 @@ interface Result
      * @return Result<T, E>
      */
     public function flatten(): Result;
+
+    /**
+     * Result<Option<T>, E> → Option<Result<T, E>> への変換
+     *
+     * @return Option<mixed>
+     */
+    public function transpose(): Option;
 }

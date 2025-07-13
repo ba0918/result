@@ -143,4 +143,14 @@ final class Err implements Result
     {
         return $this;
     }
+
+    /**
+     * @return Option<mixed>
+     */
+    #[\Override]
+    public function transpose(): Option
+    {
+        // Err(error) → Some(Err(error))
+        return Some::of($this);
+    }
 }

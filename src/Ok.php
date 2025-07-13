@@ -143,4 +143,25 @@ final class Ok implements Result
     {
         return $this->value instanceof Result ? $this->value : $this;
     }
+
+    /**
+     * @return Option<mixed>
+     */
+    #[\Override]
+    public function transpose(): Option
+    {
+        // Ok(Option) の場合
+        if ($this->value instanceof Option) {
+            if ($this->value->isSome()) {
+                // Ok(Some(value)) → Some(Ok(value))
+                return Some::of(Ok::of($this->value->unwrap()));
+            } else {
+                // Ok(None) → None
+                return None::instance();
+            }
+        }
+
+        // Ok(non-Option) → Some(Ok(value))
+        return Some::of($this);
+    }
 }
