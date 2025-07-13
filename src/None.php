@@ -51,6 +51,17 @@ final class None implements Option
     }
 
     /**
+     * 値を持っている場合に述語関数で値を検証する
+     *
+     * @param callable(never): bool $predicate
+     * @return bool
+     */
+    public function isSomeAnd(callable $predicate): bool
+    {
+        return false;
+    }
+
+    /**
      * 値を持っている場合、中の値に関数を適用する
      *
      * @template U

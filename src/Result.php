@@ -27,6 +27,22 @@ interface Result
     public function isErr(): bool;
 
     /**
+     * 成功している場合に述語関数で値を検証する
+     *
+     * @param callable(T): bool $predicate
+     * @return bool
+     */
+    public function isOkAnd(callable $predicate): bool;
+
+    /**
+     * 失敗している場合に述語関数でエラーを検証する
+     *
+     * @param callable(E): bool $predicate
+     * @return bool
+     */
+    public function isErrAnd(callable $predicate): bool;
+
+    /**
      * 成功している場合、中の値に関数を適用する
      *
      * @template U
@@ -43,6 +59,26 @@ interface Result
      * @return Result<T, F>
      */
     public function mapErr(callable $fn): Result;
+
+    /**
+     * 成功している場合は関数を適用し、失敗している場合はデフォルト値を返す
+     *
+     * @template U
+     * @param callable(T): U $fn
+     * @param U $default
+     * @return U
+     */
+    public function mapOr(callable $fn, mixed $default): mixed;
+
+    /**
+     * 成功している場合は関数を適用し、失敗している場合はクロージャの結果を返す
+     *
+     * @template U
+     * @param callable(T): U $fn
+     * @param callable(E): U $defaultFn
+     * @return U
+     */
+    public function mapOrElse(callable $fn, callable $defaultFn): mixed;
 
     /**
      * 成功している場合、中の値に関数を適用し、その結果を返す

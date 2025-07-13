@@ -42,6 +42,18 @@ final class Ok implements Result
     }
 
     #[\Override]
+    public function isOkAnd(callable $predicate): bool
+    {
+        return $predicate($this->value);
+    }
+
+    #[\Override]
+    public function isErrAnd(callable $predicate): bool
+    {
+        return false;
+    }
+
+    #[\Override]
     public function map(callable $fn): Result
     {
         return new Ok($fn($this->value));
@@ -51,6 +63,18 @@ final class Ok implements Result
     public function mapErr(callable $fn): Result
     {
         return $this;
+    }
+
+    #[\Override]
+    public function mapOr(callable $fn, mixed $default): mixed
+    {
+        return $fn($this->value);
+    }
+
+    #[\Override]
+    public function mapOrElse(callable $fn, callable $defaultFn): mixed
+    {
+        return $fn($this->value);
     }
 
     /**
