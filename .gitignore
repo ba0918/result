@@ -33,3 +33,6 @@ phpunit.result.cache
 # 開発者固有の設定ファイル（.distファイルから個人用にコピーして使用）
 phpunit.xml
 phpstan.neon
+
+# AI向け作業ログ・ドキュメント（ローカル専用）
+.ai-docs/
