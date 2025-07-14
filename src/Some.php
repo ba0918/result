@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Mizumi\Result;
 
@@ -33,6 +33,7 @@ final class Some implements Option
      *
      * @return bool
      */
+    #[\Override]
     public function isSome(): bool
     {
         return true;
@@ -43,6 +44,7 @@ final class Some implements Option
      *
      * @return bool
      */
+    #[\Override]
     public function isNone(): bool
     {
         return false;
@@ -54,6 +56,7 @@ final class Some implements Option
      * @param callable(T): bool $predicate
      * @return bool
      */
+    #[\Override]
     public function isSomeAnd(callable $predicate): bool
     {
         return $predicate($this->value);
@@ -66,6 +69,7 @@ final class Some implements Option
      * @param callable(T): U $fn
      * @return Option<U>
      */
+    #[\Override]
     public function map(callable $fn): Option
     {
         return new Some($fn($this->value));
@@ -79,6 +83,7 @@ final class Some implements Option
      * @param U $default
      * @return U
      */
+    #[\Override]
     public function mapOr(callable $fn, mixed $default): mixed
     {
         return $fn($this->value);
@@ -92,6 +97,7 @@ final class Some implements Option
      * @param callable(): U $defaultFn
      * @return U
      */
+    #[\Override]
     public function mapOrElse(callable $fn, callable $defaultFn): mixed
     {
         return $fn($this->value);
@@ -104,6 +110,7 @@ final class Some implements Option
      * @param callable(T): Option<U> $fn
      * @return Option<U>
      */
+    #[\Override]
     public function andThen(callable $fn): Option
     {
         return $fn($this->value);
@@ -115,6 +122,7 @@ final class Some implements Option
      * @param callable(T): bool $predicate
      * @return Option<T>
      */
+    #[\Override]
     public function filter(callable $predicate): Option
     {
         return $predicate($this->value) ? $this : None::instance();
@@ -125,6 +133,7 @@ final class Some implements Option
      *
      * @return T
      */
+    #[\Override]
     public function unwrap(): mixed
     {
         return $this->value;
@@ -137,6 +146,7 @@ final class Some implements Option
      * @param U $default
      * @return T|U
      */
+    #[\Override]
     public function unwrapOr(mixed $default): mixed
     {
         return $this->value;
@@ -149,6 +159,7 @@ final class Some implements Option
      * @param callable(): U $fn
      * @return T|U
      */
+    #[\Override]
     public function unwrapOrElse(callable $fn): mixed
     {
         return $this->value;
@@ -160,6 +171,7 @@ final class Some implements Option
      * @param string $message
      * @return T
      */
+    #[\Override]
     public function expect(string $message): mixed
     {
         return $this->value;
@@ -171,6 +183,7 @@ final class Some implements Option
      * @param callable(T): void $fn
      * @return Option<T>
      */
+    #[\Override]
     public function inspect(callable $fn): Option
     {
         $fn($this->value);
@@ -184,6 +197,7 @@ final class Some implements Option
      * @param Option<U> $opt
      * @return Option<T|U>
      */
+    #[\Override]
     public function or(Option $opt): Option
     {
         return $this;
@@ -196,6 +210,7 @@ final class Some implements Option
      * @param callable(): Option<U> $fn
      * @return Option<T|U>
      */
+    #[\Override]
     public function orElse(callable $fn): Option
     {
         return $this;
@@ -208,6 +223,7 @@ final class Some implements Option
      * @param Option<U> $opt
      * @return Option<U>
      */
+    #[\Override]
     public function and(Option $opt): Option
     {
         return $opt;
@@ -219,6 +235,7 @@ final class Some implements Option
      * @param mixed $value 確認したい値
      * @return bool Some値が指定値と厳密に等価な場合true、それ以外はfalse
      */
+    #[\Override]
     public function contains(mixed $value): bool
     {
         return $this->value === $value;
@@ -229,6 +246,7 @@ final class Some implements Option
      *
      * @return Result<mixed, mixed>
      */
+    #[\Override]
     public function transpose(): Result
     {
         // Some(Result) の場合
@@ -252,6 +270,7 @@ final class Some implements Option
      * @param mixed $err
      * @return Result<mixed, mixed>
      */
+    #[\Override]
     public function okOr(mixed $err): Result
     {
         return Ok::of($this->value);
@@ -263,6 +282,7 @@ final class Some implements Option
      * @param callable $fn
      * @return Result<mixed, mixed>
      */
+    #[\Override]
     public function okOrElse(callable $fn): Result
     {
         return Ok::of($this->value);
@@ -273,6 +293,7 @@ final class Some implements Option
      *
      * @return Option<mixed>
      */
+    #[\Override]
     public function flatten(): Option
     {
         return $this->value instanceof Option ? $this->value : $this;
@@ -285,6 +306,7 @@ final class Some implements Option
      * @param Option<U> $opt
      * @return Option<T|U>
      */
+    #[\Override]
     public function xor(Option $opt): Option
     {
         return $opt->isNone() ? $this : None::instance();
@@ -297,6 +319,7 @@ final class Some implements Option
      * @param Option<U> $opt
      * @return Option<array{T, U}>
      */
+    #[\Override]
     public function zip(Option $opt): Option
     {
         /** @phpstan-ignore return.type,argument.type */

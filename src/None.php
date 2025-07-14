@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Mizumi\Result;
 
@@ -35,6 +35,7 @@ final class None implements Option
      *
      * @return bool
      */
+    #[\Override]
     public function isSome(): bool
     {
         return false;
@@ -45,6 +46,7 @@ final class None implements Option
      *
      * @return bool
      */
+    #[\Override]
     public function isNone(): bool
     {
         return true;
@@ -56,6 +58,7 @@ final class None implements Option
      * @param callable(never): bool $predicate
      * @return bool
      */
+    #[\Override]
     public function isSomeAnd(callable $predicate): bool
     {
         return false;
@@ -68,6 +71,7 @@ final class None implements Option
      * @param callable(never): U $fn
      * @return Option<U>
      */
+    #[\Override]
     public function map(callable $fn): Option
     {
         return $this;
@@ -81,6 +85,7 @@ final class None implements Option
      * @param U $default
      * @return U
      */
+    #[\Override]
     public function mapOr(callable $fn, mixed $default): mixed
     {
         return $default;
@@ -94,6 +99,7 @@ final class None implements Option
      * @param callable(): U $defaultFn
      * @return U
      */
+    #[\Override]
     public function mapOrElse(callable $fn, callable $defaultFn): mixed
     {
         return $defaultFn();
@@ -106,6 +112,7 @@ final class None implements Option
      * @param callable(never): Option<U> $fn
      * @return Option<U>
      */
+    #[\Override]
     public function andThen(callable $fn): Option
     {
         return $this;
@@ -117,6 +124,7 @@ final class None implements Option
      * @param callable(never): bool $predicate
      * @return Option<never>
      */
+    #[\Override]
     public function filter(callable $predicate): Option
     {
         return $this;
@@ -128,6 +136,7 @@ final class None implements Option
      * @return never
      * @throws UnwrapException
      */
+    #[\Override]
     public function unwrap(): mixed
     {
         throw new UnwrapException('None value');
@@ -140,6 +149,7 @@ final class None implements Option
      * @param U $default
      * @return U
      */
+    #[\Override]
     public function unwrapOr(mixed $default): mixed
     {
         return $default;
@@ -152,6 +162,7 @@ final class None implements Option
      * @param callable(): U $fn
      * @return U
      */
+    #[\Override]
     public function unwrapOrElse(callable $fn): mixed
     {
         return $fn();
@@ -164,6 +175,7 @@ final class None implements Option
      * @return never
      * @throws UnwrapException
      */
+    #[\Override]
     public function expect(string $message): mixed
     {
         throw new UnwrapException($message);
@@ -175,6 +187,7 @@ final class None implements Option
      * @param callable(never): void $fn
      * @return Option<never>
      */
+    #[\Override]
     public function inspect(callable $fn): Option
     {
         return $this;
@@ -187,6 +200,7 @@ final class None implements Option
      * @param Option<U> $opt
      * @return Option<U>
      */
+    #[\Override]
     public function or(Option $opt): Option
     {
         return $opt;
@@ -199,6 +213,7 @@ final class None implements Option
      * @param callable(): Option<U> $fn
      * @return Option<U>
      */
+    #[\Override]
     public function orElse(callable $fn): Option
     {
         return $fn();
@@ -211,6 +226,7 @@ final class None implements Option
      * @param Option<U> $opt
      * @return Option<never>
      */
+    #[\Override]
     public function and(Option $opt): Option
     {
         return $this;
@@ -222,6 +238,7 @@ final class None implements Option
      * @param mixed $value 確認したい値
      * @return false
      */
+    #[\Override]
     public function contains(mixed $value): bool
     {
         return false;
@@ -232,6 +249,7 @@ final class None implements Option
      *
      * @return Result<mixed, mixed>
      */
+    #[\Override]
     public function transpose(): Result
     {
         // None → Ok(None)
@@ -244,6 +262,7 @@ final class None implements Option
      * @param mixed $err
      * @return Result<mixed, mixed>
      */
+    #[\Override]
     public function okOr(mixed $err): Result
     {
         return Err::of($err);
@@ -255,6 +274,7 @@ final class None implements Option
      * @param callable $fn
      * @return Result<mixed, mixed>
      */
+    #[\Override]
     public function okOrElse(callable $fn): Result
     {
         return Err::of($fn());
@@ -265,6 +285,7 @@ final class None implements Option
      *
      * @return Option<mixed>
      */
+    #[\Override]
     public function flatten(): Option
     {
         return $this;
@@ -277,6 +298,7 @@ final class None implements Option
      * @param Option<U> $opt
      * @return Option<U>
      */
+    #[\Override]
     public function xor(Option $opt): Option
     {
         return $opt;
@@ -289,6 +311,7 @@ final class None implements Option
      * @param Option<U> $opt
      * @return Option<never>
      */
+    #[\Override]
     public function zip(Option $opt): Option
     {
         return $this;
