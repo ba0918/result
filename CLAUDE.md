@@ -6,13 +6,28 @@
 
 ```bash
 # テスト実行
-composer exec phpunit
+composer test
 
 # 単一テスト実行
 composer exec phpunit tests/SpecificTest.php
 
+# テスト（カバレッジ付き）
+composer test-coverage
+
 # PHPStanでの静的解析（最大レベル）
-composer exec phpstan analyse
+composer phpstan
+
+# コードフォーマット（修正）
+composer cs-fix
+
+# コードフォーマット（チェック）
+composer cs-check
+
+# すべての品質チェック実行（cs-check → phpstan → test）
+composer check
+
+# コード自動修正
+composer fix
 
 # Composerの依存関係をインストール
 composer install

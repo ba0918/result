@@ -13,6 +13,7 @@
 # キャッシュファイル
 /cache/
 /tmp/
+.php-cs-fixer.cache
 
 # IDE/エディタ設定ファイル
 .idea/
