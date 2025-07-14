@@ -1,7 +1,9 @@
 <?php
 
-use Mizumi\Result\Ok;
+declare(strict_types=1);
+
 use Mizumi\Result\Err;
+use Mizumi\Result\Ok;
 use PHPUnit\Framework\TestCase;
 
 class FlattenTest extends TestCase
@@ -164,7 +166,7 @@ class FlattenTest extends TestCase
         $innermost = new Ok(42);
         $middle = new Ok($innermost);
         $outer = new Ok($middle);
-        
+
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(Ok::class, $flattened);
@@ -178,7 +180,7 @@ class FlattenTest extends TestCase
         $innermost = new Ok(42);
         $middle = new Ok($innermost);
         $outer = new Ok($middle);
-        
+
         $firstFlatten = $outer->flatten();
         $secondFlatten = $firstFlatten->flatten();
 
@@ -218,10 +220,10 @@ class FlattenTest extends TestCase
         $this->assertInstanceOf(Ok::class, $flattened);
         $this->assertEquals(42, $flattened->unwrap());
 
-        $mapped = $flattened->map(fn(mixed $x): string => "Value: " . print_r($x, true));
+        $mapped = $flattened->map(fn (mixed $x): string => 'Value: ' . print_r($x, true));
         $result = $mapped->unwrap();
 
-        $this->assertEquals("Value: 42", $result);
+        $this->assertEquals('Value: 42', $result);
     }
 
     public function testFlattenWithErrorInMethodChain(): void
@@ -233,7 +235,7 @@ class FlattenTest extends TestCase
         $this->assertInstanceOf(Err::class, $flattened);
         $this->assertEquals('calculation failed', $flattened->unwrapErr());
 
-        $mapped = $flattened->map(fn(mixed $x): string => "Value: " . print_r($x, true));
+        $mapped = $flattened->map(fn (mixed $x): string => 'Value: ' . print_r($x, true));
         $result = $mapped->unwrapOr('default');
 
         $this->assertEquals('default', $result);
@@ -244,12 +246,12 @@ class FlattenTest extends TestCase
     public function testFlattenInValidationScenario(): void
     {
         // バリデーション結果がネストしている場合
-        $validationResult = function($input): \Mizumi\Result\Result {
+        $validationResult = function ($input): \Mizumi\Result\Result {
             if ($input > 0) {
                 return new Ok(new Ok($input));
-            } else {
-                return new Ok(new Err('Value must be positive'));
             }
+
+            return new Ok(new Err('Value must be positive'));
         };
 
         // 正常ケース
@@ -286,13 +288,13 @@ class FlattenTest extends TestCase
     {
         $sharedObject = new \stdClass();
         $sharedObject->id = 123;
-        
+
         $inner = new Ok($sharedObject);
         $outer = new Ok($inner);
         $flattened = $outer->flatten();
 
         $this->assertSame($sharedObject, $flattened->unwrap());
-        
+
         // オブジェクトの変更が反映されることを確認
         $sharedObject->modified = true;
         $this->assertTrue($flattened->unwrap()->modified ?? false);

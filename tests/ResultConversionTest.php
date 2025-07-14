@@ -1,10 +1,12 @@
 <?php
 
-use Mizumi\Result\Ok;
+declare(strict_types=1);
+
 use Mizumi\Result\Err;
-use Mizumi\Result\Some;
-use Mizumi\Result\None;
 use Mizumi\Result\Exception\UnwrapException;
+use Mizumi\Result\None;
+use Mizumi\Result\Ok;
+use Mizumi\Result\Some;
 use PHPUnit\Framework\TestCase;
 
 class ResultConversionTest extends TestCase
@@ -14,7 +16,7 @@ class ResultConversionTest extends TestCase
     {
         $ok = new Ok(42);
         $option = $ok->ok();
-        
+
         $this->assertInstanceOf(Some::class, $option);
         $this->assertTrue($option->isSome());
         $this->assertEquals(42, $option->unwrap());
@@ -24,7 +26,7 @@ class ResultConversionTest extends TestCase
     {
         $err = new Err('error');
         $option = $err->ok();
-        
+
         $this->assertInstanceOf(None::class, $option);
         $this->assertTrue($option->isNone());
     }
@@ -34,7 +36,7 @@ class ResultConversionTest extends TestCase
         $complexValue = ['key' => 'value', 'nested' => ['inner' => 123]];
         $ok = new Ok($complexValue);
         $option = $ok->ok();
-        
+
         $this->assertTrue($option->isSome());
         $this->assertEquals($complexValue, $option->unwrap());
     }
@@ -43,7 +45,7 @@ class ResultConversionTest extends TestCase
     {
         $ok = new Ok(null);
         $option = $ok->ok();
-        
+
         $this->assertTrue($option->isSome());
         /** @phpstan-ignore method.alreadyNarrowedType */
         $this->assertNull($option->unwrap());
@@ -54,7 +56,7 @@ class ResultConversionTest extends TestCase
     {
         $err = new Err('error message');
         $option = $err->err();
-        
+
         $this->assertInstanceOf(Some::class, $option);
         $this->assertTrue($option->isSome());
         $this->assertEquals('error message', $option->unwrap());
@@ -64,7 +66,7 @@ class ResultConversionTest extends TestCase
     {
         $ok = new Ok(42);
         $option = $ok->err();
-        
+
         $this->assertInstanceOf(None::class, $option);
         $this->assertTrue($option->isNone());
     }
@@ -74,7 +76,7 @@ class ResultConversionTest extends TestCase
         $complexError = new \Exception('Complex error');
         $err = new Err($complexError);
         $option = $err->err();
-        
+
         $this->assertTrue($option->isSome());
         $this->assertSame($complexError, $option->unwrap());
     }
@@ -83,7 +85,7 @@ class ResultConversionTest extends TestCase
     {
         $err = new Err(null);
         $option = $err->err();
-        
+
         $this->assertTrue($option->isSome());
         /** @phpstan-ignore method.alreadyNarrowedType */
         $this->assertNull($option->unwrap());
@@ -94,7 +96,7 @@ class ResultConversionTest extends TestCase
     {
         $errorValue = 'test error';
         $err = new Err($errorValue);
-        
+
         $result = $err->expectErr('This should not fail');
         $this->assertEquals($errorValue, $result);
     }
@@ -114,7 +116,7 @@ class ResultConversionTest extends TestCase
     {
         $complexError = ['error' => 'details', 'code' => 500];
         $err = new Err($complexError);
-        
+
         $result = $err->expectErr('Should return complex error');
         $this->assertEquals($complexError, $result);
     }
@@ -137,16 +139,16 @@ class ResultConversionTest extends TestCase
         $ok = new Ok(100);
         $okOption = $ok->ok();
         $errOption = $ok->err();
-        
+
         $this->assertTrue($okOption->isSome());
         $this->assertEquals(100, $okOption->unwrap());
         $this->assertTrue($errOption->isNone());
-        
+
         // Err値からのチェーン変換
         $err = new Err('failure');
         $okOption2 = $err->ok();
         $errOption2 = $err->err();
-        
+
         $this->assertTrue($okOption2->isNone());
         $this->assertTrue($errOption2->isSome());
         $this->assertEquals('failure', $errOption2->unwrap());
@@ -155,14 +157,14 @@ class ResultConversionTest extends TestCase
     public function testExpectErrWithDifferentMessageFormats(): void
     {
         $err = new Err('test');
-        
+
         // 正常系
         $this->assertEquals('test', $err->expectErr(''));
         $this->assertEquals('test', $err->expectErr('Custom message'));
-        
+
         // Ok値での例外系
         $ok = new Ok('value');
-        
+
         $this->expectException(UnwrapException::class);
         $ok->expectErr('Custom error message');
     }

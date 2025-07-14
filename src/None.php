@@ -1,8 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Mizumi\Result;
 
 use Mizumi\Result\Exception\UnwrapException;
+use Override;
 
 /**
  * 値を持たないOptionを表すクラス
@@ -27,6 +30,7 @@ final class None implements Option
         if (self::$instance === null) {
             self::$instance = new self();
         }
+
         return self::$instance;
     }
 
@@ -35,7 +39,7 @@ final class None implements Option
      *
      * @return bool
      */
-    #[\Override]
+    #[Override]
     public function isSome(): bool
     {
         return false;
@@ -46,7 +50,7 @@ final class None implements Option
      *
      * @return bool
      */
-    #[\Override]
+    #[Override]
     public function isNone(): bool
     {
         return true;
@@ -56,9 +60,10 @@ final class None implements Option
      * 値を持っている場合に述語関数で値を検証する
      *
      * @param callable(never): bool $predicate
+     *
      * @return bool
      */
-    #[\Override]
+    #[Override]
     public function isSomeAnd(callable $predicate): bool
     {
         return false;
@@ -68,10 +73,12 @@ final class None implements Option
      * 値を持っている場合、中の値に関数を適用する
      *
      * @template U
+     *
      * @param callable(never): U $fn
+     *
      * @return Option<U>
      */
-    #[\Override]
+    #[Override]
     public function map(callable $fn): Option
     {
         return $this;
@@ -81,11 +88,13 @@ final class None implements Option
      * 値を持っている場合は関数を適用し、持っていない場合はデフォルト値を返す
      *
      * @template U
+     *
      * @param callable(never): U $fn
      * @param U $default
+     *
      * @return U
      */
-    #[\Override]
+    #[Override]
     public function mapOr(callable $fn, mixed $default): mixed
     {
         return $default;
@@ -95,11 +104,13 @@ final class None implements Option
      * 値を持っている場合は関数を適用し、持っていない場合はクロージャの結果を返す
      *
      * @template U
+     *
      * @param callable(never): U $fn
      * @param callable(): U $defaultFn
+     *
      * @return U
      */
-    #[\Override]
+    #[Override]
     public function mapOrElse(callable $fn, callable $defaultFn): mixed
     {
         return $defaultFn();
@@ -109,10 +120,12 @@ final class None implements Option
      * 値を持っている場合、中の値に関数を適用し、その結果を返す
      *
      * @template U
+     *
      * @param callable(never): Option<U> $fn
+     *
      * @return Option<U>
      */
-    #[\Override]
+    #[Override]
     public function andThen(callable $fn): Option
     {
         return $this;
@@ -122,9 +135,10 @@ final class None implements Option
      * 値を持っている場合、述語関数を満たすかチェックする
      *
      * @param callable(never): bool $predicate
+     *
      * @return Option<never>
      */
-    #[\Override]
+    #[Override]
     public function filter(callable $predicate): Option
     {
         return $this;
@@ -133,10 +147,11 @@ final class None implements Option
     /**
      * 値を持っていれば値を返し、持っていなければ例外をスローする
      *
-     * @return never
      * @throws UnwrapException
+     *
+     * @return never
      */
-    #[\Override]
+    #[Override]
     public function unwrap(): mixed
     {
         throw new UnwrapException('None value');
@@ -146,10 +161,12 @@ final class None implements Option
      * 値を持っていれば値を返し、持っていなければデフォルト値を返す
      *
      * @template U
+     *
      * @param U $default
+     *
      * @return U
      */
-    #[\Override]
+    #[Override]
     public function unwrapOr(mixed $default): mixed
     {
         return $default;
@@ -159,10 +176,12 @@ final class None implements Option
      * 値を持っていれば値を返し、持っていなければクロージャの結果を返す
      *
      * @template U
+     *
      * @param callable(): U $fn
+     *
      * @return U
      */
-    #[\Override]
+    #[Override]
     public function unwrapOrElse(callable $fn): mixed
     {
         return $fn();
@@ -172,10 +191,12 @@ final class None implements Option
      * 値を持っていれば値を返し、持っていなければ指定されたメッセージで例外をスローする
      *
      * @param string $message
-     * @return never
+     *
      * @throws UnwrapException
+     *
+     * @return never
      */
-    #[\Override]
+    #[Override]
     public function expect(string $message): mixed
     {
         throw new UnwrapException($message);
@@ -185,9 +206,10 @@ final class None implements Option
      * 値を検査し、副作用を実行する（値は変更しない）
      *
      * @param callable(never): void $fn
+     *
      * @return Option<never>
      */
-    #[\Override]
+    #[Override]
     public function inspect(callable $fn): Option
     {
         return $this;
@@ -197,10 +219,12 @@ final class None implements Option
      * Noneの場合に代替のOptionを返す（即座評価）
      *
      * @template U
+     *
      * @param Option<U> $opt
+     *
      * @return Option<U>
      */
-    #[\Override]
+    #[Override]
     public function or(Option $opt): Option
     {
         return $opt;
@@ -210,10 +234,12 @@ final class None implements Option
      * Noneの場合に代替のOptionを返す（遅延評価）
      *
      * @template U
+     *
      * @param callable(): Option<U> $fn
+     *
      * @return Option<U>
      */
-    #[\Override]
+    #[Override]
     public function orElse(callable $fn): Option
     {
         return $fn();
@@ -223,10 +249,12 @@ final class None implements Option
      * Someの場合に別のOptionを返し、Noneの場合は自身を返す（即座評価）
      *
      * @template U
+     *
      * @param Option<U> $opt
+     *
      * @return Option<never>
      */
-    #[\Override]
+    #[Override]
     public function and(Option $opt): Option
     {
         return $this;
@@ -236,9 +264,10 @@ final class None implements Option
      * Some値が指定された値を含むかどうかを確認する
      *
      * @param mixed $value 確認したい値
+     *
      * @return false
      */
-    #[\Override]
+    #[Override]
     public function contains(mixed $value): bool
     {
         return false;
@@ -249,7 +278,7 @@ final class None implements Option
      *
      * @return Result<mixed, mixed>
      */
-    #[\Override]
+    #[Override]
     public function transpose(): Result
     {
         // None → Ok(None)
@@ -260,9 +289,10 @@ final class None implements Option
      * OptionをResultに変換する（Noneの場合は指定されたエラーでErr）
      *
      * @param mixed $err
+     *
      * @return Result<mixed, mixed>
      */
-    #[\Override]
+    #[Override]
     public function okOr(mixed $err): Result
     {
         return Err::of($err);
@@ -272,9 +302,10 @@ final class None implements Option
      * OptionをResultに変換する（Noneの場合はクロージャの結果でErr）
      *
      * @param callable $fn
+     *
      * @return Result<mixed, mixed>
      */
-    #[\Override]
+    #[Override]
     public function okOrElse(callable $fn): Result
     {
         return Err::of($fn());
@@ -285,7 +316,7 @@ final class None implements Option
      *
      * @return Option<mixed>
      */
-    #[\Override]
+    #[Override]
     public function flatten(): Option
     {
         return $this;
@@ -295,10 +326,12 @@ final class None implements Option
      * 排他的OR操作：片方のみSomeの場合にSome、両方Some/両方Noneの場合にNone
      *
      * @template U
+     *
      * @param Option<U> $opt
+     *
      * @return Option<U>
      */
-    #[\Override]
+    #[Override]
     public function xor(Option $opt): Option
     {
         return $opt;
@@ -308,10 +341,12 @@ final class None implements Option
      * 2つのOptionを結合：両方Someの場合にタプル、片方でもNoneの場合にNone
      *
      * @template U
+     *
      * @param Option<U> $opt
+     *
      * @return Option<never>
      */
-    #[\Override]
+    #[Override]
     public function zip(Option $opt): Option
     {
         return $this;

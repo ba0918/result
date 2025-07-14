@@ -1,7 +1,9 @@
 <?php
 
-use Mizumi\Result\Ok;
+declare(strict_types=1);
+
 use Mizumi\Result\Err;
+use Mizumi\Result\Ok;
 use PHPUnit\Framework\TestCase;
 
 class InspectTest extends TestCase
@@ -10,9 +12,9 @@ class InspectTest extends TestCase
     {
         $sideEffectExecuted = false;
         $inspectedValue = null;
-        
+
         $result = new Ok(42);
-        $returnedResult = $result->inspect(function($value) use (&$sideEffectExecuted, &$inspectedValue) {
+        $returnedResult = $result->inspect(function ($value) use (&$sideEffectExecuted, &$inspectedValue): void {
             $sideEffectExecuted = true;
             $inspectedValue = $value;
         });
@@ -25,9 +27,9 @@ class InspectTest extends TestCase
     public function testInspectOnErrDoesNotExecute(): void
     {
         $sideEffectExecuted = false;
-        
+
         $result = new Err('error message');
-        $returnedResult = $result->inspect(function($value) use (&$sideEffectExecuted) {
+        $returnedResult = $result->inspect(function ($value) use (&$sideEffectExecuted): void {
             $sideEffectExecuted = true;
         });
 
@@ -38,9 +40,9 @@ class InspectTest extends TestCase
     public function testInspectErrOnOkDoesNotExecute(): void
     {
         $sideEffectExecuted = false;
-        
+
         $result = new Ok(42);
-        $returnedResult = $result->inspectErr(function($error) use (&$sideEffectExecuted) {
+        $returnedResult = $result->inspectErr(function ($error) use (&$sideEffectExecuted): void {
             $sideEffectExecuted = true;
         });
 
@@ -52,9 +54,9 @@ class InspectTest extends TestCase
     {
         $sideEffectExecuted = false;
         $inspectedError = null;
-        
+
         $result = new Err('error message');
-        $returnedResult = $result->inspectErr(function($error) use (&$sideEffectExecuted, &$inspectedError) {
+        $returnedResult = $result->inspectErr(function ($error) use (&$sideEffectExecuted, &$inspectedError): void {
             $sideEffectExecuted = true;
             $inspectedError = $error;
         });
@@ -69,8 +71,8 @@ class InspectTest extends TestCase
         $okResult = new Ok(100);
         $errResult = new Err('test error');
 
-        $okInspected = $okResult->inspect(fn($value) => null);
-        $errInspected = $errResult->inspect(fn($value) => null);
+        $okInspected = $okResult->inspect(fn ($value) => null);
+        $errInspected = $errResult->inspect(fn ($value) => null);
 
         $this->assertSame($okResult, $okInspected, 'inspect() should return the same Ok instance');
         $this->assertSame($errResult, $errInspected, 'inspect() should return the same Err instance');
@@ -81,8 +83,8 @@ class InspectTest extends TestCase
         $okResult = new Ok(100);
         $errResult = new Err('test error');
 
-        $okInspected = $okResult->inspectErr(fn($error) => null);
-        $errInspected = $errResult->inspectErr(fn($error) => null);
+        $okInspected = $okResult->inspectErr(fn ($error) => null);
+        $errInspected = $errResult->inspectErr(fn ($error) => null);
 
         $this->assertSame($okResult, $okInspected, 'inspectErr() should return the same Ok instance');
         $this->assertSame($errResult, $errInspected, 'inspectErr() should return the same Err instance');
@@ -91,14 +93,14 @@ class InspectTest extends TestCase
     public function testInspectInMethodChain(): void
     {
         $inspectedValues = [];
-        
+
         $result = new Ok(10)
-            ->map(fn($x) => $x * 2)
-            ->inspect(function($value) use (&$inspectedValues) {
+            ->map(fn ($x) => $x * 2)
+            ->inspect(function ($value) use (&$inspectedValues): void {
                 $inspectedValues[] = $value;
             })
-            ->map(fn($x) => $x + 5)
-            ->inspect(function($value) use (&$inspectedValues) {
+            ->map(fn ($x) => $x + 5)
+            ->inspect(function ($value) use (&$inspectedValues): void {
                 $inspectedValues[] = $value;
             });
 
@@ -110,8 +112,8 @@ class InspectTest extends TestCase
     {
         $originalValue = 'original';
         $result = new Ok($originalValue);
-        
-        $result->inspect(function($value) {
+
+        $result->inspect(function ($value): void {
             // 値を変更しようとしても効果がないことを確認するため
             $value = 'modified';
         });
@@ -123,9 +125,9 @@ class InspectTest extends TestCase
     {
         $originalError = 'original error';
         $result = new Err($originalError);
-        
-        $result->inspectErr(function($error) {
-            // エラーを変更しようとしても効果がないことを確認するため  
+
+        $result->inspectErr(function ($error): void {
+            // エラーを変更しようとしても効果がないことを確認するため
             $error = 'modified error';
         });
 
@@ -135,20 +137,20 @@ class InspectTest extends TestCase
     public function testInspectSideEffectExecution(): void
     {
         $log = [];
-        
-        new Ok('test value')->inspect(function($value) use (&$log) {
+
+        new Ok('test value')->inspect(function ($value) use (&$log): void {
             $log[] = "Inspected value: $value";
         });
-        
-        new Err('test error')->inspectErr(function($error) use (&$log) {
+
+        new Err('test error')->inspectErr(function ($error) use (&$log): void {
             $log[] = "Inspected error: $error";
         });
 
         $expectedLog = [
             'Inspected value: test value',
-            'Inspected error: test error'
+            'Inspected error: test error',
         ];
-        
+
         $this->assertEquals($expectedLog, $log, 'inspect methods should execute side effects correctly');
     }
 }

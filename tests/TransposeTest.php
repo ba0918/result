@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Mizumi\Result\Tests;
 
+use Exception;
 use Mizumi\Result\Err;
 use Mizumi\Result\None;
 use Mizumi\Result\Ok;
@@ -9,6 +12,7 @@ use Mizumi\Result\Option;
 use Mizumi\Result\Result;
 use Mizumi\Result\Some;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 /**
  * transpose()メソッドの専用テスト
@@ -20,7 +24,7 @@ final class TransposeTest extends TestCase
         // Some(Ok(value)) → Ok(Some(value))
         $optionResult = Some::of(Ok::of('test'));
         $result = $optionResult->transpose();
-        
+
         $this->assertTrue($result->isOk());
         /** @var Option<mixed> $unwrapped */
         $unwrapped = $result->unwrap();
@@ -33,7 +37,7 @@ final class TransposeTest extends TestCase
         // Some(Err(error)) → Err(error)
         $optionResult = Some::of(Err::of('error'));
         $result = $optionResult->transpose();
-        
+
         $this->assertTrue($result->isErr());
         $this->assertSame('error', $result->unwrapErr());
     }
@@ -43,7 +47,7 @@ final class TransposeTest extends TestCase
         // None → Ok(None)
         $option = None::instance();
         $result = $option->transpose();
-        
+
         $this->assertTrue($result->isOk());
         /** @var Option<mixed> $unwrapped */
         $unwrapped = $result->unwrap();
@@ -55,7 +59,7 @@ final class TransposeTest extends TestCase
         // Some(non-Result) → Ok(Some(value))
         $option = Some::of('plain_value');
         $result = $option->transpose();
-        
+
         $this->assertTrue($result->isOk());
         /** @var Option<mixed> $unwrapped */
         $unwrapped = $result->unwrap();
@@ -68,7 +72,7 @@ final class TransposeTest extends TestCase
         // Ok(Some(value)) → Some(Ok(value))
         $resultOption = Ok::of(Some::of('test'));
         $option = $resultOption->transpose();
-        
+
         $this->assertTrue($option->isSome());
         /** @var Result<mixed,mixed> $unwrapped */
         $unwrapped = $option->unwrap();
@@ -81,7 +85,7 @@ final class TransposeTest extends TestCase
         // Ok(None) → None
         $resultOption = Ok::of(None::instance());
         $option = $resultOption->transpose();
-        
+
         $this->assertTrue($option->isNone());
     }
 
@@ -90,7 +94,7 @@ final class TransposeTest extends TestCase
         // Err(error) → Some(Err(error))
         $result = Err::of('error');
         $option = $result->transpose();
-        
+
         $this->assertTrue($option->isSome());
         /** @var Result<mixed,mixed> $unwrapped */
         $unwrapped = $option->unwrap();
@@ -103,7 +107,7 @@ final class TransposeTest extends TestCase
         // Ok(non-Option) → Some(Ok(value))
         $result = Ok::of('plain_value');
         $option = $result->transpose();
-        
+
         $this->assertTrue($option->isSome());
         /** @var Result<mixed,mixed> $unwrapped */
         $unwrapped = $option->unwrap();
@@ -117,7 +121,7 @@ final class TransposeTest extends TestCase
         $original = Some::of(Ok::of('value'));
         $transposed = $original->transpose(); // Ok(Some(value))
         $doubleTransposed = $transposed->transpose(); // Some(Ok(value))
-        
+
         // Some(Ok(value)) → Ok(Some(value)) → Some(Ok(value))
         $this->assertTrue($doubleTransposed->isSome());
         /** @var Result<mixed,mixed> $result */
@@ -131,7 +135,7 @@ final class TransposeTest extends TestCase
         // より複雑なケース
         $nested = Some::of(Ok::of(Some::of('nested')));
         $result = $nested->transpose(); // Ok(Some(Some('nested')))
-        
+
         $this->assertTrue($result->isOk());
         /** @var Option<mixed> $innerOption */
         $innerOption = $result->unwrap();
@@ -147,7 +151,7 @@ final class TransposeTest extends TestCase
         // null値のテスト
         $option = Some::of(Ok::of(null));
         $result = $option->transpose();
-        
+
         $this->assertTrue($result->isOk());
         /** @var Option<mixed> $innerOption */
         $innerOption = $result->unwrap();
@@ -161,7 +165,7 @@ final class TransposeTest extends TestCase
         $array = ['a', 'b', 'c'];
         $option = Some::of(Ok::of($array));
         $result = $option->transpose();
-        
+
         $this->assertTrue($result->isOk());
         /** @var Option<mixed> $innerOption */
         $innerOption = $result->unwrap();
@@ -172,12 +176,12 @@ final class TransposeTest extends TestCase
     public function testTransposeWithObjectValue(): void
     {
         // オブジェクト値のテスト
-        $obj = new \stdClass();
+        $obj = new stdClass();
         $obj->prop = 'value';
-        
+
         $option = Some::of(Ok::of($obj));
         $result = $option->transpose();
-        
+
         $this->assertTrue($result->isOk());
         /** @var Option<mixed> $innerOption */
         $innerOption = $result->unwrap();
@@ -188,12 +192,12 @@ final class TransposeTest extends TestCase
     public function testTransposeErrorPropagation(): void
     {
         // エラーの伝播テスト
-        $errors = ['error1', 'error2', new \Exception('exception')];
-        
+        $errors = ['error1', 'error2', new Exception('exception')];
+
         foreach ($errors as $error) {
             $option = Some::of(Err::of($error));
             $result = $option->transpose();
-            
+
             $this->assertTrue($result->isErr());
             $this->assertSame($error, $result->unwrapErr());
         }
@@ -203,19 +207,19 @@ final class TransposeTest extends TestCase
     {
         // メソッドチェーンでのtranspose()テスト
         $transposed = Some::of(Ok::of(42))->transpose();
-        
-        $mapped = $transposed->map(function(mixed $opt) {
+
+        $mapped = $transposed->map(function (mixed $opt) {
             /** @var Option<mixed> $opt */
-            return $opt->map(function(mixed $x): int {
+            return $opt->map(function (mixed $x): int {
                 /** @var int $x */
                 return $x * 2;
             });
         });
-        
+
         /** @var Option<mixed> $unwrapped */
         $unwrapped = $mapped->unwrap();
         $value = $unwrapped->unwrap();
-            
+
         $this->assertSame(84, $value);
     }
 }

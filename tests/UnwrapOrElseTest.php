@@ -1,7 +1,9 @@
 <?php
 
-use Mizumi\Result\Ok;
+declare(strict_types=1);
+
 use Mizumi\Result\Err;
+use Mizumi\Result\Ok;
 use PHPUnit\Framework\TestCase;
 
 class UnwrapOrElseTest extends TestCase
@@ -9,7 +11,7 @@ class UnwrapOrElseTest extends TestCase
     public function testUnwrapOrElseOnOk(): void
     {
         $result = new Ok(10);
-        $value = $result->unwrapOrElse(fn($err) => strlen($err));
+        $value = $result->unwrapOrElse(fn ($err) => strlen($err));
 
         $this->assertEquals(10, $value);
     }
@@ -17,7 +19,7 @@ class UnwrapOrElseTest extends TestCase
     public function testUnwrapOrElseOnErr(): void
     {
         $result = new Err('some error');
-        $value = $result->unwrapOrElse(fn($err) => strlen($err));
+        $value = $result->unwrapOrElse(fn ($err) => strlen($err));
 
         // 'some error' has 10 characters
         $this->assertEquals(10, $value);
@@ -27,8 +29,9 @@ class UnwrapOrElseTest extends TestCase
     {
         $closureExecuted = false;
         $result = new Ok(5);
-        $value = $result->unwrapOrElse(function($err) use (&$closureExecuted) {
+        $value = $result->unwrapOrElse(function ($err) use (&$closureExecuted) {
             $closureExecuted = true;
+
             return strlen($err);
         });
 

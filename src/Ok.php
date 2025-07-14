@@ -1,13 +1,17 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Mizumi\Result;
 
 use Mizumi\Result\Exception\UnwrapException;
+use Override;
 
 /**
  * 成功を表すクラス
  *
  * @template T
+ *
  * @implements Result<T, never>
  */
 final class Ok implements Result
@@ -17,11 +21,11 @@ final class Ok implements Result
      */
     public function __construct(private readonly mixed $value)
     {
-
     }
 
     /**
      * @param T $value
+     *
      * @return self<T>
      */
     public static function of(mixed $value): self
@@ -29,49 +33,49 @@ final class Ok implements Result
         return new self($value);
     }
 
-    #[\Override]
+    #[Override]
     public function isOk(): bool
     {
         return true;
     }
 
-    #[\Override]
+    #[Override]
     public function isErr(): bool
     {
         return false;
     }
 
-    #[\Override]
+    #[Override]
     public function isOkAnd(callable $predicate): bool
     {
         return $predicate($this->value);
     }
 
-    #[\Override]
+    #[Override]
     public function isErrAnd(callable $predicate): bool
     {
         return false;
     }
 
-    #[\Override]
+    #[Override]
     public function map(callable $fn): Result
     {
         return new Ok($fn($this->value));
     }
 
-    #[\Override]
+    #[Override]
     public function mapErr(callable $fn): Result
     {
         return $this;
     }
 
-    #[\Override]
+    #[Override]
     public function mapOr(callable $fn, mixed $default): mixed
     {
         return $fn($this->value);
     }
 
-    #[\Override]
+    #[Override]
     public function mapOrElse(callable $fn, callable $defaultFn): mixed
     {
         return $fn($this->value);
@@ -80,89 +84,92 @@ final class Ok implements Result
     /**
      * @template U
      * @template F
+     *
      * @param callable(T): Result<U, F> $fn
+     *
      * @return Result<U, F>
      */
-    #[\Override]
+    #[Override]
     public function andThen(callable $fn): Result
     {
         return $fn($this->value);
     }
 
-    #[\Override]
+    #[Override]
     public function unwrap(): mixed
     {
         return $this->value;
     }
 
-    #[\Override]
+    #[Override]
     public function unwrapErr(): mixed
     {
         throw new UnwrapException('Called unwrapErr() on an Ok value: ' . print_r($this->value, true));
     }
 
-    #[\Override]
+    #[Override]
     public function unwrapOr(mixed $default): mixed
     {
         return $this->value;
     }
 
-    #[\Override]
+    #[Override]
     public function unwrapOrElse(callable $fn): mixed
     {
         return $this->value;
     }
 
-    #[\Override]
+    #[Override]
     public function expect(string $message): mixed
     {
         return $this->value;
     }
 
-    #[\Override]
+    #[Override]
     public function inspect(callable $fn): Result
     {
         $fn($this->value);
+
         return $this;
     }
 
-    #[\Override]
+    #[Override]
     public function inspectErr(callable $fn): Result
     {
         return $this;
     }
 
-    #[\Override]
+    #[Override]
     public function or(Result $res): Result
     {
         return $this;
     }
 
-    #[\Override]
+    #[Override]
     public function orElse(callable $fn): Result
     {
         return $this;
     }
 
-    #[\Override]
+    #[Override]
     public function and(Result $res): Result
     {
         return $res;
     }
 
-    #[\Override]
+    #[Override]
     public function contains(mixed $value): bool
     {
         return $this->value === $value;
     }
 
-    #[\Override]
+    #[Override]
     public function containsErr(mixed $error): bool
     {
         return false;
     }
 
-    #[\Override]
+    #[Override]
     public function flatten(): Result
     {
         return $this->value instanceof Result ? $this->value : $this;
@@ -171,7 +178,7 @@ final class Ok implements Result
     /**
      * @return Option<mixed>
      */
-    #[\Override]
+    #[Override]
     public function transpose(): Option
     {
         // Ok(Option) の場合
@@ -179,30 +186,30 @@ final class Ok implements Result
             if ($this->value->isSome()) {
                 // Ok(Some(value)) → Some(Ok(value))
                 return Some::of(Ok::of($this->value->unwrap()));
-            } else {
-                // Ok(None) → None
-                return None::instance();
             }
+
+            // Ok(None) → None
+            return None::instance();
         }
 
         // Ok(non-Option) → Some(Ok(value))
         return Some::of($this);
     }
 
-    #[\Override]
+    #[Override]
     public function ok(): Option
     {
         /** @phpstan-ignore return.type */
         return Some::of($this->value);
     }
 
-    #[\Override]
+    #[Override]
     public function err(): Option
     {
         return None::instance();
     }
 
-    #[\Override]
+    #[Override]
     public function expectErr(string $message): mixed
     {
         throw new UnwrapException($message . ': ' . print_r($this->value, true));

@@ -1,13 +1,16 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Mizumi\Result;
 
-use Mizumi\Result\Exception\UnwrapException;
+use Override;
 
 /**
  * 値を持つOptionを表すクラス
  *
  * @template T
+ *
  * @implements Option<T>
  */
 final class Some implements Option
@@ -21,6 +24,7 @@ final class Some implements Option
 
     /**
      * @param T $value
+     *
      * @return self<T>
      */
     public static function of(mixed $value): self
@@ -33,7 +37,7 @@ final class Some implements Option
      *
      * @return bool
      */
-    #[\Override]
+    #[Override]
     public function isSome(): bool
     {
         return true;
@@ -44,7 +48,7 @@ final class Some implements Option
      *
      * @return bool
      */
-    #[\Override]
+    #[Override]
     public function isNone(): bool
     {
         return false;
@@ -54,9 +58,10 @@ final class Some implements Option
      * 値を持っている場合に述語関数で値を検証する
      *
      * @param callable(T): bool $predicate
+     *
      * @return bool
      */
-    #[\Override]
+    #[Override]
     public function isSomeAnd(callable $predicate): bool
     {
         return $predicate($this->value);
@@ -66,10 +71,12 @@ final class Some implements Option
      * 値を持っている場合、中の値に関数を適用する
      *
      * @template U
+     *
      * @param callable(T): U $fn
+     *
      * @return Option<U>
      */
-    #[\Override]
+    #[Override]
     public function map(callable $fn): Option
     {
         return new Some($fn($this->value));
@@ -79,11 +86,13 @@ final class Some implements Option
      * 値を持っている場合は関数を適用し、持っていない場合はデフォルト値を返す
      *
      * @template U
+     *
      * @param callable(T): U $fn
      * @param U $default
+     *
      * @return U
      */
-    #[\Override]
+    #[Override]
     public function mapOr(callable $fn, mixed $default): mixed
     {
         return $fn($this->value);
@@ -93,11 +102,13 @@ final class Some implements Option
      * 値を持っている場合は関数を適用し、持っていない場合はクロージャの結果を返す
      *
      * @template U
+     *
      * @param callable(T): U $fn
      * @param callable(): U $defaultFn
+     *
      * @return U
      */
-    #[\Override]
+    #[Override]
     public function mapOrElse(callable $fn, callable $defaultFn): mixed
     {
         return $fn($this->value);
@@ -107,10 +118,12 @@ final class Some implements Option
      * 値を持っている場合、中の値に関数を適用し、その結果を返す
      *
      * @template U
+     *
      * @param callable(T): Option<U> $fn
+     *
      * @return Option<U>
      */
-    #[\Override]
+    #[Override]
     public function andThen(callable $fn): Option
     {
         return $fn($this->value);
@@ -120,9 +133,10 @@ final class Some implements Option
      * 値を持っている場合、述語関数を満たすかチェックする
      *
      * @param callable(T): bool $predicate
+     *
      * @return Option<T>
      */
-    #[\Override]
+    #[Override]
     public function filter(callable $predicate): Option
     {
         return $predicate($this->value) ? $this : None::instance();
@@ -133,7 +147,7 @@ final class Some implements Option
      *
      * @return T
      */
-    #[\Override]
+    #[Override]
     public function unwrap(): mixed
     {
         return $this->value;
@@ -143,10 +157,12 @@ final class Some implements Option
      * 値を持っていれば値を返し、持っていなければデフォルト値を返す
      *
      * @template U
+     *
      * @param U $default
+     *
      * @return T|U
      */
-    #[\Override]
+    #[Override]
     public function unwrapOr(mixed $default): mixed
     {
         return $this->value;
@@ -156,10 +172,12 @@ final class Some implements Option
      * 値を持っていれば値を返し、持っていなければクロージャの結果を返す
      *
      * @template U
+     *
      * @param callable(): U $fn
+     *
      * @return T|U
      */
-    #[\Override]
+    #[Override]
     public function unwrapOrElse(callable $fn): mixed
     {
         return $this->value;
@@ -169,9 +187,10 @@ final class Some implements Option
      * 値を持っていれば値を返し、持っていなければ指定されたメッセージで例外をスローする
      *
      * @param string $message
+     *
      * @return T
      */
-    #[\Override]
+    #[Override]
     public function expect(string $message): mixed
     {
         return $this->value;
@@ -181,12 +200,14 @@ final class Some implements Option
      * 値を検査し、副作用を実行する（値は変更しない）
      *
      * @param callable(T): void $fn
+     *
      * @return Option<T>
      */
-    #[\Override]
+    #[Override]
     public function inspect(callable $fn): Option
     {
         $fn($this->value);
+
         return $this;
     }
 
@@ -194,10 +215,12 @@ final class Some implements Option
      * Noneの場合に代替のOptionを返す（即座評価）
      *
      * @template U
+     *
      * @param Option<U> $opt
+     *
      * @return Option<T|U>
      */
-    #[\Override]
+    #[Override]
     public function or(Option $opt): Option
     {
         return $this;
@@ -207,10 +230,12 @@ final class Some implements Option
      * Noneの場合に代替のOptionを返す（遅延評価）
      *
      * @template U
+     *
      * @param callable(): Option<U> $fn
+     *
      * @return Option<T|U>
      */
-    #[\Override]
+    #[Override]
     public function orElse(callable $fn): Option
     {
         return $this;
@@ -220,10 +245,12 @@ final class Some implements Option
      * Someの場合に別のOptionを返し、Noneの場合は自身を返す（即座評価）
      *
      * @template U
+     *
      * @param Option<U> $opt
+     *
      * @return Option<U>
      */
-    #[\Override]
+    #[Override]
     public function and(Option $opt): Option
     {
         return $opt;
@@ -233,9 +260,10 @@ final class Some implements Option
      * Some値が指定された値を含むかどうかを確認する
      *
      * @param mixed $value 確認したい値
+     *
      * @return bool Some値が指定値と厳密に等価な場合true、それ以外はfalse
      */
-    #[\Override]
+    #[Override]
     public function contains(mixed $value): bool
     {
         return $this->value === $value;
@@ -246,7 +274,7 @@ final class Some implements Option
      *
      * @return Result<mixed, mixed>
      */
-    #[\Override]
+    #[Override]
     public function transpose(): Result
     {
         // Some(Result) の場合
@@ -254,10 +282,10 @@ final class Some implements Option
             if ($this->value->isOk()) {
                 // Some(Ok(value)) → Ok(Some(value))
                 return Ok::of(Some::of($this->value->unwrap()));
-            } else {
-                // Some(Err(error)) → Err(error)
-                return Err::of($this->value->unwrapErr());
             }
+
+            // Some(Err(error)) → Err(error)
+            return Err::of($this->value->unwrapErr());
         }
 
         // Some(non-Result) → Ok(Some(value))
@@ -268,9 +296,10 @@ final class Some implements Option
      * OptionをResultに変換する（Noneの場合は指定されたエラーでErr）
      *
      * @param mixed $err
+     *
      * @return Result<mixed, mixed>
      */
-    #[\Override]
+    #[Override]
     public function okOr(mixed $err): Result
     {
         return Ok::of($this->value);
@@ -280,9 +309,10 @@ final class Some implements Option
      * OptionをResultに変換する（Noneの場合はクロージャの結果でErr）
      *
      * @param callable $fn
+     *
      * @return Result<mixed, mixed>
      */
-    #[\Override]
+    #[Override]
     public function okOrElse(callable $fn): Result
     {
         return Ok::of($this->value);
@@ -293,7 +323,7 @@ final class Some implements Option
      *
      * @return Option<mixed>
      */
-    #[\Override]
+    #[Override]
     public function flatten(): Option
     {
         return $this->value instanceof Option ? $this->value : $this;
@@ -303,10 +333,12 @@ final class Some implements Option
      * 排他的OR操作：片方のみSomeの場合にSome、両方Some/両方Noneの場合にNone
      *
      * @template U
+     *
      * @param Option<U> $opt
+     *
      * @return Option<T|U>
      */
-    #[\Override]
+    #[Override]
     public function xor(Option $opt): Option
     {
         return $opt->isNone() ? $this : None::instance();
@@ -316,10 +348,12 @@ final class Some implements Option
      * 2つのOptionを結合：両方Someの場合にタプル、片方でもNoneの場合にNone
      *
      * @template U
+     *
      * @param Option<U> $opt
+     *
      * @return Option<array{T, U}>
      */
-    #[\Override]
+    #[Override]
     public function zip(Option $opt): Option
     {
         /** @phpstan-ignore return.type,argument.type */

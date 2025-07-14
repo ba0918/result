@@ -1,7 +1,9 @@
 <?php
 
-use Mizumi\Result\Ok;
+declare(strict_types=1);
+
 use Mizumi\Result\Err;
+use Mizumi\Result\Ok;
 use PHPUnit\Framework\TestCase;
 
 class AndMethodTest extends TestCase
@@ -12,9 +14,9 @@ class AndMethodTest extends TestCase
     {
         $first = new Ok(10);
         $second = new Ok(20);
-        
+
         $result = $first->and($second);
-        
+
         $this->assertTrue($result->isOk());
         $this->assertEquals(20, $result->unwrap());
     }
@@ -23,9 +25,9 @@ class AndMethodTest extends TestCase
     {
         $ok = new Ok(10);
         $err = new Err('error');
-        
+
         $result = $ok->and($err);
-        
+
         $this->assertTrue($result->isErr());
         $this->assertEquals('error', $result->unwrapErr());
     }
@@ -34,9 +36,9 @@ class AndMethodTest extends TestCase
     {
         $err = new Err('error');
         $ok = new Ok(20);
-        
+
         $result = $err->and($ok);
-        
+
         $this->assertTrue($result->isErr());
         $this->assertEquals('error', $result->unwrapErr());
     }
@@ -45,9 +47,9 @@ class AndMethodTest extends TestCase
     {
         $firstErr = new Err('first error');
         $secondErr = new Err('second error');
-        
+
         $result = $firstErr->and($secondErr);
-        
+
         $this->assertTrue($result->isErr());
         $this->assertEquals('first error', $result->unwrapErr());
     }
@@ -58,9 +60,9 @@ class AndMethodTest extends TestCase
     {
         $intOk = new Ok(123);
         $stringOk = new Ok('text');
-        
+
         $result = $intOk->and($stringOk);
-        
+
         $this->assertTrue($result->isOk());
         $this->assertEquals('text', $result->unwrap());
     }
@@ -69,9 +71,9 @@ class AndMethodTest extends TestCase
     {
         $stringErr = new Err('text error');
         $intErr = new Err(404);
-        
+
         $result = $stringErr->and($intErr);
-        
+
         $this->assertTrue($result->isErr());
         $this->assertEquals('text error', $result->unwrapErr());
     }
@@ -83,7 +85,7 @@ class AndMethodTest extends TestCase
         $result = (new Ok('start'))
             ->and(new Ok('middle'))
             ->and(new Ok('end'));
-            
+
         $this->assertTrue($result->isOk());
         $this->assertEquals('end', $result->unwrap());
     }
@@ -93,7 +95,7 @@ class AndMethodTest extends TestCase
         $result = (new Ok('start'))
             ->and(new Err('failed'))
             ->and(new Ok('never reached'));
-            
+
         $this->assertTrue($result->isErr());
         $this->assertEquals('failed', $result->unwrapErr());
     }
@@ -101,10 +103,10 @@ class AndMethodTest extends TestCase
     public function testAndWithOtherMethods(): void
     {
         $result = (new Ok(10))
-            ->map(fn($x) => $x * 2)  // Ok(20)
+            ->map(fn ($x) => $x * 2)  // Ok(20)
             ->and(new Ok('success')) // Ok('success')
             ->or(new Ok('fallback')); // Ok('success')
-            
+
         $this->assertTrue($result->isOk());
         $this->assertEquals('success', $result->unwrap());
     }
@@ -112,10 +114,10 @@ class AndMethodTest extends TestCase
     public function testAndWithOtherMethodsError(): void
     {
         $result = (new Err('initial error'))
-            ->mapErr(fn($e) => 'mapped: ' . $e)  // Err('mapped: initial error')
+            ->mapErr(fn ($e) => 'mapped: ' . $e)  // Err('mapped: initial error')
             ->and(new Ok('never used'))          // Err('mapped: initial error')
             ->or(new Ok('recovered'));           // Ok('recovered')
-            
+
         $this->assertTrue($result->isOk());
         $this->assertEquals('recovered', $result->unwrap());
     }
@@ -125,21 +127,21 @@ class AndMethodTest extends TestCase
     public function testAndWithComplexTypes(): void
     {
         $arrayOk = new Ok(['key' => 'value']);
-        $objectOk = new Ok((object)['prop' => 'data']);
-        
+        $objectOk = new Ok((object) ['prop' => 'data']);
+
         $result = $arrayOk->and($objectOk);
-        
+
         $this->assertTrue($result->isOk());
-        $this->assertEquals((object)['prop' => 'data'], $result->unwrap());
+        $this->assertEquals((object) ['prop' => 'data'], $result->unwrap());
     }
 
     public function testAndWithComplexErrorTypes(): void
     {
         $arrayErr = new Err(['code' => 404, 'message' => 'Not found']);
         $exceptionErr = new Err(new \Exception('Exception error'));
-        
+
         $result = $arrayErr->and($exceptionErr);
-        
+
         $this->assertTrue($result->isErr());
         $this->assertEquals(['code' => 404, 'message' => 'Not found'], $result->unwrapErr());
     }
@@ -150,9 +152,9 @@ class AndMethodTest extends TestCase
     {
         $nullOk = new Ok(null);
         $valueOk = new Ok('value');
-        
+
         $result = $nullOk->and($valueOk);
-        
+
         $this->assertTrue($result->isOk());
         $this->assertEquals('value', $result->unwrap());
     }
@@ -161,9 +163,9 @@ class AndMethodTest extends TestCase
     {
         $nullErr = new Err(null);
         $valueErr = new Err('error');
-        
+
         $result = $nullErr->and($valueErr);
-        
+
         $this->assertTrue($result->isErr());
         $this->assertNull($result->unwrapErr());
     }

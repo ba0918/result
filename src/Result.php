@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Mizumi\Result;
 
@@ -30,6 +32,7 @@ interface Result
      * 成功している場合に述語関数で値を検証する
      *
      * @param callable(T): bool $predicate
+     *
      * @return bool
      */
     public function isOkAnd(callable $predicate): bool;
@@ -38,6 +41,7 @@ interface Result
      * 失敗している場合に述語関数でエラーを検証する
      *
      * @param callable(E): bool $predicate
+     *
      * @return bool
      */
     public function isErrAnd(callable $predicate): bool;
@@ -46,7 +50,9 @@ interface Result
      * 成功している場合、中の値に関数を適用する
      *
      * @template U
+     *
      * @param callable(T): U $fn
+     *
      * @return Result<U, E>
      */
     public function map(callable $fn): Result;
@@ -55,7 +61,9 @@ interface Result
      * 失敗している場合、中のエラーに関数を適用する
      *
      * @template F
+     *
      * @param callable(E): F $fn
+     *
      * @return Result<T, F>
      */
     public function mapErr(callable $fn): Result;
@@ -64,8 +72,10 @@ interface Result
      * 成功している場合は関数を適用し、失敗している場合はデフォルト値を返す
      *
      * @template U
+     *
      * @param callable(T): U $fn
      * @param U $default
+     *
      * @return U
      */
     public function mapOr(callable $fn, mixed $default): mixed;
@@ -74,8 +84,10 @@ interface Result
      * 成功している場合は関数を適用し、失敗している場合はクロージャの結果を返す
      *
      * @template U
+     *
      * @param callable(T): U $fn
      * @param callable(E): U $defaultFn
+     *
      * @return U
      */
     public function mapOrElse(callable $fn, callable $defaultFn): mixed;
@@ -85,7 +97,9 @@ interface Result
      *
      * @template U
      * @template F
+     *
      * @param callable(T): Result<U, F> $fn
+     *
      * @return Result<U, E|F>
      */
     public function andThen(callable $fn): Result;
@@ -93,16 +107,18 @@ interface Result
     /**
      * 成功していれば値を返し、失敗していれば例外をスローする
      *
-     * @return T
      * @throws UnwrapException
+     *
+     * @return T
      */
     public function unwrap(): mixed;
 
     /**
      * 失敗していれば値を返し、成功していれば例外をスローする
      *
-     * @return E
      * @throws UnwrapException
+     *
+     * @return E
      */
     public function unwrapErr(): mixed;
 
@@ -110,7 +126,9 @@ interface Result
      * 成功していれば値を返し、失敗していればデフォルト値を返す
      *
      * @template U
+     *
      * @param U $default
+     *
      * @return T|U
      */
     public function unwrapOr(mixed $default): mixed;
@@ -119,7 +137,9 @@ interface Result
      * 成功していれば値を返し、失敗していればクロージャの結果を返す
      *
      * @template U
+     *
      * @param callable(E): U $fn
+     *
      * @return T|U
      */
     public function unwrapOrElse(callable $fn): mixed;
@@ -128,8 +148,10 @@ interface Result
      * 成功していれば値を返し、失敗していれば指定されたメッセージで例外をスローする
      *
      * @param string $message
-     * @return T
+     *
      * @throws UnwrapException
+     *
+     * @return T
      */
     public function expect(string $message): mixed;
 
@@ -137,6 +159,7 @@ interface Result
      * 成功値を検査し、副作用を実行する（値は変更しない）
      *
      * @param callable(T): void $fn
+     *
      * @return Result<T, E>
      */
     public function inspect(callable $fn): Result;
@@ -145,6 +168,7 @@ interface Result
      * エラー値を検査し、副作用を実行する（エラーは変更しない）
      *
      * @param callable(E): void $fn
+     *
      * @return Result<T, E>
      */
     public function inspectErr(callable $fn): Result;
@@ -154,7 +178,9 @@ interface Result
      *
      * @template U
      * @template F
+     *
      * @param Result<U, F> $res
+     *
      * @return Result<T|U, F>
      */
     public function or(Result $res): Result;
@@ -164,7 +190,9 @@ interface Result
      *
      * @template U
      * @template F
+     *
      * @param callable(E): Result<U, F> $fn
+     *
      * @return Result<T|U, F>
      */
     public function orElse(callable $fn): Result;
@@ -174,7 +202,9 @@ interface Result
      *
      * @template U
      * @template F
+     *
      * @param Result<U, F> $res
+     *
      * @return Result<U, E|F>
      */
     public function and(Result $res): Result;
@@ -183,6 +213,7 @@ interface Result
      * Ok値が指定された値を含むかどうかを確認する
      *
      * @param mixed $value 確認したい値
+     *
      * @return bool Ok値が指定値と厳密に等価な場合true、それ以外はfalse
      */
     public function contains(mixed $value): bool;
@@ -191,6 +222,7 @@ interface Result
      * Err値が指定されたエラーを含むかどうかを確認する
      *
      * @param mixed $error 確認したいエラー値
+     *
      * @return bool Err値が指定エラーと厳密に等価な場合true、それ以外はfalse
      */
     public function containsErr(mixed $error): bool;
@@ -227,8 +259,10 @@ interface Result
      * 失敗していればエラー値を返し、成功していれば指定されたメッセージで例外をスローする
      *
      * @param string $message
-     * @return E
+     *
      * @throws UnwrapException
+     *
+     * @return E
      */
     public function expectErr(string $message): mixed;
 }

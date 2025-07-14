@@ -1,13 +1,17 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Mizumi\Result;
 
 use Mizumi\Result\Exception\UnwrapException;
+use Override;
 
 /**
  * 失敗を表すクラス
  *
  * @template E
+ *
  * @implements Result<never, E>
  */
 final class Err implements Result
@@ -17,11 +21,11 @@ final class Err implements Result
      */
     public function __construct(private readonly mixed $error)
     {
-
     }
 
     /**
      * @param E $error
+     *
      * @return self<E>
      */
     public static function of(mixed $error): self
@@ -29,49 +33,49 @@ final class Err implements Result
         return new self($error);
     }
 
-    #[\Override]
+    #[Override]
     public function isOk(): bool
     {
         return false;
     }
 
-    #[\Override]
+    #[Override]
     public function isErr(): bool
     {
         return true;
     }
 
-    #[\Override]
+    #[Override]
     public function isOkAnd(callable $predicate): bool
     {
         return false;
     }
 
-    #[\Override]
+    #[Override]
     public function isErrAnd(callable $predicate): bool
     {
         return $predicate($this->error);
     }
 
-    #[\Override]
+    #[Override]
     public function map(callable $fn): Result
     {
         return $this;
     }
 
-    #[\Override]
+    #[Override]
     public function mapErr(callable $fn): Result
     {
         return new Err($fn($this->error));
     }
 
-    #[\Override]
+    #[Override]
     public function mapOr(callable $fn, mixed $default): mixed
     {
         return $default;
     }
 
-    #[\Override]
+    #[Override]
     public function mapOrElse(callable $fn, callable $defaultFn): mixed
     {
         return $defaultFn($this->error);
@@ -80,89 +84,92 @@ final class Err implements Result
     /**
      * @template U
      * @template F
+     *
      * @param callable(never): Result<U, F> $fn
+     *
      * @return Result<U, E>
      */
-    #[\Override]
+    #[Override]
     public function andThen(callable $fn): Result
     {
         return $this;
     }
 
-    #[\Override]
+    #[Override]
     public function unwrap(): mixed
     {
         throw new UnwrapException('Called unwrap() on an Err value: ' . print_r($this->error, true));
     }
 
-    #[\Override]
+    #[Override]
     public function unwrapErr(): mixed
     {
         return $this->error;
     }
 
-    #[\Override]
+    #[Override]
     public function unwrapOr(mixed $default): mixed
     {
         return $default;
     }
 
-    #[\Override]
+    #[Override]
     public function unwrapOrElse(callable $fn): mixed
     {
         return $fn($this->error);
     }
 
-    #[\Override]
+    #[Override]
     public function expect(string $message): mixed
     {
         throw new UnwrapException($message . ': ' . print_r($this->error, true));
     }
 
-    #[\Override]
+    #[Override]
     public function inspect(callable $fn): Result
     {
         return $this;
     }
 
-    #[\Override]
+    #[Override]
     public function inspectErr(callable $fn): Result
     {
         $fn($this->error);
+
         return $this;
     }
 
-    #[\Override]
+    #[Override]
     public function or(Result $res): Result
     {
         return $res;
     }
 
-    #[\Override]
+    #[Override]
     public function orElse(callable $fn): Result
     {
         return $fn($this->error);
     }
 
-    #[\Override]
+    #[Override]
     public function and(Result $res): Result
     {
         return $this;
     }
 
-    #[\Override]
+    #[Override]
     public function contains(mixed $value): bool
     {
         return false;
     }
 
-    #[\Override]
+    #[Override]
     public function containsErr(mixed $error): bool
     {
         return $this->error === $error;
     }
 
-    #[\Override]
+    #[Override]
     public function flatten(): Result
     {
         return $this;
@@ -171,27 +178,27 @@ final class Err implements Result
     /**
      * @return Option<mixed>
      */
-    #[\Override]
+    #[Override]
     public function transpose(): Option
     {
         // Err(error) → Some(Err(error))
         return Some::of($this);
     }
 
-    #[\Override]
+    #[Override]
     public function ok(): Option
     {
         return None::instance();
     }
 
-    #[\Override]
+    #[Override]
     public function err(): Option
     {
         /** @phpstan-ignore return.type */
         return Some::of($this->error);
     }
 
-    #[\Override]
+    #[Override]
     public function expectErr(string $message): mixed
     {
         return $this->error;
