@@ -8,7 +8,7 @@ use Mizumi\Result\Exception\UnwrapException;
 use Override;
 
 /**
- * 値を持たないOptionを表すクラス
+ * Class representing an Option without a value
  *
  * @implements Option<never>
  */

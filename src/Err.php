@@ -8,7 +8,7 @@ use Mizumi\Result\Exception\UnwrapException;
 use Override;
 
 /**
- * 失敗を表すクラス
+ * Class representing failure
  *
  * @template E
  *

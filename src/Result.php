@@ -7,29 +7,29 @@ namespace Mizumi\Result;
 use Mizumi\Result\Exception\UnwrapException;
 
 /**
- * 成功/失敗を表現する為の型
+ * Type for representing success/failure states
  *
- * @template T 成功時の値の型
- * @template E 失敗時のエラーの型
+ * @template T The type of the success value
+ * @template E The type of the error value
  */
 interface Result
 {
     /**
-     * 成功しているか確認する
+     * Checks if the result is a success
      *
      * @return bool
      */
     public function isOk(): bool;
 
     /**
-     * 失敗しているか確認する
+     * Checks if the result is an error
      *
      * @return bool
      */
     public function isErr(): bool;
 
     /**
-     * 成功している場合に述語関数で値を検証する
+     * Validates the value with a predicate function if successful
      *
      * @param callable(T): bool $predicate
      *
@@ -38,7 +38,7 @@ interface Result
     public function isOkAnd(callable $predicate): bool;
 
     /**
-     * 失敗している場合に述語関数でエラーを検証する
+     * Validates the error with a predicate function if failed
      *
      * @param callable(E): bool $predicate
      *
@@ -47,7 +47,7 @@ interface Result
     public function isErrAnd(callable $predicate): bool;
 
     /**
-     * 成功している場合、中の値に関数を適用する
+     * Applies a function to the contained value if successful
      *
      * @template U
      *
@@ -58,7 +58,7 @@ interface Result
     public function map(callable $fn): Result;
 
     /**
-     * 失敗している場合、中のエラーに関数を適用する
+     * Applies a function to the contained error if failed
      *
      * @template F
      *
@@ -69,7 +69,7 @@ interface Result
     public function mapErr(callable $fn): Result;
 
     /**
-     * 成功している場合は関数を適用し、失敗している場合はデフォルト値を返す
+     * Applies a function if successful, returns default value if failed
      *
      * @template U
      *
@@ -81,7 +81,7 @@ interface Result
     public function mapOr(callable $fn, mixed $default): mixed;
 
     /**
-     * 成功している場合は関数を適用し、失敗している場合はクロージャの結果を返す
+     * Applies a function if successful, returns closure result if failed
      *
      * @template U
      *
@@ -93,7 +93,7 @@ interface Result
     public function mapOrElse(callable $fn, callable $defaultFn): mixed;
 
     /**
-     * 成功している場合、中の値に関数を適用し、その結果を返す
+     * Applies a function to the contained value if successful and returns the result
      *
      * @template U
      * @template F
@@ -105,7 +105,7 @@ interface Result
     public function andThen(callable $fn): Result;
 
     /**
-     * 成功していれば値を返し、失敗していれば例外をスローする
+     * Returns the value if successful, throws exception if failed
      *
      * @throws UnwrapException
      *
@@ -114,7 +114,7 @@ interface Result
     public function unwrap(): mixed;
 
     /**
-     * 失敗していれば値を返し、成功していれば例外をスローする
+     * Returns the error if failed, throws exception if successful
      *
      * @throws UnwrapException
      *
@@ -123,7 +123,7 @@ interface Result
     public function unwrapErr(): mixed;
 
     /**
-     * 成功していれば値を返し、失敗していればデフォルト値を返す
+     * Returns the value if successful, returns default value if failed
      *
      * @template U
      *
@@ -134,7 +134,7 @@ interface Result
     public function unwrapOr(mixed $default): mixed;
 
     /**
-     * 成功していれば値を返し、失敗していればクロージャの結果を返す
+     * Returns the value if successful, returns closure result if failed
      *
      * @template U
      *
@@ -145,7 +145,7 @@ interface Result
     public function unwrapOrElse(callable $fn): mixed;
 
     /**
-     * 成功していれば値を返し、失敗していれば指定されたメッセージで例外をスローする
+     * Returns the value if successful, throws exception with specified message if failed
      *
      * @param string $message
      *
@@ -156,7 +156,7 @@ interface Result
     public function expect(string $message): mixed;
 
     /**
-     * 成功値を検査し、副作用を実行する（値は変更しない）
+     * Inspects the success value and executes side effects (value remains unchanged)
      *
      * @param callable(T): void $fn
      *
@@ -165,7 +165,7 @@ interface Result
     public function inspect(callable $fn): Result;
 
     /**
-     * エラー値を検査し、副作用を実行する（エラーは変更しない）
+     * Inspects the error value and executes side effects (error remains unchanged)
      *
      * @param callable(E): void $fn
      *
@@ -174,7 +174,7 @@ interface Result
     public function inspectErr(callable $fn): Result;
 
     /**
-     * Errの場合に代替のResultを返す（即座評価）
+     * Returns alternative Result if Err (eager evaluation)
      *
      * @template U
      * @template F
@@ -186,7 +186,7 @@ interface Result
     public function or(Result $res): Result;
 
     /**
-     * Errの場合に代替のResultを返す（遅延評価）
+     * Returns alternative Result if Err (lazy evaluation)
      *
      * @template U
      * @template F
@@ -198,7 +198,7 @@ interface Result
     public function orElse(callable $fn): Result;
 
     /**
-     * Okの場合に別のResultを返し、Errの場合は自身を返す（即座評価）
+     * Returns another Result if Ok, returns self if Err (eager evaluation)
      *
      * @template U
      * @template F
@@ -210,53 +210,53 @@ interface Result
     public function and(Result $res): Result;
 
     /**
-     * Ok値が指定された値を含むかどうかを確認する
+     * Checks if Ok value contains the specified value
      *
-     * @param mixed $value 確認したい値
+     * @param mixed $value The value to check
      *
-     * @return bool Ok値が指定値と厳密に等価な場合true、それ以外はfalse
+     * @return bool true if Ok value strictly equals the specified value, false otherwise
      */
     public function contains(mixed $value): bool;
 
     /**
-     * Err値が指定されたエラーを含むかどうかを確認する
+     * Checks if Err value contains the specified error
      *
-     * @param mixed $error 確認したいエラー値
+     * @param mixed $error The error value to check
      *
-     * @return bool Err値が指定エラーと厳密に等価な場合true、それ以外はfalse
+     * @return bool true if Err value strictly equals the specified error, false otherwise
      */
     public function containsErr(mixed $error): bool;
 
     /**
-     * ネストしたResultを一段階平坦化する
+     * Flattens a nested Result by one level
      *
      * @return Result<T, E>
      */
     public function flatten(): Result;
 
     /**
-     * Result<Option<T>, E> → Option<Result<T, E>> への変換
+     * Converts Result<Option<T>, E> → Option<Result<T, E>>
      *
      * @return Option<mixed>
      */
     public function transpose(): Option;
 
     /**
-     * 成功値をOptionとして取得する
+     * Gets the success value as Option
      *
      * @return Option<T>
      */
     public function ok(): Option;
 
     /**
-     * エラー値をOptionとして取得する
+     * Gets the error value as Option
      *
      * @return Option<E>
      */
     public function err(): Option;
 
     /**
-     * 失敗していればエラー値を返し、成功していれば指定されたメッセージで例外をスローする
+     * Returns the error value if failed, throws exception with specified message if successful
      *
      * @param string $message
      *

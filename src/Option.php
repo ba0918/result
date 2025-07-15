@@ -7,28 +7,28 @@ namespace Mizumi\Result;
 use Mizumi\Result\Exception\UnwrapException;
 
 /**
- * 値の有無を表現する為の型
+ * Type for representing presence/absence of a value
  *
- * @template T 値の型
+ * @template T The type of the value
  */
 interface Option
 {
     /**
-     * 値を持っているか確認する
+     * Checks if a value is present
      *
      * @return bool
      */
     public function isSome(): bool;
 
     /**
-     * 値を持っていないか確認する
+     * Checks if no value is present
      *
      * @return bool
      */
     public function isNone(): bool;
 
     /**
-     * 値を持っている場合に述語関数で値を検証する
+     * Validates the value with a predicate function if value is present
      *
      * @param callable(T): bool $predicate
      *
@@ -37,7 +37,7 @@ interface Option
     public function isSomeAnd(callable $predicate): bool;
 
     /**
-     * 値を持っている場合、中の値に関数を適用する
+     * Applies a function to the contained value if present
      *
      * @template U
      *
@@ -48,7 +48,7 @@ interface Option
     public function map(callable $fn): Option;
 
     /**
-     * 値を持っている場合は関数を適用し、持っていない場合はデフォルト値を返す
+     * Applies a function if value is present, returns default value if absent
      *
      * @template U
      *
@@ -60,7 +60,7 @@ interface Option
     public function mapOr(callable $fn, mixed $default): mixed;
 
     /**
-     * 値を持っている場合は関数を適用し、持っていない場合はクロージャの結果を返す
+     * Applies a function if value is present, returns closure result if absent
      *
      * @template U
      *
@@ -72,7 +72,7 @@ interface Option
     public function mapOrElse(callable $fn, callable $defaultFn): mixed;
 
     /**
-     * 値を持っている場合、中の値に関数を適用し、その結果を返す
+     * Applies a function to the contained value if present and returns the result
      *
      * @template U
      *
@@ -83,7 +83,7 @@ interface Option
     public function andThen(callable $fn): Option;
 
     /**
-     * 値を持っている場合、述語関数を満たすかチェックする
+     * Checks if the value satisfies the predicate function if present
      *
      * @param callable(T): bool $predicate
      *
@@ -92,7 +92,7 @@ interface Option
     public function filter(callable $predicate): Option;
 
     /**
-     * 値を持っていれば値を返し、持っていなければ例外をスローする
+     * Returns the value if present, throws exception if absent
      *
      * @throws UnwrapException
      *
@@ -101,7 +101,7 @@ interface Option
     public function unwrap(): mixed;
 
     /**
-     * 値を持っていれば値を返し、持っていなければデフォルト値を返す
+     * Returns the value if present, returns default value if absent
      *
      * @template U
      *
@@ -112,7 +112,7 @@ interface Option
     public function unwrapOr(mixed $default): mixed;
 
     /**
-     * 値を持っていれば値を返し、持っていなければクロージャの結果を返す
+     * Returns the value if present, returns closure result if absent
      *
      * @template U
      *
@@ -123,7 +123,7 @@ interface Option
     public function unwrapOrElse(callable $fn): mixed;
 
     /**
-     * 値を持っていれば値を返し、持っていなければ指定されたメッセージで例外をスローする
+     * Returns the value if present, throws exception with specified message if absent
      *
      * @param string $message
      *
@@ -134,7 +134,7 @@ interface Option
     public function expect(string $message): mixed;
 
     /**
-     * 値を検査し、副作用を実行する（値は変更しない）
+     * Inspects the value and executes side effects (value remains unchanged)
      *
      * @param callable(T): void $fn
      *
@@ -143,7 +143,7 @@ interface Option
     public function inspect(callable $fn): Option;
 
     /**
-     * Noneの場合に代替のOptionを返す（即座評価）
+     * Returns alternative Option if None (eager evaluation)
      *
      * @template U
      *
@@ -154,7 +154,7 @@ interface Option
     public function or(Option $opt): Option;
 
     /**
-     * Noneの場合に代替のOptionを返す（遅延評価）
+     * Returns alternative Option if None (lazy evaluation)
      *
      * @template U
      *
@@ -165,7 +165,7 @@ interface Option
     public function orElse(callable $fn): Option;
 
     /**
-     * Someの場合に別のOptionを返し、Noneの場合は自身を返す（即座評価）
+     * Returns another Option if Some, returns self if None (eager evaluation)
      *
      * @template U
      *
@@ -176,23 +176,23 @@ interface Option
     public function and(Option $opt): Option;
 
     /**
-     * Some値が指定された値を含むかどうかを確認する
+     * Checks if Some value contains the specified value
      *
-     * @param mixed $value 確認したい値
+     * @param mixed $value The value to check
      *
-     * @return bool Some値が指定値と厳密に等価な場合true、それ以外はfalse
+     * @return bool true if Some value strictly equals the specified value, false otherwise
      */
     public function contains(mixed $value): bool;
 
     /**
-     * Option<Result<T, E>> → Result<Option<T>, E> への変換
+     * Converts Option<Result<T, E>> → Result<Option<T>, E>
      *
      * @return Result<mixed, mixed>
      */
     public function transpose(): Result;
 
     /**
-     * OptionをResultに変換する（Noneの場合は指定されたエラーでErr）
+     * Converts Option to Result (None becomes Err with specified error)
      *
      * @param mixed $err
      *
@@ -201,7 +201,7 @@ interface Option
     public function okOr(mixed $err): Result;
 
     /**
-     * OptionをResultに変換する（Noneの場合はクロージャの結果でErr）
+     * Converts Option to Result (None becomes Err with closure result)
      *
      * @param callable $fn
      *
@@ -210,14 +210,14 @@ interface Option
     public function okOrElse(callable $fn): Result;
 
     /**
-     * ネストしたOptionを一段階平坦化する
+     * Flattens a nested Option by one level
      *
      * @return Option<mixed>
      */
     public function flatten(): Option;
 
     /**
-     * 排他的OR操作：片方のみSomeの場合にSome、両方Some/両方Noneの場合にNone
+     * Exclusive OR operation: Some if only one is Some, None if both Some/both None
      *
      * @template U
      *
@@ -228,7 +228,7 @@ interface Option
     public function xor(Option $opt): Option;
 
     /**
-     * 2つのOptionを結合：両方Someの場合にタプル、片方でもNoneの場合にNone
+     * Combines two Options: tuple if both Some, None if either is None
      *
      * @template U
      *

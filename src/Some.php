@@ -7,7 +7,7 @@ namespace Mizumi\Result;
 use Override;
 
 /**
- * 値を持つOptionを表すクラス
+ * Class representing an Option with a value
  *
  * @template T
  *
