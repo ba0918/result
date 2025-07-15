@@ -1,66 +1,68 @@
-# PHP Result/Option型ライブラリ
+# PHP Result/Option Library
 
 ![PHP Version](https://img.shields.io/badge/php-%5E8.4-blue.svg)
 ![PHPStan](https://img.shields.io/badge/PHPStan-Level%20MAX-brightgreen.svg)
 ![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)
 ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)
 
-RustのResult型とOption型をPHPで実装した、エラーハンドリングとnull安全性のためのライブラリです。
+🌐 **[日本語](README.ja.md)** | **English**
 
-## 🚀 なぜこのライブラリを使うのか？
+A PHP implementation of Rust's Result and Option types for robust error handling and null safety.
 
-- **型安全なエラーハンドリング** - 例外やnullの代わりに明示的な成功/失敗を表現
-- **関数型プログラミング** - メソッドチェーンによる宣言的なコード記述
-- **Rust互換** - Rustエコシステムの知見を活用可能（97%の仕様適合率）
-- **高品質** - PHPStan Level MAX、100%テストカバレッジ
+## 🚀 Why Use This Library?
 
-## 📦 インストール
+- **Type-Safe Error Handling** - Express success/failure explicitly instead of exceptions or null
+- **Functional Programming** - Declarative code with method chaining
+- **Rust Compatible** - Leverage Rust ecosystem knowledge (97% specification compliance)
+- **High Quality** - PHPStan Level MAX, 100% test coverage
+
+## 📦 Installation
 
 ```bash
 composer require mizumi/result
 ```
 
-## ⚡ 5分でクイックスタート
+## ⚡ 5-Minute Quick Start
 
-### Result型 - エラーハンドリング
+### Result Type - Error Handling
 
 ```php
 <?php
 use Mizumi\Result\{Ok, Err, Result};
 
-// 割り算関数（ゼロ除算をエラーとして処理）
+// Division function (handles division by zero as error)
 function safeDivide(float $a, float $b): Result
 {
     if ($b === 0.0) {
-        return new Err("ゼロで割ることはできません");
+        return new Err("Cannot divide by zero");
     }
     return new Ok($a / $b);
 }
 
-// エラーハンドリング
+// Error handling
 $result = safeDivide(10, 2);
 
 if ($result->isOk()) {
-    echo "結果: " . $result->unwrap(); // 結果: 5
+    echo "Result: " . $result->unwrap(); // Result: 5
 } else {
-    echo "エラー: " . $result->unwrapErr();
+    echo "Error: " . $result->unwrapErr();
 }
 
-// メソッドチェーンでより簡潔に
+// More concise with method chaining
 $output = safeDivide(10, 2)
-    ->map(fn($value) => $value * 2)        // 成功時は2倍
-    ->unwrapOr(0);                         // 失敗時は0
+    ->map(fn($value) => $value * 2)        // Double on success
+    ->unwrapOr(0);                         // Default to 0 on failure
 
 echo $output; // 10
 ```
 
-### Option型 - null安全性
+### Option Type - Null Safety
 
 ```php
 <?php
 use Mizumi\Result\{Some, None, Option};
 
-// 配列から値を安全に取得
+// Safely retrieve value from array
 function findUser(int $id): Option
 {
     $users = [1 => 'Alice', 2 => 'Bob'];
@@ -71,73 +73,73 @@ function findUser(int $id): Option
     return None::instance();
 }
 
-// null安全な処理
+// Null-safe processing
 $user = findUser(1)
-    ->map(fn($name) => strtoupper($name))  // 見つかった場合は大文字化
-    ->unwrapOr('Unknown');                 // 見つからない場合はデフォルト値
+    ->map(fn($name) => strtoupper($name))  // Uppercase if found
+    ->unwrapOr('Unknown');                 // Default value if not found
 
 echo $user; // ALICE
 ```
 
-## 📚 ドキュメント
+## 📚 Documentation
 
-### 📖 学習リソース
-- **[初心者向けチュートリアル](docs/tutorial/getting_started.md)** - 30分で基本概念を理解
-- **[基本的な使用方法](docs/tutorial/basic_usage.md)** - 実用的なパターンと実例
-- **[高度なパターン](docs/tutorial/advanced_patterns.md)** - 上級者向けテクニック
+### 📖 Learning Resources
+- **[Getting Started Tutorial](docs/tutorial/getting_started.md)** - Understand core concepts in 30 minutes
+- **[Basic Usage](docs/tutorial/basic_usage.md)** - Practical patterns and examples
+- **[Advanced Patterns](docs/tutorial/advanced_patterns.md)** - Techniques for experienced developers
 
-### 📋 実用ガイド
-- **[ベストプラクティス](docs/guide/best_practices.md)** - プロジェクトでの実用的ガイドライン
-- **[移行ガイド](docs/guide/migration_guide.md)** - 既存コードからの段階的移行
-- **[パフォーマンスガイド](docs/guide/performance_guide.md)** - 最適化とベンチマーク
+### 📋 Practical Guides
+- **[Best Practices](docs/guide/best_practices.md)** - Practical guidelines for your projects
+- **[Migration Guide](docs/guide/migration_guide.md)** - Step-by-step migration from existing code
+- **[Performance Guide](docs/guide/performance_guide.md)** - Optimization and benchmarks
 
-### 🔧 リファレンス
-- **[Result API](docs/api/result_api_reference.md)** - Result型の全メソッド詳細
-- **[Option API](docs/api/option_api_reference.md)** - Option型の全メソッド詳細
-- **[仕様書](docs/spec/specification.md)** - 技術仕様の完全版
+### 🔧 Reference
+- **[Result API](docs/api/result_api_reference.md)** - Complete Result type method reference
+- **[Option API](docs/api/option_api_reference.md)** - Complete Option type method reference
+- **[Specification](docs/spec/specification.md)** - Complete technical specification
 
-### 🆚 比較・統合
-- **[Rust比較](docs/comparison/rust_comparison.md)** - Rust標準ライブラリとの対応
-- **[他ライブラリ比較](docs/comparison/other_libraries.md)** - 技術選定の参考資料
+### 🆚 Comparison & Integration
+- **[Rust Comparison](docs/comparison/rust_comparison.md)** - Mapping to Rust standard library
+- **[Other Libraries Comparison](docs/comparison/other_libraries.md)** - Technical selection reference
 
-## 🔥 主な機能
+## 🔥 Key Features
 
-### Result型メソッド
+### Result Type Methods
 ```php
-// 基本メソッド
-$result->isOk() / $result->isErr()           // 成功/失敗判定
-$result->map($fn) / $result->mapErr($fn)     // 値/エラーの変換
-$result->andThen($fn)                        // モナド的チェーン
-$result->unwrap() / $result->unwrapOr($def)  // 値の取り出し
+// Core methods
+$result->isOk() / $result->isErr()           // Success/failure checks
+$result->map($fn) / $result->mapErr($fn)     // Value/error transformation
+$result->andThen($fn)                        // Monadic chaining
+$result->unwrap() / $result->unwrapOr($def)  // Value extraction
 
-// ショートハンドメソッド
-$result->isOkAnd($predicate)                 // 条件付き成功判定
-$result->mapOr($fn, $default)                // デフォルト値付き変換
+// Shorthand methods
+$result->isOkAnd($predicate)                 // Conditional success check
+$result->mapOr($fn, $default)                // Transformation with default
 ```
 
-### Option型メソッド
+### Option Type Methods
 ```php
-// 基本メソッド
-$option->isSome() / $option->isNone()        // 値の有無判定
-$option->map($fn)                            // 値の変換
-$option->andThen($fn)                        // モナド的チェーン
-$option->filter($predicate)                  // 条件フィルタリング
+// Core methods
+$option->isSome() / $option->isNone()        // Value presence checks
+$option->map($fn)                            // Value transformation
+$option->andThen($fn)                        // Monadic chaining
+$option->filter($predicate)                  // Conditional filtering
 
-// 結合操作
-$option->zip($other)                         // 2つのOptionを結合
-$option->xor($other)                         // 排他的OR
+// Combining operations
+$option->zip($other)                         // Combine two Options
+$option->xor($other)                         // Exclusive OR
 ```
 
-## 🎯 実世界での使用例
+## 🎯 Real-World Examples
 
 ```php
-// API レスポンスの処理
+// API response handling
 function callApi(string $url): Result
 {
     $response = file_get_contents($url);
     
     if ($response === false) {
-        return new Err("API呼び出しに失敗しました");
+        return new Err("API call failed");
     }
     
     return new Ok(json_decode($response, true));
@@ -146,11 +148,11 @@ function callApi(string $url): Result
 $result = callApi('https://api.example.com/users')
     ->andThen(fn($data) => isset($data['users']) ? 
         new Ok($data['users']) : 
-        new Err("不正なレスポンス形式"))
+        new Err("Invalid response format"))
     ->map(fn($users) => array_filter($users, fn($user) => $user['active']))
     ->unwrapOr([]);
 
-// 設定ファイルの読み込み
+// Configuration file loading
 function loadConfig(string $path): Option
 {
     if (!file_exists($path)) {
@@ -166,39 +168,39 @@ $config = loadConfig('config.json')
     ->unwrapOr($defaultConfig);
 ```
 
-## ✅ 要件
+## ✅ Requirements
 
 - **PHP 8.4+**
 - **Composer**
 
-## 🛠️ 開発
+## 🛠️ Development
 
 ```bash
-# 依存関係インストール
+# Install dependencies
 composer install
 
-# テスト実行
+# Run tests
 composer exec phpunit
 
-# 静的解析
+# Static analysis
 composer exec phpstan analyse
 ```
 
-## 📈 品質指標
+## 📈 Quality Metrics
 
-- **テストカバレッジ**: 100%
-- **PHPStan**: Level MAX（最高レベル）
-- **テスト件数**: 231+
-- **Rust仕様適合率**: 97%+
+- **Test Coverage**: 100%
+- **PHPStan**: Level MAX (highest level)
+- **Test Count**: 231+
+- **Rust Specification Compliance**: 97%+
 
-## 📄 ライセンス
+## 📄 License
 
 MIT License
 
-## 🤝 コントリビューション
+## 🤝 Contributing
 
-Issue、Pull Requestを歓迎します。開発に参加される場合は[コーディングガイドライン](docs/spec/coding_guideline.md)をご確認ください。
+Issues and Pull Requests are welcome! Please check the [coding guidelines](docs/spec/coding_guideline.md) if you'd like to contribute to development.
 
 ---
 
-**Get started**: [初心者向けチュートリアル](docs/tutorial/getting_started.md) | **Examples**: [実用例集](examples/) | **API**: [リファレンス](docs/api/)
+**Get started**: [Getting Started Tutorial](docs/tutorial/getting_started.md) | **Examples**: [Example Collection](examples/) | **API**: [Reference](docs/api/)
