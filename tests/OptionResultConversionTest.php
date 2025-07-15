@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 use stdClass;
 
 /**
- * OptionとResultの相互変換テスト
+ * Tests for mutual conversion between Option and Result
  */
 final class OptionResultConversionTest extends TestCase
 {

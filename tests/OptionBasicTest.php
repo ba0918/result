@@ -10,7 +10,7 @@ use Mizumi\Result\Some;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Option型の基本機能テスト
+ * Basic functionality tests for Option type
  */
 final class OptionBasicTest extends TestCase
 {

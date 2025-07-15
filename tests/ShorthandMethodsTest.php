@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 use stdClass;
 
 /**
- * ショートハンドメソッド群のテスト
+ * Tests for shorthand method groups
  */
 final class ShorthandMethodsTest extends TestCase
 {

@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 use stdClass;
 
 /**
- * transpose()メソッドの専用テスト
+ * Dedicated tests for transpose() method
  */
 final class TransposeTest extends TestCase
 {

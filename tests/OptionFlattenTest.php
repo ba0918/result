@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 use stdClass;
 
 /**
- * Option型flatten()メソッドのテスト
+ * Tests for Option type flatten() method
  */
 final class OptionFlattenTest extends TestCase
 {
