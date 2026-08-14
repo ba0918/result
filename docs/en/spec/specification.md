@@ -244,6 +244,15 @@ Immutable singleton class representing an Option without a value.
 - Normal errors represented by `Err` instances
 - `UnwrapException` occurs only during unexpected operations
 
+## Supported PHP Versions
+
+- **Supported version**: `^8.3`
+- **Rationale**:
+  - Security support for 8.3 continues until the end of December 2027
+  - PHP 8.4-specific features (such as property hooks) are mutually exclusive with the readonly design and have no room for application in this library
+  - The code uses only readonly from 8.1 and `#[Override]` from 8.3
+- **Re-evaluation condition**: Review supported versions when 8.3 reaches EOL (December 2027)
+
 ## Usage Examples
 
 ### Basic Usage
@@ -828,7 +837,7 @@ final class None implements Option { }
 ## Extensibility
 
 ### Future Extension Plans
-1. **Additional Option type methods**: `flatten()`, `zip()` (`replace()` intentionally not supported by design)
+1. **Additional Option type methods**: New method additions (`replace()` intentionally not supported by design, see above)
 2. **Better error representation**: Structured error information, detailed stack traces
 3. **Enhanced debug support features**: More detailed inspect functionality
 4. **Performance optimization**: Reduced memory usage, improved execution speed
