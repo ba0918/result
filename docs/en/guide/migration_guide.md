@@ -432,7 +432,18 @@ class PaymentService
             throw new RuntimeException("Payment API server error (HTTP status: $httpCode)");
         }
         
+        if ($httpCode === 429) {
+            // Rate limiting is a retryable infrastructure condition
+            throw new RuntimeException('Payment API rate limited - retry later');
+        }
+        
+        if (in_array($httpCode, [401, 403, 404], true)) {
+            // Credentials or endpoint problems are configuration errors
+            throw new RuntimeException("Payment API configuration error (HTTP status: $httpCode)");
+        }
+        
         if ($httpCode >= 400) {
+            // Business declines the caller branches on
             return Err::of("Payment declined (HTTP status: $httpCode)");
         }
         
