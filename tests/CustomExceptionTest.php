@@ -11,15 +11,19 @@ class CustomExceptionTest extends TestCase
 {
     public function testUnwrapOnErrThrowsCustomException(): void
     {
+        $errorValue = 'error';
         $this->expectException(UnwrapException::class);
-        $err = new Err('error');
+        $this->expectExceptionMessage('Called unwrap() on an Err value: ' . print_r($errorValue, true));
+        $err = new Err($errorValue);
         $err->unwrap();
     }
 
     public function testUnwrapErrOnOkThrowsCustomException(): void
     {
+        $successValue = 'success';
         $this->expectException(UnwrapException::class);
-        $ok = new Ok('success');
+        $this->expectExceptionMessage('Called unwrapErr() on an Ok value: ' . print_r($successValue, true));
+        $ok = new Ok($successValue);
         $ok->unwrapErr();
     }
 }
