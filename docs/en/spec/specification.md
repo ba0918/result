@@ -785,8 +785,11 @@ final class None implements Option { }
 - ✅ `xor()` - Exclusive OR operation
 - ✅ `zip()` - Multiple Option combination
 
-### Option Type - Unimplemented Features
-- ❌ `replace()` - Value replacement
+### Option Type - Non-supported Features
+- ❌ `replace()` - Value replacement (intentionally not supported by design)
+  - Rust's `replace()` requires destructive assignment via `&mut self`
+  - Structurally impossible under this library's immutable (readonly) design
+  - In PHP, variable reassignment (`$opt = Some::of($new)`) is the equivalent operation
 
 ### Differences and Constraints
 - Due to PHP's type system constraints, compile-time type checking is limited
@@ -825,7 +828,7 @@ final class None implements Option { }
 ## Extensibility
 
 ### Future Extension Plans
-1. **Additional Option type methods**: `replace()`
+1. **Additional Option type methods**: `flatten()`, `zip()` (`replace()` intentionally not supported by design)
 2. **Better error representation**: Structured error information, detailed stack traces
 3. **Enhanced debug support features**: More detailed inspect functionality
 4. **Performance optimization**: Reduced memory usage, improved execution speed
@@ -959,7 +962,7 @@ class ValidationError implements ErrorType {
 - Constraints from None's singleton pattern (thread safety)
 
 ### Option Type-Specific Limitations
-- `replace()` method not implemented (`flatten()`, `xor()`, `zip()` are implemented)
+- `replace()` method intentionally not supported (conflict between readonly design and destructive assignment)
 - Native null checking is faster for performance-critical processing
 - Value inspection more complex than Result type during debugging
 

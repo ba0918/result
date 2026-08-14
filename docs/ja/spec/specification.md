@@ -781,8 +781,11 @@ final class None implements Option { }
 - ✅ `xor()` - 排他的OR操作
 - ✅ `zip()` - 複数Optionの組み合わせ
 
-### Option型 - 未実装機能
-- ❌ `replace()` - 値の置換
+### Option型 - 非対応機能
+- ❌ `replace()` - 値の置換（設計判断により非対応）
+  - Rustの `replace()` は `&mut self` による破壊的代入が前提
+  - このライブラリはイミュータブル設計（readonly）のため構造的に実装不可能
+  - PHPでは変数への再代入（`$opt = Some::of($new)`）が等価操作
 
 ### 違いと制約
 - PHPの型システムの制約により、コンパイル時型チェックは限定的
@@ -821,7 +824,7 @@ final class None implements Option { }
 ## 拡張可能性
 
 ### 今後の拡張予定
-1. **Option型の追加メソッド**: `flatten()`, `zip()`, `replace()`
+1. **Option型の追加メソッド**: `flatten()`, `zip()`（`replace()`は設計判断により非対応）
 2. **より良いエラー表現**: 構造化エラー情報、詳細なスタックトレース
 3. **デバッグ支援機能の強化**: より詳細な inspect 機能
 4. **パフォーマンス最適化**: メモリ使用量の削減、実行速度の向上
@@ -955,7 +958,7 @@ class ValidationError implements ErrorType {
 - Noneのシングルトンパターンによる制約（スレッドセーフティ）
 
 ### Option型固有の制限
-- `replace()`メソッドは未実装（`flatten()`, `xor()`, `zip()`は実装済み）
+- `replace()`メソッドは設計判断により非対応（readonly設計と破壊的代入の衝突）
 - パフォーマンスクリティカルな処理では native null チェックの方が高速
 - デバッグ時の値確認がResult型より複雑
 
