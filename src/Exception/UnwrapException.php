@@ -22,7 +22,7 @@ use Exception;
  *
  * ## Error message format
  * - Result type: "Called unwrap() on an Err value: [error content]"
- * - Option type: "None value" or specified custom message
+ * - Option type: "Called unwrap() on a None value" or specified custom message
  *
  * ## Usage example
  * ```php

@@ -154,7 +154,7 @@ final class None implements Option
     #[Override]
     public function unwrap(): mixed
     {
-        throw new UnwrapException('None value');
+        throw new UnwrapException('Called unwrap() on a None value');
     }
 
     /**
@@ -282,6 +282,7 @@ final class None implements Option
     public function transpose(): Result
     {
         // None → Ok(None)
+        /** @phpstan-ignore return.type */
         return Ok::of($this);
     }
 
