@@ -453,6 +453,8 @@ class UserManager
      */
     public function add(Username $user, string $password, string $actor, int $now): Result
     {
+        $path = $this->config->htpasswdPath;
+
         $validation = $this->validatePassword($password);
         if ($validation->isErr()) {
             return $validation;

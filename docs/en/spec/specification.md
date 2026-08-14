@@ -240,8 +240,18 @@ Immutable singleton class representing an Option without a value.
 
 ### 4. Error Handling
 
-- Exceptions thrown only in exceptional situations
-- Normal errors represented by `Err` instances
+The choice between `Result`, `Option`, and `Exception` follows one question:
+does the caller want to handle this failure as a normal branch of its flow?
+
+- Failures the caller should branch on (validation, business rules) → `Result` / `Option`
+- Normal "no value" where the reason does not matter → `Option`
+- Invariant violations and programming mistakes → `Exception`
+- Infrastructure failures (file, DB, network) this layer cannot recover from → `Exception` by default
+- Failures an upper layer wants to retry or fall back on → convert to `Result` at the boundary
+
+The detailed decision table and the chain-design guidelines (one chain per
+responsibility, ~4 `andThen` steps per method, no nested `andThen`) are in
+the [Best Practices Guide](../guide/best_practices.md).
 - `UnwrapException` occurs only during unexpected operations
 
 ## Supported PHP Versions
