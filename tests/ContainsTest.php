@@ -12,21 +12,21 @@ class ContainsTest extends TestCase
 
     public function testOkContainsWithEqualValue(): void
     {
-        $ok = new Ok(42);
+        $ok = Ok::of(42);
 
         $this->assertTrue($ok->contains(42));
     }
 
     public function testOkContainsWithDifferentValue(): void
     {
-        $ok = new Ok(42);
+        $ok = Ok::of(42);
 
         $this->assertFalse($ok->contains(24));
     }
 
     public function testOkContainsWithDifferentType(): void
     {
-        $ok = new Ok(42);
+        $ok = Ok::of(42);
 
         $this->assertFalse($ok->contains('42'));
         $this->assertFalse($ok->contains(42.0));
@@ -34,7 +34,7 @@ class ContainsTest extends TestCase
 
     public function testOkContainsWithString(): void
     {
-        $ok = new Ok('hello');
+        $ok = Ok::of('hello');
 
         $this->assertTrue($ok->contains('hello'));
         $this->assertFalse($ok->contains('world'));
@@ -45,21 +45,21 @@ class ContainsTest extends TestCase
 
     public function testErrContainsErrWithEqualError(): void
     {
-        $err = new Err('database error');
+        $err = Err::of('database error');
 
         $this->assertTrue($err->containsErr('database error'));
     }
 
     public function testErrContainsErrWithDifferentError(): void
     {
-        $err = new Err('database error');
+        $err = Err::of('database error');
 
         $this->assertFalse($err->containsErr('network error'));
     }
 
     public function testErrContainsErrWithDifferentType(): void
     {
-        $err = new Err(404);
+        $err = Err::of(404);
 
         $this->assertTrue($err->containsErr(404));
         $this->assertFalse($err->containsErr('404'));
@@ -69,7 +69,7 @@ class ContainsTest extends TestCase
 
     public function testOkContainsErrAlwaysFalse(): void
     {
-        $ok = new Ok('success');
+        $ok = Ok::of('success');
 
         $this->assertFalse($ok->containsErr('success'));
         $this->assertFalse($ok->containsErr('error'));
@@ -78,7 +78,7 @@ class ContainsTest extends TestCase
 
     public function testErrContainsAlwaysFalse(): void
     {
-        $err = new Err('error');
+        $err = Err::of('error');
 
         $this->assertFalse($err->contains('error'));
         $this->assertFalse($err->contains('success'));
@@ -89,7 +89,7 @@ class ContainsTest extends TestCase
 
     public function testOkContainsWithNull(): void
     {
-        $ok = new Ok(null);
+        $ok = Ok::of(null);
 
         $this->assertTrue($ok->contains(null));
         $this->assertFalse($ok->contains(0));
@@ -99,7 +99,7 @@ class ContainsTest extends TestCase
 
     public function testErrContainsErrWithNull(): void
     {
-        $err = new Err(null);
+        $err = Err::of(null);
 
         $this->assertTrue($err->containsErr(null));
         $this->assertFalse($err->containsErr(0));
@@ -113,7 +113,7 @@ class ContainsTest extends TestCase
     {
         $obj = new \stdClass();
         $obj->value = 'test';
-        $ok = new Ok($obj);
+        $ok = Ok::of($obj);
 
         $this->assertTrue($ok->contains($obj));
 
@@ -126,7 +126,7 @@ class ContainsTest extends TestCase
     {
         $errorObj = new \stdClass();
         $errorObj->message = 'error';
-        $err = new Err($errorObj);
+        $err = Err::of($errorObj);
 
         $this->assertTrue($err->containsErr($errorObj));
 
@@ -140,7 +140,7 @@ class ContainsTest extends TestCase
     public function testOkContainsWithArray(): void
     {
         $array = [1, 2, 3];
-        $ok = new Ok($array);
+        $ok = Ok::of($array);
 
         $this->assertTrue($ok->contains([1, 2, 3]));
         $this->assertFalse($ok->contains(['1', '2', '3']));
@@ -151,7 +151,7 @@ class ContainsTest extends TestCase
     public function testErrContainsErrWithArray(): void
     {
         $errorArray = ['code' => 500, 'message' => 'server error'];
-        $err = new Err($errorArray);
+        $err = Err::of($errorArray);
 
         $this->assertTrue($err->containsErr(['code' => 500, 'message' => 'server error']));
         $this->assertFalse($err->containsErr(['code' => '500', 'message' => 'server error']));
@@ -162,12 +162,12 @@ class ContainsTest extends TestCase
 
     public function testOkContainsWithNumericTypes(): void
     {
-        $intOk = new Ok(42);
+        $intOk = Ok::of(42);
         $this->assertTrue($intOk->contains(42));
         $this->assertFalse($intOk->contains(42.0));
         $this->assertFalse($intOk->contains('42'));
 
-        $floatOk = new Ok(42.5);
+        $floatOk = Ok::of(42.5);
         $this->assertTrue($floatOk->contains(42.5));
         $this->assertFalse($floatOk->contains(42));
         $this->assertFalse($floatOk->contains('42.5'));
@@ -177,12 +177,12 @@ class ContainsTest extends TestCase
 
     public function testOkContainsWithBooleanTypes(): void
     {
-        $trueOk = new Ok(true);
+        $trueOk = Ok::of(true);
         $this->assertTrue($trueOk->contains(true));
         $this->assertFalse($trueOk->contains(1));
         $this->assertFalse($trueOk->contains('true'));
 
-        $falseOk = new Ok(false);
+        $falseOk = Ok::of(false);
         $this->assertTrue($falseOk->contains(false));
         $this->assertFalse($falseOk->contains(0));
         $this->assertFalse($falseOk->contains(''));
@@ -198,7 +198,7 @@ class ContainsTest extends TestCase
             'permissions' => ['read', 'write'],
             'active' => true,
         ];
-        $ok = new Ok($complexData);
+        $ok = Ok::of($complexData);
 
         $this->assertTrue($ok->contains($complexData));
 
@@ -222,7 +222,7 @@ class ContainsTest extends TestCase
     public function testContainsPerformanceWithLargeData(): void
     {
         $largeArray = range(1, 1000);
-        $ok = new Ok($largeArray);
+        $ok = Ok::of($largeArray);
 
         $startTime = microtime(true);
         $result = $ok->contains($largeArray);
@@ -236,8 +236,8 @@ class ContainsTest extends TestCase
 
     public function testContainsReturnType(): void
     {
-        $ok = new Ok('test');
-        $err = new Err('error');
+        $ok = Ok::of('test');
+        $err = Err::of('error');
 
         // Confirm that the return value behaves correctly as a bool
         $this->assertTrue($ok->contains('test'));

@@ -12,8 +12,8 @@ class OrMethodTest extends TestCase
 
     public function testOrWithOkAndOk(): void
     {
-        $first = new Ok(10);
-        $second = new Ok(20);
+        $first = Ok::of(10);
+        $second = Ok::of(20);
 
         $result = $first->or($second);
 
@@ -23,8 +23,8 @@ class OrMethodTest extends TestCase
 
     public function testOrWithOkAndErr(): void
     {
-        $ok = new Ok(10);
-        $err = new Err('error');
+        $ok = Ok::of(10);
+        $err = Err::of('error');
 
         $result = $ok->or($err);
 
@@ -34,8 +34,8 @@ class OrMethodTest extends TestCase
 
     public function testOrWithErrAndOk(): void
     {
-        $err = new Err('error');
-        $ok = new Ok(20);
+        $err = Err::of('error');
+        $ok = Ok::of(20);
 
         $result = $err->or($ok);
 
@@ -45,8 +45,8 @@ class OrMethodTest extends TestCase
 
     public function testOrWithErrAndErr(): void
     {
-        $firstErr = new Err('first error');
-        $secondErr = new Err('second error');
+        $firstErr = Err::of('first error');
+        $secondErr = Err::of('second error');
 
         $result = $firstErr->or($secondErr);
 
@@ -58,13 +58,13 @@ class OrMethodTest extends TestCase
 
     public function testOrElseWithOk(): void
     {
-        $ok = new Ok(10);
+        $ok = Ok::of(10);
         $called = false;
 
         $result = $ok->orElse(function () use (&$called) {
             $called = true;
 
-            return new Ok(99);
+            return Ok::of(99);
         });
 
         $this->assertTrue($result->isOk());
@@ -74,12 +74,12 @@ class OrMethodTest extends TestCase
 
     public function testOrElseWithErrReturningOk(): void
     {
-        $err = new Err('original error');
+        $err = Err::of('original error');
 
         $result = $err->orElse(function ($error) {
             $this->assertSame('original error', $error);
 
-            return new Ok(42);
+            return Ok::of(42);
         });
 
         $this->assertTrue($result->isOk());
@@ -88,10 +88,10 @@ class OrMethodTest extends TestCase
 
     public function testOrElseWithErrReturningErr(): void
     {
-        $err = new Err('original error');
+        $err = Err::of('original error');
 
         $result = $err->orElse(function ($error) {
-            return new Err('transformed: ' . $error);
+            return Err::of('transformed: ' . $error);
         });
 
         $this->assertTrue($result->isErr());
@@ -101,12 +101,12 @@ class OrMethodTest extends TestCase
     public function testOrElseErrorValuePassedCorrectly(): void
     {
         $originalError = ['code' => 404, 'message' => 'Not found'];
-        $err = new Err($originalError);
+        $err = Err::of($originalError);
 
         $result = $err->orElse(function ($error) use ($originalError) {
             $this->assertSame($originalError, $error);
 
-            return new Ok('recovered');
+            return Ok::of('recovered');
         });
 
         $this->assertTrue($result->isOk());
@@ -117,9 +117,9 @@ class OrMethodTest extends TestCase
 
     public function testOrChaining(): void
     {
-        $result = (new Err('first'))
-            ->or(new Err('second'))
-            ->or(new Ok('success'));
+        $result = (Err::of('first'))
+            ->or(Err::of('second'))
+            ->or(Ok::of('success'));
 
         $this->assertTrue($result->isOk());
         $this->assertSame('success', $result->unwrap());
@@ -127,9 +127,9 @@ class OrMethodTest extends TestCase
 
     public function testOrElseChaining(): void
     {
-        $result = (new Err('first'))
-            ->orElse(fn ($e) => new Err('second: ' . $e))
-            ->orElse(fn ($e) => new Ok('recovered from: ' . $e));
+        $result = (Err::of('first'))
+            ->orElse(fn ($e) => Err::of('second: ' . $e))
+            ->orElse(fn ($e) => Ok::of('recovered from: ' . $e));
 
         $this->assertTrue($result->isOk());
         $this->assertSame('recovered from: second: first', $result->unwrap());
@@ -139,8 +139,8 @@ class OrMethodTest extends TestCase
 
     public function testOrWithDifferentErrorTypes(): void
     {
-        $stringErr = new Err('string error');
-        $intErr = new Err(404);
+        $stringErr = Err::of('string error');
+        $intErr = Err::of(404);
 
         $result = $stringErr->or($intErr);
 
@@ -150,10 +150,10 @@ class OrMethodTest extends TestCase
 
     public function testOrElseWithDifferentErrorTypes(): void
     {
-        $stringErr = new Err('string error');
+        $stringErr = Err::of('string error');
 
         $result = $stringErr->orElse(function () {
-            return new Err(500); // returns a different error type
+            return Err::of(500); // returns a different error type
         });
 
         $this->assertTrue($result->isErr());

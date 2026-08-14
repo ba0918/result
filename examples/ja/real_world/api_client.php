@@ -117,14 +117,14 @@ class ApiClient
     private function validateEndpoint(string $endpoint): Result
     {
         if (empty($endpoint)) {
-            return new Err('エンドポイントが指定されていません');
+            return Err::of('エンドポイントが指定されていません');
         }
 
         if (!str_starts_with($endpoint, '/')) {
             $endpoint = '/' . $endpoint;
         }
 
-        return new Ok($endpoint);
+        return Ok::of($endpoint);
     }
 
     /**
@@ -135,10 +135,10 @@ class ApiClient
         $url = $this->baseUrl . $endpoint;
 
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            return new Err("無効なURL: $url");
+            return Err::of("無効なURL: $url");
         }
 
-        return new Ok($url);
+        return Ok::of($url);
     }
 
     /**
@@ -149,7 +149,7 @@ class ApiClient
         $ch = curl_init();
 
         if ($ch === false) {
-            return new Err('cURLセッションの初期化に失敗しました');
+            return Err::of('cURLセッションの初期化に失敗しました');
         }
 
         $allHeaders = array_merge($this->defaultHeaders, $headers);
@@ -173,7 +173,7 @@ class ApiClient
             if (json_last_error() !== JSON_ERROR_NONE) {
                 curl_close($ch);
 
-                return new Err('リクエストデータのJSON変換に失敗: ' . json_last_error_msg());
+                return Err::of('リクエストデータのJSON変換に失敗: ' . json_last_error_msg());
             }
             curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
         }
@@ -184,10 +184,10 @@ class ApiClient
         curl_close($ch);
 
         if ($response === false) {
-            return new Err("HTTP リクエストに失敗: $error");
+            return Err::of("HTTP リクエストに失敗: $error");
         }
 
-        return new Ok([
+        return Ok::of([
             'body' => $response,
             'status_code' => $httpCode,
             'url' => $url,
@@ -204,20 +204,20 @@ class ApiClient
 
         // HTTPステータスコードのチェック
         if ($statusCode >= 400) {
-            return new Err("HTTPエラー: $statusCode - " . $this->getStatusMessage($statusCode));
+            return Err::of("HTTPエラー: $statusCode - " . $this->getStatusMessage($statusCode));
         }
 
         // JSONレスポンスの解析
         if (empty($body)) {
-            return new Ok([]);
+            return Ok::of([]);
         }
 
         $data = json_decode($body, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return new Err('レスポンスのJSON解析に失敗: ' . json_last_error_msg());
+            return Err::of('レスポンスのJSON解析に失敗: ' . json_last_error_msg());
         }
 
-        return new Ok($data);
+        return Ok::of($data);
     }
 
     /**
@@ -264,8 +264,8 @@ class AuthenticatedApiClient extends ApiClient
         return $this->get('/auth/validate')
             ->andThen(
                 fn ($response) => isset($response['valid']) && $response['valid']
-                    ? new Ok($response)
-                    : new Err('APIキーが無効です'),
+                    ? Ok::of($response)
+                    : Err::of('APIキーが無効です'),
             );
     }
 }
@@ -358,14 +358,14 @@ class UserApiClient
     private function validatePagination(int $page, int $limit): Result
     {
         if ($page < 1) {
-            return new Err('ページ番号は1以上である必要があります');
+            return Err::of('ページ番号は1以上である必要があります');
         }
 
         if ($limit < 1 || $limit > 100) {
-            return new Err('件数は1-100の範囲で指定してください');
+            return Err::of('件数は1-100の範囲で指定してください');
         }
 
-        return new Ok(['page' => $page, 'limit' => $limit]);
+        return Ok::of(['page' => $page, 'limit' => $limit]);
     }
 
     /**
@@ -374,10 +374,10 @@ class UserApiClient
     private function validateUserId(int $userId): Result
     {
         if ($userId < 1) {
-            return new Err('ユーザーIDは1以上である必要があります');
+            return Err::of('ユーザーIDは1以上である必要があります');
         }
 
-        return new Ok($userId);
+        return Ok::of($userId);
     }
 
     /**
@@ -389,15 +389,15 @@ class UserApiClient
 
         foreach ($required as $field) {
             if (!isset($userData[$field]) || empty($userData[$field])) {
-                return new Err("必須フィールドが不足しています: $field");
+                return Err::of("必須フィールドが不足しています: $field");
             }
         }
 
         if (!filter_var($userData['email'], FILTER_VALIDATE_EMAIL)) {
-            return new Err('メールアドレスの形式が正しくありません');
+            return Err::of('メールアドレスの形式が正しくありません');
         }
 
-        return new Ok($userData);
+        return Ok::of($userData);
     }
 }
 

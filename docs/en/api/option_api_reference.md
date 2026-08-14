@@ -371,7 +371,7 @@ $noneOption = None::instance();
 try {
     $value = $noneOption->unwrap(); // UnwrapException
 } catch (UnwrapException $e) {
-    echo $e->getMessage(); // "None value"
+    echo $e->getMessage(); // "Called unwrap() on a None value"
 }
 ```
 

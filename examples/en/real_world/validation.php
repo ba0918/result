@@ -53,18 +53,18 @@ class ValidationResult
         $firstField = array_key_first($this->errors);
         $firstError = $this->errors[$firstField][0] ?? '';
 
-        return new Some($firstError);
+        return Some::of($firstError);
     }
 
     public function toResult(): Result
     {
         if ($this->isValid) {
-            return new Ok($this->data);
+            return Ok::of($this->data);
         }
 
         $errorMessage = $this->getFirstError()->unwrapOr('Validation error occurred');
 
-        return new Err($errorMessage);
+        return Err::of($errorMessage);
     }
 }
 
@@ -142,7 +142,7 @@ class FormValidator
             'unique' => $this->validateUnique($value, (string) $rule->parameter),
             'date' => $this->validateDate($value),
             'url' => $this->validateUrl($value),
-            default => new Err("Unknown validation rule: {$rule->rule}")
+            default => Err::of("Unknown validation rule: {$rule->rule}")
         };
 
         return $result->mapErr(fn ($error) => $this->getCustomMessage($rule, $error));
@@ -154,10 +154,10 @@ class FormValidator
     private function validateRequired($value): Result
     {
         if ($value === null || $value === '' || (is_array($value) && empty($value))) {
-            return new Err('This field is required');
+            return Err::of('This field is required');
         }
 
-        return new Ok($value);
+        return Ok::of($value);
     }
 
     /**
@@ -166,14 +166,14 @@ class FormValidator
     private function validateEmail($value): Result
     {
         if ($value === null || $value === '') {
-            return new Ok($value);
+            return Ok::of($value);
         }
 
         if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
-            return new Err('Please enter a valid email address');
+            return Err::of('Please enter a valid email address');
         }
 
-        return new Ok($value);
+        return Ok::of($value);
     }
 
     /**
@@ -182,14 +182,14 @@ class FormValidator
     private function validateMinLength($value, int $min): Result
     {
         if ($value === null || $value === '') {
-            return new Ok($value);
+            return Ok::of($value);
         }
 
         if (mb_strlen((string) $value) < $min) {
-            return new Err("Please enter at least {$min} characters");
+            return Err::of("Please enter at least {$min} characters");
         }
 
-        return new Ok($value);
+        return Ok::of($value);
     }
 
     /**
@@ -198,14 +198,14 @@ class FormValidator
     private function validateMaxLength($value, int $max): Result
     {
         if ($value === null || $value === '') {
-            return new Ok($value);
+            return Ok::of($value);
         }
 
         if (mb_strlen((string) $value) > $max) {
-            return new Err("Please enter no more than {$max} characters");
+            return Err::of("Please enter no more than {$max} characters");
         }
 
-        return new Ok($value);
+        return Ok::of($value);
     }
 
     /**
@@ -214,14 +214,14 @@ class FormValidator
     private function validateNumeric($value): Result
     {
         if ($value === null || $value === '') {
-            return new Ok($value);
+            return Ok::of($value);
         }
 
         if (!is_numeric($value)) {
-            return new Err('Please enter a numeric value');
+            return Err::of('Please enter a numeric value');
         }
 
-        return new Ok($value);
+        return Ok::of($value);
     }
 
     /**
@@ -230,14 +230,14 @@ class FormValidator
     private function validateInteger($value): Result
     {
         if ($value === null || $value === '') {
-            return new Ok($value);
+            return Ok::of($value);
         }
 
         if (!filter_var($value, FILTER_VALIDATE_INT)) {
-            return new Err('Please enter an integer value');
+            return Err::of('Please enter an integer value');
         }
 
-        return new Ok((int) $value);
+        return Ok::of((int) $value);
     }
 
     /**
@@ -246,14 +246,14 @@ class FormValidator
     private function validateMin($value, int $min): Result
     {
         if ($value === null || $value === '') {
-            return new Ok($value);
+            return Ok::of($value);
         }
 
         if (!is_numeric($value) || (int) $value < $min) {
-            return new Err("Please enter a value of {$min} or greater");
+            return Err::of("Please enter a value of {$min} or greater");
         }
 
-        return new Ok($value);
+        return Ok::of($value);
     }
 
     /**
@@ -262,14 +262,14 @@ class FormValidator
     private function validateMax($value, int $max): Result
     {
         if ($value === null || $value === '') {
-            return new Ok($value);
+            return Ok::of($value);
         }
 
         if (!is_numeric($value) || (int) $value > $max) {
-            return new Err("Please enter a value of {$max} or less");
+            return Err::of("Please enter a value of {$max} or less");
         }
 
-        return new Ok($value);
+        return Ok::of($value);
     }
 
     /**
@@ -278,14 +278,14 @@ class FormValidator
     private function validateRegex($value, string $pattern): Result
     {
         if ($value === null || $value === '') {
-            return new Ok($value);
+            return Ok::of($value);
         }
 
         if (!preg_match($pattern, (string) $value)) {
-            return new Err('Please enter in the correct format');
+            return Err::of('Please enter in the correct format');
         }
 
-        return new Ok($value);
+        return Ok::of($value);
     }
 
     /**
@@ -294,16 +294,16 @@ class FormValidator
     private function validateIn($value, array $options): Result
     {
         if ($value === null || $value === '') {
-            return new Ok($value);
+            return Ok::of($value);
         }
 
         if (!in_array($value, $options, true)) {
             $optionList = implode(', ', $options);
 
-            return new Err("Please select from: $optionList");
+            return Err::of("Please select from: $optionList");
         }
 
-        return new Ok($value);
+        return Ok::of($value);
     }
 
     /**
@@ -315,10 +315,10 @@ class FormValidator
         $confirmValue = $data[$field . '_confirmation'] ?? null;
 
         if ($value !== $confirmValue) {
-            return new Err('Confirmation input does not match');
+            return Err::of('Confirmation input does not match');
         }
 
-        return new Ok($value);
+        return Ok::of($value);
     }
 
     /**
@@ -327,7 +327,7 @@ class FormValidator
     private function validateUnique($value, string $table): Result
     {
         if ($value === null || $value === '') {
-            return new Ok($value);
+            return Ok::of($value);
         }
 
         // In actual implementation, check database
@@ -335,10 +335,10 @@ class FormValidator
         $existingValues = ['admin@example.com', 'test@example.com'];
 
         if (in_array($value, $existingValues, true)) {
-            return new Err('This value is already in use');
+            return Err::of('This value is already in use');
         }
 
-        return new Ok($value);
+        return Ok::of($value);
     }
 
     /**
@@ -347,15 +347,15 @@ class FormValidator
     private function validateDate($value): Result
     {
         if ($value === null || $value === '') {
-            return new Ok($value);
+            return Ok::of($value);
         }
 
         $date = DateTime::createFromFormat('Y-m-d', (string) $value);
         if (!$date || $date->format('Y-m-d') !== $value) {
-            return new Err('Please enter in correct date format (YYYY-MM-DD)');
+            return Err::of('Please enter in correct date format (YYYY-MM-DD)');
         }
 
-        return new Ok($value);
+        return Ok::of($value);
     }
 
     /**
@@ -364,14 +364,14 @@ class FormValidator
     private function validateUrl($value): Result
     {
         if ($value === null || $value === '') {
-            return new Ok($value);
+            return Ok::of($value);
         }
 
         if (!filter_var($value, FILTER_VALIDATE_URL)) {
-            return new Err('Please enter a valid URL format');
+            return Err::of('Please enter a valid URL format');
         }
 
-        return new Ok($value);
+        return Ok::of($value);
     }
 
     /**

@@ -27,8 +27,8 @@ use ba0918\Result\{Ok, Err, Some, None, Result, Option};
 // Result<Result<T, E>, E> → Result<T, E>
 function complexOperation(int $value): Result
 {
-    return new Ok($value)
-        ->map(fn($v) => $v > 0 ? new Ok($v * 2) : new Err("負の値です"))
+    return Ok::of($value)
+        ->map(fn($v) => $v > 0 ? Ok::of($v * 2) : Err::of("負の値です"))
         ->flatten(); // Ok(Ok(4)) → Ok(4), Ok(Err("負の値です")) → Err("負の値です")
 }
 
@@ -44,7 +44,7 @@ echo $result2->unwrapErr(); // "負の値です"
 // 複数層の処理での活用
 function processData(array $data): Result
 {
-    return new Ok($data)
+    return Ok::of($data)
         ->map(fn($d) => validateData($d))    // Result<Result<T, E>, E>
         ->flatten()                          // Result<T, E>
         ->andThen(fn($d) => enrichData($d))  // Result<T, E>
@@ -54,15 +54,15 @@ function processData(array $data): Result
 function validateData(array $data): Result
 {
     return isset($data['id']) ? 
-        new Ok($data) : 
-        new Err("IDが不足しています");
+        Ok::of($data) : 
+        Err::of("IDが不足しています");
 }
 
 function enrichData(array $data): Result
 {
     // 外部データソースからの情報付加
     $additionalInfo = ['timestamp' => time()];
-    return new Ok(array_merge($data, $additionalInfo));
+    return Ok::of(array_merge($data, $additionalInfo));
 }
 
 function transformData(array $data): array
@@ -86,14 +86,14 @@ function processOptionalValue(?string $input): Option
         return None::instance();
     }
     
-    return new Some(validateInput($input));
+    return Some::of(validateInput($input));
 }
 
 function validateInput(string $input): Result
 {
     return strlen($input) > 0 ? 
-        new Ok(trim($input)) : 
-        new Err("空の入力です");
+        Ok::of(trim($input)) : 
+        Err::of("空の入力です");
 }
 
 // transpose の活用
@@ -137,11 +137,11 @@ class DataProcessor
         
         foreach ($required as $field) {
             if (!isset($input[$field])) {
-                return new Err("必須フィールドが不足: $field");
+                return Err::of("必須フィールドが不足: $field");
             }
         }
         
-        return new Ok($input);
+        return Ok::of($input);
     }
     
     private function enrichWithMetadata(array $data): Result
@@ -157,7 +157,7 @@ class DataProcessor
             'external_metadata' => $metadata->unwrap()
         ]);
         
-        return new Ok($enriched);
+        return Ok::of($enriched);
     }
     
     private function fetchExternalMetadata(string $type): Result
@@ -169,24 +169,24 @@ class DataProcessor
         ];
         
         if (!isset($metadataMap[$type])) {
-            return new Err("未対応のデータ型: $type");
+            return Err::of("未対応のデータ型: $type");
         }
         
-        return new Ok($metadataMap[$type]);
+        return Ok::of($metadataMap[$type]);
     }
     
     private function validateBusinessRules(array $data): Result
     {
         // ビジネスルール検証
         if ($data['type'] === 'user' && !isset($data['data']['email'])) {
-            return new Err("ユーザーデータにはメールアドレスが必要です");
+            return Err::of("ユーザーデータにはメールアドレスが必要です");
         }
         
         if ($data['type'] === 'product' && !isset($data['data']['price'])) {
-            return new Err("商品データには価格が必要です");
+            return Err::of("商品データには価格が必要です");
         }
         
-        return new Ok($data);
+        return Ok::of($data);
     }
     
     private function persistData(array $data): Result
@@ -196,9 +196,9 @@ class DataProcessor
         
         // 成功/失敗をランダムにシミュレート
         if (rand(0, 10) < 8) {
-            return new Ok($id);
+            return Ok::of($id);
         } else {
-            return new Err("データベース保存に失敗しました");
+            return Err::of("データベース保存に失敗しました");
         }
     }
     
@@ -206,9 +206,9 @@ class DataProcessor
     {
         // 通知送信をシミュレート
         if (rand(0, 10) < 9) {
-            return new Ok("通知送信完了: $recordId");
+            return Ok::of("通知送信完了: $recordId");
         } else {
-            return new Err("通知送信に失敗しました");
+            return Err::of("通知送信に失敗しました");
         }
     }
 }
@@ -287,7 +287,7 @@ class RobustService
             }
         }
         
-        return new Err(new DetailedError(
+        return Err::of(new DetailedError(
             ErrorType::SYSTEM,
             "最大試行回数に達しました",
             "試行回数: $maxRetries"
@@ -298,7 +298,7 @@ class RobustService
     {
         // ネットワークエラーをシミュレート（回復可能）
         if (rand(0, 10) < 3) {
-            return new Err(new DetailedError(
+            return Err::of(new DetailedError(
                 ErrorType::NETWORK,
                 "ネットワーク接続に失敗しました",
                 "timeout after 30s"
@@ -307,14 +307,14 @@ class RobustService
         
         // バリデーションエラー（回復不可能）
         if (!isset($data['id'])) {
-            return new Err(new DetailedError(
+            return Err::of(new DetailedError(
                 ErrorType::VALIDATION,
                 "IDフィールドが必要です",
                 "required field missing"
             ));
         }
         
-        return new Ok("データ処理完了: " . $data['id']);
+        return Ok::of("データ処理完了: " . $data['id']);
     }
 }
 ```
@@ -378,10 +378,10 @@ class FormValidator
         
         // 結果の返却
         if ($validation->hasErrors()) {
-            return new Err($validation);
+            return Err::of($validation);
         }
         
-        return new Ok([
+        return Ok::of([
             'email' => $data['email'],
             'password' => $data['password'],
             'age' => $data['age']
@@ -391,36 +391,36 @@ class FormValidator
     private function validateEmail(string $email): Result
     {
         if (empty($email)) {
-            return new Err("メールアドレスが入力されていません");
+            return Err::of("メールアドレスが入力されていません");
         }
         
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return new Err("メールアドレスの形式が正しくありません");
+            return Err::of("メールアドレスの形式が正しくありません");
         }
         
-        return new Ok($email);
+        return Ok::of($email);
     }
     
     private function validatePassword(string $password): Result
     {
         if (strlen($password) < 8) {
-            return new Err("パスワードは8文字以上である必要があります");
+            return Err::of("パスワードは8文字以上である必要があります");
         }
         
-        return new Ok($password);
+        return Ok::of($password);
     }
     
     private function validateAge(?int $age): Result
     {
         if ($age === null) {
-            return new Err("年齢が入力されていません");
+            return Err::of("年齢が入力されていません");
         }
         
         if ($age < 0 || $age > 150) {
-            return new Err("年齢は0-150の範囲で入力してください");
+            return Err::of("年齢は0-150の範囲で入力してください");
         }
         
-        return new Ok($age);
+        return Ok::of($age);
     }
 }
 ```
@@ -464,24 +464,24 @@ class UserProfileBuilder
     private function findUser(int $id): Option
     {
         $users = [1 => ['id' => 1, 'name' => 'Alice']];
-        return isset($users[$id]) ? new Some($users[$id]) : None::instance();
+        return isset($users[$id]) ? Some::of($users[$id]) : None::instance();
     }
     
     private function findSettings(int $userId): Option
     {
         $settings = [1 => ['theme' => 'dark', 'lang' => 'ja']];
-        return isset($settings[$userId]) ? new Some($settings[$userId]) : None::instance();
+        return isset($settings[$userId]) ? Some::of($settings[$userId]) : None::instance();
     }
     
     private function findPreferences(int $userId): Option
     {
         $preferences = [1 => ['notifications' => true, 'newsletter' => false]];
-        return isset($preferences[$userId]) ? new Some($preferences[$userId]) : None::instance();
+        return isset($preferences[$userId]) ? Some::of($preferences[$userId]) : None::instance();
     }
     
     private function getDefaultSettings(): Option
     {
-        return new Some(['theme' => 'light', 'lang' => 'en']);
+        return Some::of(['theme' => 'light', 'lang' => 'en']);
     }
 }
 ```
@@ -506,7 +506,7 @@ class ProductFilter
             ->andThen(fn($product) => {
                 if ($product['discount'] > 0) {
                     $discountedPrice = $product['price'] * (1 - $product['discount'] / 100);
-                    return new Some(array_merge($product, ['final_price' => $discountedPrice]));
+                    return Some::of(array_merge($product, ['final_price' => $discountedPrice]));
                 }
                 return None::instance();
             });
@@ -525,7 +525,7 @@ class ProductFilter
             2 => ['id' => 2, 'name' => 'Mouse', 'price' => 0, 'available' => false, 'discount' => 0, 'category_id' => 2],
         ];
         
-        return isset($products[$id]) ? new Some($products[$id]) : None::instance();
+        return isset($products[$id]) ? Some::of($products[$id]) : None::instance();
     }
     
     private function findCategory(int $categoryId): Option
@@ -535,7 +535,7 @@ class ProductFilter
             2 => ['id' => 2, 'name' => 'Accessories'],
         ];
         
-        return isset($categories[$categoryId]) ? new Some($categories[$categoryId]) : None::instance();
+        return isset($categories[$categoryId]) ? Some::of($categories[$categoryId]) : None::instance();
     }
 }
 ```
@@ -560,9 +560,9 @@ class OptimizedProcessor
     private function validateDataset(array $items): Result
     {
         if (count($items) > 10000) {
-            return new Err("データセットが大きすぎます");
+            return Err::of("データセットが大きすぎます");
         }
-        return new Ok($items);
+        return Ok::of($items);
     }
     
     private function processInBatches(array $items): Result
@@ -579,13 +579,13 @@ class OptimizedProcessor
             $results = array_merge($results, $batchResult->unwrap());
         }
         
-        return new Ok($results);
+        return Ok::of($results);
     }
     
     private function processBatch(array $batch): Result
     {
         // バッチ処理の実装
-        return new Ok(array_map(fn($item) => $item * 2, $batch));
+        return Ok::of(array_map(fn($item) => $item * 2, $batch));
     }
     
     private function fallbackToCache(): array
@@ -620,7 +620,7 @@ class MemoryEfficientProcessor
     private function processItem($item): Option
     {
         if (is_numeric($item) && $item > 0) {
-            return new Some($item * 2);
+            return Some::of($item * 2);
         }
         return None::instance();
     }
@@ -688,7 +688,7 @@ function badMixing(?string $input): Option
     if ($input === null) {
         return None::instance();
     }
-    return new Some($input); // nullチェックが必要になる
+    return Some::of($input); // nullチェックが必要になる
 }
 
 // ✅ 良い例 - 一貫した型使用
@@ -727,14 +727,14 @@ class OrderProcessingWorkflow
     private function validateOrder(array $data): Result
     {
         if (!isset($data['items']) || empty($data['items'])) {
-            return new Err("注文商品が指定されていません");
+            return Err::of("注文商品が指定されていません");
         }
         
         if (!isset($data['customer_id'])) {
-            return new Err("顧客IDが指定されていません");
+            return Err::of("顧客IDが指定されていません");
         }
         
-        return new Ok($data);
+        return Ok::of($data);
     }
     
     private function checkInventory(array $order): Result
@@ -743,18 +743,18 @@ class OrderProcessingWorkflow
             $available = $this->getInventoryCount($item['product_id']);
             
             if ($available->isNone() || $available->unwrap() < $item['quantity']) {
-                return new Err("商品ID {$item['product_id']} の在庫が不足しています");
+                return Err::of("商品ID {$item['product_id']} の在庫が不足しています");
             }
         }
         
-        return new Ok($order);
+        return Ok::of($order);
     }
     
     private function getInventoryCount(int $productId): Option
     {
         $inventory = [1 => 10, 2 => 5, 3 => 0];
         return isset($inventory[$productId]) ? 
-            new Some($inventory[$productId]) : 
+            Some::of($inventory[$productId]) : 
             None::instance();
     }
     
@@ -767,7 +767,7 @@ class OrderProcessingWorkflow
             $price = $this->getProductPrice($item['product_id']);
             
             if ($price->isNone()) {
-                return new Err("商品ID {$item['product_id']} の価格情報が見つかりません");
+                return Err::of("商品ID {$item['product_id']} の価格情報が見つかりません");
             }
             
             $itemTotal = $price->unwrap() * $item['quantity'];
@@ -779,7 +779,7 @@ class OrderProcessingWorkflow
             ]);
         }
         
-        return new Ok(array_merge($order, [
+        return Ok::of(array_merge($order, [
             'items' => $calculatedItems,
             'total_amount' => $total
         ]));
@@ -789,7 +789,7 @@ class OrderProcessingWorkflow
     {
         $prices = [1 => 1000, 2 => 2000, 3 => 3000];
         return isset($prices[$productId]) ? 
-            new Some($prices[$productId]) : 
+            Some::of($prices[$productId]) : 
             None::instance();
     }
     
@@ -797,23 +797,23 @@ class OrderProcessingWorkflow
     {
         // 支払い処理をシミュレート
         if ($order['total_amount'] > 100000) {
-            return new Err("支払い金額が上限を超えています");
+            return Err::of("支払い金額が上限を超えています");
         }
         
         $paymentId = 'pay_' . uniqid();
-        return new Ok(array_merge($order, ['payment_id' => $paymentId]));
+        return Ok::of(array_merge($order, ['payment_id' => $paymentId]));
     }
     
     private function reserveItems(array $order): Result
     {
         $reservationId = 'res_' . uniqid();
-        return new Ok(array_merge($order, ['reservation_id' => $reservationId]));
+        return Ok::of(array_merge($order, ['reservation_id' => $reservationId]));
     }
     
     private function generateInvoice(array $order): Result
     {
         $invoiceId = 'inv_' . uniqid();
-        return new Ok([
+        return Ok::of([
             'order_id' => 'ord_' . uniqid(),
             'invoice_id' => $invoiceId,
             'payment_id' => $order['payment_id'],
@@ -825,7 +825,7 @@ class OrderProcessingWorkflow
     private function sendNotifications(array $invoice): Result
     {
         // 通知送信をシミュレート
-        return new Ok($invoice);
+        return Ok::of($invoice);
     }
 }
 

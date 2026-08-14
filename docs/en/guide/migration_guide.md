@@ -43,11 +43,11 @@ use ba0918\Result\{Ok, Err, Some, None};
 function learningExample(): void
 {
     // Result type basics
-    $result = new Ok(42);
+    $result = Ok::of(42);
     echo $result->unwrap(); // 42
     
     // Option type basics
-    $option = new Some("Hello");
+    $option = Some::of("Hello");
     echo $option->unwrapOr("Default"); // Hello
 }
 ```
@@ -87,7 +87,7 @@ class NewFeatureService
     public function findNewEntity(int $id): Option
     {
         $entity = $this->repository->findById($id);
-        return $entity ? new Some($entity) : None::instance();
+        return $entity ? Some::of($entity) : None::instance();
     }
 }
 ```
@@ -105,9 +105,9 @@ class ResultHelper
     {
         try {
             $result = $fn(...$args);
-            return new Ok($result);
+            return Ok::of($result);
         } catch (Exception $e) {
-            return new Err($e->getMessage());
+            return Err::of($e->getMessage());
         }
     }
     
@@ -116,7 +116,7 @@ class ResultHelper
      */
     public static function fromNullable($value): Option
     {
-        return $value === null ? None::instance() : new Some($value);
+        return $value === null ? None::instance() : Some::of($value);
     }
 }
 
@@ -144,7 +144,7 @@ class UserServiceLegacy
     public function findUserSafe(int $id): Option
     {
         $user = $this->findUser($id);
-        return $user === null ? None::instance() : new Some($user);
+        return $user === null ? None::instance() : Some::of($user);
     }
 }
 
@@ -155,7 +155,7 @@ class UserServiceModern
     public function findUser(int $id): Option
     {
         $user = $this->database->find($id);
-        return $user === null ? None::instance() : new Some($user);
+        return $user === null ? None::instance() : Some::of($user);
     }
     
     // Legacy method for backward compatibility
@@ -198,20 +198,20 @@ class ConfigServiceModern
     public function loadConfig(string $path): Result
     {
         if (!file_exists($path)) {
-            return new Err("Configuration file not found: $path");
+            return Err::of("Configuration file not found: $path");
         }
         
         $content = file_get_contents($path);
         if ($content === false) {
-            return new Err("Failed to read configuration file: $path");
+            return Err::of("Failed to read configuration file: $path");
         }
         
         $config = json_decode($content, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return new Err("Invalid JSON format in configuration file: " . json_last_error_msg());
+            return Err::of("Invalid JSON format in configuration file: " . json_last_error_msg());
         }
         
-        return new Ok($config);
+        return Ok::of($config);
     }
     
     // Maintain backward compatibility
@@ -288,7 +288,7 @@ class UserRepository
         $stmt->execute([$email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        return $user ? new Some($user) : None::instance();
+        return $user ? Some::of($user) : None::instance();
     }
     
     public function getUserProfile(int $userId): Option
@@ -301,7 +301,7 @@ class UserRepository
     {
         // Profile data retrieval implementation
         $profile = /* fetch from database */;
-        return $profile ? new Some($profile) : None::instance();
+        return $profile ? Some::of($profile) : None::instance();
     }
 }
 
@@ -383,14 +383,14 @@ class PaymentService
     private function validatePaymentData(array $data): Result
     {
         if (empty($data['amount'])) {
-            return new Err('Payment amount not specified');
+            return Err::of('Payment amount not specified');
         }
         
         if ($data['amount'] <= 0) {
-            return new Err('Payment amount must be a positive value');
+            return Err::of('Payment amount must be a positive value');
         }
         
-        return new Ok($data);
+        return Ok::of($data);
     }
     
     private function callPaymentAPI(array $data): Result
@@ -406,24 +406,24 @@ class PaymentService
         curl_close($ch);
         
         if ($response === false) {
-            return new Err('Payment API call failed');
+            return Err::of('Payment API call failed');
         }
         
         if ($httpCode !== 200) {
-            return new Err("Payment processing failed (HTTP status: $httpCode)");
+            return Err::of("Payment processing failed (HTTP status: $httpCode)");
         }
         
-        return new Ok($response);
+        return Ok::of($response);
     }
     
     private function parseResponse(string $response): Result
     {
         $result = json_decode($response, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return new Err('Invalid payment API response format');
+            return Err::of('Invalid payment API response format');
         }
         
-        return new Ok($result);
+        return Ok::of($result);
     }
 }
 
@@ -451,7 +451,7 @@ class MixedUserService
     public function findUserSafe(int $id): Option
     {
         $user = $this->findUserLegacy($id);
-        return $user === null ? None::instance() : new Some($user);
+        return $user === null ? None::instance() : Some::of($user);
     }
     
     // Existing methods (legacy) - scheduled for gradual removal
@@ -496,18 +496,18 @@ class SafeFileOperations
     {
         try {
             $content = $this->fileOps->read($path);
-            return new Ok($content);
+            return Ok::of($content);
         } catch (FileNotFoundException $e) {
-            return new Err("File not found: $path");
+            return Err::of("File not found: $path");
         } catch (IOException $e) {
-            return new Err("File read error: " . $e->getMessage());
+            return Err::of("File read error: " . $e->getMessage());
         }
     }
     
     public function findFile(string $pattern): Option
     {
         $files = $this->fileOps->glob($pattern);
-        return empty($files) ? None::instance() : new Some($files[0]);
+        return empty($files) ? None::instance() : Some::of($files[0]);
     }
 }
 ```
@@ -526,12 +526,12 @@ class ResultApiClient
             $response = $this->client->get($endpoint);
             
             if ($response->getStatusCode() >= 400) {
-                return new Err("API error: " . $response->getStatusCode());
+                return Err::of("API error: " . $response->getStatusCode());
             }
             
-            return new Ok($response->getBody());
+            return Ok::of($response->getBody());
         } catch (ApiException $e) {
-            return new Err("API call error: " . $e->getMessage());
+            return Err::of("API call error: " . $e->getMessage());
         }
     }
 }
@@ -561,16 +561,16 @@ class UserRepositoryTransition implements UserRepositoryLegacy, UserRepositoryMo
     public function findById(int $id): Option
     {
         $user = $this->database->find($id);
-        return $user ? new Some($user) : None::instance();
+        return $user ? Some::of($user) : None::instance();
     }
     
     public function save(array $user): Result
     {
         try {
             $saved = $this->database->save($user);
-            return new Ok($saved);
+            return Ok::of($saved);
         } catch (DatabaseException $e) {
-            return new Err("Save error: " . $e->getMessage());
+            return Err::of("Save error: " . $e->getMessage());
         }
     }
     
@@ -596,13 +596,13 @@ class UserRepositoryTransition implements UserRepositoryLegacy, UserRepositoryMo
 // ❌ Bad example: Unnecessary object creation
 function inefficientConversion($value): Option
 {
-    return new Some($value); // Always creates Some
+    return Some::of($value); // Always creates Some
 }
 
 // ✅ Good example: Proper judgment
 function efficientConversion($value): Option
 {
-    return $value === null ? None::instance() : new Some($value);
+    return $value === null ? None::instance() : Some::of($value);
 }
 
 // ✅ Utilize caching
@@ -630,7 +630,7 @@ class BadService
     
     public function process(): Result
     {
-        $this->result = new Ok($this); // Circular reference
+        $this->result = Ok::of($this); // Circular reference
         return $this->result;
     }
 }
@@ -640,7 +640,7 @@ class GoodService
 {
     public function process(array $data): Result
     {
-        return new Ok($this->processData($data)); // Return only data
+        return Ok::of($this->processData($data)); // Return only data
     }
 }
 ```
@@ -725,10 +725,10 @@ function process(): Result
     $value = getValue();
     
     if ($value === null) {
-        return new Err("Could not retrieve value");
+        return Err::of("Could not retrieve value");
     }
     
-    return new Ok($value);
+    return Ok::of($value);
 }
 ```
 
@@ -739,23 +739,23 @@ function process(): Result
 function validate($data): Result
 {
     if (!isValid($data)) {
-        return new Err("Invalid"); // Insufficient information
+        return Err::of("Invalid"); // Insufficient information
     }
-    return new Ok($data);
+    return Ok::of($data);
 }
 
 // Solution: Specific error messages
 function validate($data): Result
 {
     if (empty($data['email'])) {
-        return new Err("Email address is not entered");
+        return Err::of("Email address is not entered");
     }
     
     if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-        return new Err("Email address format is incorrect");
+        return Err::of("Email address format is incorrect");
     }
     
-    return new Ok($data);
+    return Ok::of($data);
 }
 ```
 

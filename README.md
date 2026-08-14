@@ -2,7 +2,7 @@
 
 ![PHP Version](https://img.shields.io/badge/php-%5E8.3-blue.svg)
 ![PHPStan](https://img.shields.io/badge/PHPStan-Level%20MAX-brightgreen.svg)
-![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)
+![Tests](https://github.com/ba0918/result/actions/workflows/quality-check.yml/badge.svg)
 ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)
 
 [日本語](README.ja.md)
@@ -44,9 +44,9 @@ use ba0918\Result\{Ok, Err, Result};
 function safeDivide(float $a, float $b): Result
 {
     if ($b === 0.0) {
-        return new Err("Cannot divide by zero");
+        return Err::of("Cannot divide by zero");
     }
-    return new Ok($a / $b);
+    return Ok::of($a / $b);
 }
 
 // Error handling
@@ -78,7 +78,7 @@ function findUser(int $id): Option
     $users = [1 => 'Alice', 2 => 'Bob'];
     
     if (isset($users[$id])) {
-        return new Some($users[$id]);
+        return Some::of($users[$id]);
     }
     return None::instance();
 }

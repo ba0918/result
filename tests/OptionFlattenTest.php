@@ -82,7 +82,7 @@ final class OptionFlattenTest extends TestCase
         $flattened = $someNull->flatten();
 
         $this->assertSame($someNull, $flattened);
-        $this->assertNull($flattened->unwrap());
+        $this->assertNull($flattened->unwrap()); /** @phpstan-ignore method.alreadyNarrowedType (unwrap of Some(null) is expected to be null) */
     }
 
     public function testSomeWithZeroValue(): void
@@ -197,8 +197,6 @@ final class OptionFlattenTest extends TestCase
 
         // map creates Some(Some(value))
         $mapped = $option->map(function ($x) {
-            assert(is_int($x));
-
             return Some::of($x * 2);
         });
         $this->assertTrue($mapped->isSome());

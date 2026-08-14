@@ -16,23 +16,23 @@ use PHPUnit\Framework\TestCase;
 function safe_divide(float $a, float $b): Result
 {
     if ($b === 0.0) {
-        return new Err('Division by zero');
+        return Err::of('Division by zero');
     }
 
-    return new Ok($a / $b);
+    return Ok::of($a / $b);
 }
 
 class AndThenTest extends TestCase
 {
     public function testAndThenWithSuccess(): void
     {
-        $single = (new Ok(10.0))
+        $single = (Ok::of(10.0))
             ->andThen(fn (float $x) => safe_divide($x, 2.0));
 
         $this->assertTrue($single->isOk());
         $this->assertSame(5.0, $single->unwrap());
 
-        $chained = (new Ok(10.0))
+        $chained = (Ok::of(10.0))
             ->andThen(fn (float $x) => safe_divide($x, 2.0)) // 10 / 2 = 5
             ->andThen(fn (float $x) => safe_divide($x, 5.0)); // 5 / 5 = 1
 
@@ -43,7 +43,7 @@ class AndThenTest extends TestCase
     public function testAndThenWithFailure(): void
     {
         $executionCount = 0;
-        $result = (new Ok(10))
+        $result = (Ok::of(10))
             ->andThen(function ($x) use (&$executionCount): Result {
                 $executionCount++;
 
@@ -63,7 +63,7 @@ class AndThenTest extends TestCase
     public function testAndThenOnErr(): void
     {
         $executionCount = 0;
-        $result = (new Err('Initial error'))
+        $result = (Err::of('Initial error'))
             ->andThen(function ($x) use (&$executionCount): Result {
                 $executionCount++;
 

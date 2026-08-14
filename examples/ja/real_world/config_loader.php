@@ -43,11 +43,11 @@ class ConfigValue
     public function asString(): Option
     {
         if ($this->type === ConfigType::STRING) {
-            return new Some((string) $this->value);
+            return Some::of((string) $this->value);
         }
 
         if (is_scalar($this->value)) {
-            return new Some((string) $this->value);
+            return Some::of((string) $this->value);
         }
 
         return None::instance();
@@ -59,11 +59,11 @@ class ConfigValue
     public function asInt(): Option
     {
         if ($this->type === ConfigType::INTEGER) {
-            return new Some((int) $this->value);
+            return Some::of((int) $this->value);
         }
 
         if (is_numeric($this->value)) {
-            return new Some((int) $this->value);
+            return Some::of((int) $this->value);
         }
 
         return None::instance();
@@ -75,16 +75,16 @@ class ConfigValue
     public function asBool(): Option
     {
         if ($this->type === ConfigType::BOOLEAN) {
-            return new Some((bool) $this->value);
+            return Some::of((bool) $this->value);
         }
 
         if (is_string($this->value)) {
             $lower = strtolower($this->value);
             if (in_array($lower, ['true', '1', 'yes', 'on'])) {
-                return new Some(true);
+                return Some::of(true);
             }
             if (in_array($lower, ['false', '0', 'no', 'off'])) {
-                return new Some(false);
+                return Some::of(false);
             }
         }
 
@@ -97,7 +97,7 @@ class ConfigValue
     public function asArray(): Option
     {
         if ($this->type === ConfigType::ARRAY && is_array($this->value)) {
-            return new Some($this->value);
+            return Some::of($this->value);
         }
 
         return None::instance();
@@ -109,11 +109,11 @@ class ConfigValue
     public function asFloat(): Option
     {
         if ($this->type === ConfigType::FLOAT) {
-            return new Some((float) $this->value);
+            return Some::of((float) $this->value);
         }
 
         if (is_numeric($this->value)) {
-            return new Some((float) $this->value);
+            return Some::of((float) $this->value);
         }
 
         return None::instance();
@@ -150,14 +150,14 @@ class JsonConfigLoader implements ConfigLoader
     private function validatePath(string $path): Result
     {
         if (!file_exists($path)) {
-            return new Err("設定ファイルが見つかりません: $path");
+            return Err::of("設定ファイルが見つかりません: $path");
         }
 
         if (!is_readable($path)) {
-            return new Err("設定ファイルが読み込めません: $path");
+            return Err::of("設定ファイルが読み込めません: $path");
         }
 
-        return new Ok($path);
+        return Ok::of($path);
     }
 
     private function readFile(string $path): Result
@@ -165,25 +165,25 @@ class JsonConfigLoader implements ConfigLoader
         $content = file_get_contents($path);
 
         if ($content === false) {
-            return new Err("ファイルの読み込みに失敗しました: $path");
+            return Err::of("ファイルの読み込みに失敗しました: $path");
         }
 
-        return new Ok($content);
+        return Ok::of($content);
     }
 
     private function parseJson(string $content): Result
     {
         if (empty(trim($content))) {
-            return new Ok([]);
+            return Ok::of([]);
         }
 
         $data = json_decode($content, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return new Err('JSON解析エラー: ' . json_last_error_msg());
+            return Err::of('JSON解析エラー: ' . json_last_error_msg());
         }
 
-        return new Ok($data);
+        return Ok::of($data);
     }
 }
 
@@ -206,14 +206,14 @@ class PhpConfigLoader implements ConfigLoader
     private function validatePath(string $path): Result
     {
         if (!file_exists($path)) {
-            return new Err("設定ファイルが見つかりません: $path");
+            return Err::of("設定ファイルが見つかりません: $path");
         }
 
         if (!is_readable($path)) {
-            return new Err("設定ファイルが読み込めません: $path");
+            return Err::of("設定ファイルが読み込めません: $path");
         }
 
-        return new Ok($path);
+        return Ok::of($path);
     }
 
     private function loadPhpFile(string $path): Result
@@ -222,12 +222,12 @@ class PhpConfigLoader implements ConfigLoader
             $config = include $path;
 
             if (!is_array($config)) {
-                return new Err("PHP設定ファイルは配列を返す必要があります: $path");
+                return Err::of("PHP設定ファイルは配列を返す必要があります: $path");
             }
 
-            return new Ok($config);
+            return Ok::of($config);
         } catch (Throwable $e) {
-            return new Err('PHP設定ファイルの読み込みエラー: ' . $e->getMessage());
+            return Err::of('PHP設定ファイルの読み込みエラー: ' . $e->getMessage());
         }
     }
 }
@@ -252,10 +252,10 @@ class EnvConfigLoader implements ConfigLoader
     private function validatePath(string $path): Result
     {
         if (!file_exists($path)) {
-            return new Err("環境変数ファイルが見つかりません: $path");
+            return Err::of("環境変数ファイルが見つかりません: $path");
         }
 
-        return new Ok($path);
+        return Ok::of($path);
     }
 
     private function readFile(string $path): Result
@@ -263,10 +263,10 @@ class EnvConfigLoader implements ConfigLoader
         $content = file_get_contents($path);
 
         if ($content === false) {
-            return new Err("環境変数ファイルの読み込みに失敗しました: $path");
+            return Err::of("環境変数ファイルの読み込みに失敗しました: $path");
         }
 
-        return new Ok($content);
+        return Ok::of($content);
     }
 
     private function parseEnv(string $content): Result
@@ -291,13 +291,13 @@ class EnvConfigLoader implements ConfigLoader
             $config[$key] = $value;
         }
 
-        return new Ok($config);
+        return Ok::of($config);
     }
 
     private function parseLine(string $line, int $lineNumber): Result
     {
         if (!str_contains($line, '=')) {
-            return new Err("行 $lineNumber: 無効な形式（'='が見つかりません）");
+            return Err::of("行 $lineNumber: 無効な形式（'='が見つかりません）");
         }
 
         [$key, $value] = explode('=', $line, 2);
@@ -305,7 +305,7 @@ class EnvConfigLoader implements ConfigLoader
         $value = trim($value);
 
         if (empty($key)) {
-            return new Err("行 $lineNumber: キーが空です");
+            return Err::of("行 $lineNumber: キーが空です");
         }
 
         // クォートを除去
@@ -314,7 +314,7 @@ class EnvConfigLoader implements ConfigLoader
             $value = substr($value, 1, -1);
         }
 
-        return new Ok([$key, $value]);
+        return Ok::of([$key, $value]);
     }
 }
 
@@ -346,7 +346,7 @@ class ConfigManager
         $loader = $this->findLoader($path);
 
         if ($loader->isNone()) {
-            return new Err("サポートされていないファイル形式: $path");
+            return Err::of("サポートされていないファイル形式: $path");
         }
 
         return $loader->unwrap()->load($path)
@@ -365,7 +365,7 @@ class ConfigManager
             }
         }
 
-        return new Ok($this->config);
+        return Ok::of($this->config);
     }
 
     /**
@@ -374,13 +374,13 @@ class ConfigManager
     public function loadDirectory(string $directory): Result
     {
         if (!is_dir($directory)) {
-            return new Err("ディレクトリが見つかりません: $directory");
+            return Err::of("ディレクトリが見つかりません: $directory");
         }
 
         $files = glob($directory . '/*.{json,php,env}', GLOB_BRACE);
 
         if (empty($files)) {
-            return new Err("設定ファイルが見つかりません: $directory");
+            return Err::of("設定ファイルが見つかりません: $directory");
         }
 
         return $this->loadFiles($files);
@@ -394,14 +394,14 @@ class ConfigManager
         $value = $this->getNestedValue($this->config, $key);
 
         if ($value === null && $default !== null) {
-            return new Some($default);
+            return Some::of($default);
         }
 
         if ($value === null) {
             return None::instance();
         }
 
-        return new Some($value);
+        return Some::of($value);
     }
 
     /**
@@ -421,10 +421,10 @@ class ConfigManager
         $value = $this->get($key);
 
         if ($value->isNone()) {
-            return new Err("必須設定が見つかりません: $key");
+            return Err::of("必須設定が見つかりません: $key");
         }
 
-        return new Ok($value->unwrap());
+        return Ok::of($value->unwrap());
     }
 
     /**
@@ -464,7 +464,7 @@ class ConfigManager
             }
         }
 
-        return new Ok($this->config);
+        return Ok::of($this->config);
     }
 
     /**
@@ -482,17 +482,17 @@ class ConfigManager
         }
 
         if (!empty($errors)) {
-            return new Err('設定バリデーションエラー: ' . implode(', ', $errors));
+            return Err::of('設定バリデーションエラー: ' . implode(', ', $errors));
         }
 
-        return new Ok($this->config);
+        return Ok::of($this->config);
     }
 
     private function findLoader(string $path): Option
     {
         foreach ($this->loaders as $loader) {
             if ($loader->supports($path)) {
-                return new Some($loader);
+                return Some::of($loader);
             }
         }
 
@@ -513,7 +513,7 @@ class ConfigManager
         // ソース情報を記録
         $this->recordSources($data, $source, $namespace);
 
-        return new Ok($this->config);
+        return Ok::of($this->config);
     }
 
     private function recordSources(array $data, string $source, string $namespace): void
@@ -571,27 +571,27 @@ class ConfigManager
     private function convertType(mixed $value, ConfigType $type): Option
     {
         return match ($type) {
-            ConfigType::STRING => new Some((string) $value),
-            ConfigType::INTEGER => is_numeric($value) ? new Some((int) $value) : None::instance(),
+            ConfigType::STRING => Some::of((string) $value),
+            ConfigType::INTEGER => is_numeric($value) ? Some::of((int) $value) : None::instance(),
             ConfigType::BOOLEAN => $this->convertToBool($value),
-            ConfigType::ARRAY => is_array($value) ? new Some($value) : None::instance(),
-            ConfigType::FLOAT => is_numeric($value) ? new Some((float) $value) : None::instance(),
+            ConfigType::ARRAY => is_array($value) ? Some::of($value) : None::instance(),
+            ConfigType::FLOAT => is_numeric($value) ? Some::of((float) $value) : None::instance(),
         };
     }
 
     private function convertToBool(mixed $value): Option
     {
         if (is_bool($value)) {
-            return new Some($value);
+            return Some::of($value);
         }
 
         if (is_string($value)) {
             $lower = strtolower($value);
             if (in_array($lower, ['true', '1', 'yes', 'on'])) {
-                return new Some(true);
+                return Some::of(true);
             }
             if (in_array($lower, ['false', '0', 'no', 'off'])) {
-                return new Some(false);
+                return Some::of(false);
             }
         }
 
@@ -604,11 +604,11 @@ class ConfigManager
 
         // 必須チェック
         if (isset($rule['required']) && $rule['required'] && $value->isNone()) {
-            return new Err("必須設定が見つかりません: $key");
+            return Err::of("必須設定が見つかりません: $key");
         }
 
         if ($value->isNone()) {
-            return new Ok(null);
+            return Ok::of(null);
         }
 
         $val = $value->unwrap();
@@ -617,21 +617,21 @@ class ConfigManager
         if (isset($rule['type'])) {
             $typeResult = $this->convertType($val, ConfigType::from($rule['type']));
             if ($typeResult->isNone()) {
-                return new Err("設定 $key の型が正しくありません（期待: {$rule['type']}）");
+                return Err::of("設定 $key の型が正しくありません（期待: {$rule['type']}）");
             }
         }
 
         // 最小値チェック
         if (isset($rule['min']) && is_numeric($val) && $val < $rule['min']) {
-            return new Err("設定 $key は {$rule['min']} 以上である必要があります");
+            return Err::of("設定 $key は {$rule['min']} 以上である必要があります");
         }
 
         // 最大値チェック
         if (isset($rule['max']) && is_numeric($val) && $val > $rule['max']) {
-            return new Err("設定 $key は {$rule['max']} 以下である必要があります");
+            return Err::of("設定 $key は {$rule['max']} 以下である必要があります");
         }
 
-        return new Ok($val);
+        return Ok::of($val);
     }
 }
 

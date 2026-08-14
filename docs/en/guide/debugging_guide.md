@@ -19,7 +19,7 @@ This guide explains common issues and solutions when using the PHP Result/Option
 #### Problem
 ```php
 $option = None::instance();
-$value = $option->unwrap(); // UnwrapException: None value
+$value = $option->unwrap(); // UnwrapException: Called unwrap() on a None value
 ```
 
 #### Solutions

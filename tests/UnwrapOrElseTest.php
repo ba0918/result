@@ -10,7 +10,7 @@ class UnwrapOrElseTest extends TestCase
 {
     public function testUnwrapOrElseOnOk(): void
     {
-        $result = new Ok(10);
+        $result = Ok::of(10);
         $value = $result->unwrapOrElse(fn ($err) => strlen($err));
 
         $this->assertSame(10, $value);
@@ -18,7 +18,7 @@ class UnwrapOrElseTest extends TestCase
 
     public function testUnwrapOrElseOnErr(): void
     {
-        $result = new Err('some error');
+        $result = Err::of('some error');
         $value = $result->unwrapOrElse(fn ($err) => strlen($err));
 
         // 'some error' has 10 characters
@@ -28,7 +28,7 @@ class UnwrapOrElseTest extends TestCase
     public function testUnwrapOrElseDoesNotExecuteClosureOnOk(): void
     {
         $closureExecuted = false;
-        $result = new Ok(5);
+        $result = Ok::of(5);
         $value = $result->unwrapOrElse(function ($err) use (&$closureExecuted) {
             $closureExecuted = true;
 

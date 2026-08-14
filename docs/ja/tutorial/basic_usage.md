@@ -75,21 +75,21 @@ class UserService
         // API呼び出し
         $response = file_get_contents("https://api.example.com/users/$id");
         if ($response === false) {
-            return new Err("API呼び出しに失敗しました");
+            return Err::of("API呼び出しに失敗しました");
         }
         
         // JSON解析
         $data = json_decode($response, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return new Err("JSON解析エラー: " . json_last_error_msg());
+            return Err::of("JSON解析エラー: " . json_last_error_msg());
         }
         
         // データ検証
         if (!isset($data['id'])) {
-            return new Err("不正なユーザーデータ: IDが見つかりません");
+            return Err::of("不正なユーザーデータ: IDが見つかりません");
         }
         
-        return new Ok($data);
+        return Ok::of($data);
     }
     
     public function displayUser(int $id): string
@@ -169,7 +169,7 @@ class ProductRepository
         ];
         
         if (isset($products[$id])) {
-            return new Some($products[$id]);
+            return Some::of($products[$id]);
         }
         return None::instance();
     }
@@ -206,15 +206,15 @@ use ba0918\Result\{Ok, Err, Some, None};
 // 文字列の正規化と検証
 function processUsername(string $input): Result
 {
-    return new Ok($input)
+    return Ok::of($input)
         ->map(fn($s) => trim($s))                    // 1. 空白除去
         ->map(fn($s) => strtolower($s))              // 2. 小文字化
         ->andThen(fn($s) => strlen($s) >= 3 ? 
-            new Ok($s) : 
-            new Err("ユーザー名は3文字以上である必要があります"))  // 3. 長さ検証
+            Ok::of($s) : 
+            Err::of("ユーザー名は3文字以上である必要があります"))  // 3. 長さ検証
         ->andThen(fn($s) => preg_match('/^[a-z0-9_]+$/', $s) ? 
-            new Ok($s) : 
-            new Err("ユーザー名に無効な文字が含まれています"));    // 4. 文字種検証
+            Ok::of($s) : 
+            Err::of("ユーザー名に無効な文字が含まれています"));    // 4. 文字種検証
 }
 
 // 使用例
@@ -241,13 +241,13 @@ function getUserWithSettings(int $userId): Option
 function findUser(int $id): Option
 {
     $users = [1 => ['id' => 1, 'name' => 'Alice']];
-    return isset($users[$id]) ? new Some($users[$id]) : None::instance();
+    return isset($users[$id]) ? Some::of($users[$id]) : None::instance();
 }
 
 function getSettings(int $userId): Option
 {
     $settings = [1 => ['theme' => 'dark', 'lang' => 'ja']];
-    return isset($settings[$userId]) ? new Some($settings[$userId]) : None::instance();
+    return isset($settings[$userId]) ? Some::of($settings[$userId]) : None::instance();
 }
 
 // 使用例
@@ -269,30 +269,30 @@ function loadConfiguration(string $configPath): Result
 {
     // ファイル存在確認
     if (!file_exists($configPath)) {
-        return new Err("設定ファイルが見つかりません: $configPath");
+        return Err::of("設定ファイルが見つかりません: $configPath");
     }
     
     // ファイル読み込み
     $content = file_get_contents($configPath);
     if ($content === false) {
-        return new Err("設定ファイルの読み込みに失敗しました: $configPath");
+        return Err::of("設定ファイルの読み込みに失敗しました: $configPath");
     }
     
     // JSON解析
     $config = json_decode($content, true);
     if (json_last_error() !== JSON_ERROR_NONE) {
-        return new Err("設定ファイルのJSON形式が不正です: " . json_last_error_msg());
+        return Err::of("設定ファイルのJSON形式が不正です: " . json_last_error_msg());
     }
     
     // 必須項目の確認
     $required = ['app_name', 'database'];
     foreach ($required as $key) {
         if (!isset($config[$key])) {
-            return new Err("必須設定項目が不足しています: $key");
+            return Err::of("必須設定項目が不足しています: $key");
         }
     }
     
-    return new Ok($config);
+    return Ok::of($config);
 }
 
 // 使用例 - デフォルト設定との合成
@@ -332,40 +332,40 @@ class UserValidator
     private function validateEmail(string $email): Result
     {
         if (empty($email)) {
-            return new Err("メールアドレスが入力されていません");
+            return Err::of("メールアドレスが入力されていません");
         }
         
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return new Err("メールアドレスの形式が正しくありません");
+            return Err::of("メールアドレスの形式が正しくありません");
         }
         
-        return new Ok($email);
+        return Ok::of($email);
     }
     
     private function validatePassword(string $password): Result
     {
         if (strlen($password) < 8) {
-            return new Err("パスワードは8文字以上である必要があります");
+            return Err::of("パスワードは8文字以上である必要があります");
         }
         
         if (!preg_match('/[A-Za-z]/', $password) || !preg_match('/[0-9]/', $password)) {
-            return new Err("パスワードは英字と数字を含む必要があります");
+            return Err::of("パスワードは英字と数字を含む必要があります");
         }
         
-        return new Ok($password);
+        return Ok::of($password);
     }
     
     private function validateAge(?int $age): Result
     {
         if ($age === null) {
-            return new Err("年齢が入力されていません");
+            return Err::of("年齢が入力されていません");
         }
         
         if ($age < 0 || $age > 150) {
-            return new Err("年齢は0-150の範囲で入力してください");
+            return Err::of("年齢は0-150の範囲で入力してください");
         }
         
-        return new Ok($age);
+        return Ok::of($age);
     }
 }
 
@@ -394,7 +394,7 @@ use ba0918\Result\{Some, None, Option};
 
 function safeGet(array $array, string $key): Option
 {
-    return isset($array[$key]) ? new Some($array[$key]) : None::instance();
+    return isset($array[$key]) ? Some::of($array[$key]) : None::instance();
 }
 
 function safeGetNested(array $array, array $keys): Option
@@ -408,7 +408,7 @@ function safeGetNested(array $array, array $keys): Option
         $current = $current[$key];
     }
     
-    return new Some($current);
+    return Some::of($current);
 }
 
 // 使用例
@@ -449,7 +449,7 @@ class UserRepository
         ];
         
         if (isset($users[$email])) {
-            return new Some($users[$email]);
+            return Some::of($users[$email]);
         }
         return None::instance();
     }
@@ -502,24 +502,24 @@ class ContactFormProcessor
         $message = $this->getFormValue($data, 'message');
         
         if ($name->isNone()) {
-            return new Err("お名前を入力してください");
+            return Err::of("お名前を入力してください");
         }
         
         if ($email->isNone()) {
-            return new Err("メールアドレスを入力してください");
+            return Err::of("メールアドレスを入力してください");
         }
         
         if ($message->isNone()) {
-            return new Err("メッセージを入力してください");
+            return Err::of("メッセージを入力してください");
         }
         
-        return new Ok($data);
+        return Ok::of($data);
     }
     
     private function getFormValue(array $data, string $key): Option
     {
         $value = trim($data[$key] ?? '');
-        return empty($value) ? None::instance() : new Some($value);
+        return empty($value) ? None::instance() : Some::of($value);
     }
     
     private function sendEmail(array $data): Result
@@ -528,9 +528,9 @@ class ContactFormProcessor
         $success = rand(0, 1); // ランダムに成功/失敗
         
         if ($success) {
-            return new Ok("メール送信成功");
+            return Ok::of("メール送信成功");
         } else {
-            return new Err("メール送信に失敗しました");
+            return Err::of("メール送信に失敗しました");
         }
     }
     
@@ -538,7 +538,7 @@ class ContactFormProcessor
     {
         // DB保存をシミュレート
         $id = rand(1000, 9999);
-        return new Ok($id);
+        return Ok::of($id);
     }
 }
 
@@ -574,7 +574,7 @@ class WeatherService
         $validCities = ['Tokyo', 'Osaka', 'Nagoya'];
         
         if (!in_array($city, $validCities, true)) {
-            return new Err("対応していない都市です: $city");
+            return Err::of("対応していない都市です: $city");
         }
         
         // API レスポンスをシミュレート
@@ -584,7 +584,7 @@ class WeatherService
             ]
         ]);
         
-        return new Ok($response);
+        return Ok::of($response);
     }
     
     private function parseResponse(string $response): Result
@@ -592,19 +592,19 @@ class WeatherService
         $data = json_decode($response, true);
         
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return new Err("API レスポンスの解析に失敗しました");
+            return Err::of("API レスポンスの解析に失敗しました");
         }
         
-        return new Ok($data);
+        return Ok::of($data);
     }
     
     private function extractTemperature(array $data): Result
     {
         if (!isset($data['weather']['main']['temp'])) {
-            return new Err("温度データが見つかりません");
+            return Err::of("温度データが見つかりません");
         }
         
-        return new Ok($data['weather']['main']['temp']);
+        return Ok::of($data['weather']['main']['temp']);
     }
     
     private function formatTemperature(int $temp): string

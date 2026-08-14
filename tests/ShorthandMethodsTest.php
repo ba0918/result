@@ -38,6 +38,7 @@ final class ShorthandMethodsTest extends TestCase
 
     public function testIsOkAndWithNullValue(): void
     {
+        /** @var Ok<mixed> $result */
         $result = Ok::of(null);
         $this->assertTrue($result->isOkAnd(fn ($x) => $x === null));
         $this->assertFalse($result->isOkAnd(fn ($x) => $x !== null));
@@ -45,10 +46,9 @@ final class ShorthandMethodsTest extends TestCase
 
     public function testIsOkAndWithComplexPredicate(): void
     {
+        /** @var Ok<array<string, mixed>> $result */
         $result = Ok::of(['name' => 'test', 'age' => 25]);
         $this->assertTrue($result->isOkAnd(function ($data) {
-            assert(is_array($data));
-
             return isset($data['name']) && $data['age'] >= 18;
         }));
     }
@@ -63,8 +63,6 @@ final class ShorthandMethodsTest extends TestCase
     {
         $result = Err::of('file not found');
         $this->assertTrue($result->isErrAnd(function ($err) {
-            assert(is_string($err));
-
             return str_contains($err, 'not found');
         }));
     }
@@ -73,8 +71,6 @@ final class ShorthandMethodsTest extends TestCase
     {
         $result = Err::of('file not found');
         $this->assertFalse($result->isErrAnd(function ($err) {
-            assert(is_string($err));
-
             return str_contains($err, 'access denied');
         }));
     }
@@ -89,8 +85,6 @@ final class ShorthandMethodsTest extends TestCase
     {
         $result = Err::of(['code' => 404, 'message' => 'Not Found']);
         $this->assertTrue($result->isErrAnd(function ($err) {
-            assert(is_array($err));
-
             return $err['code'] >= 400 && $err['code'] < 500;
         }));
     }
@@ -101,8 +95,6 @@ final class ShorthandMethodsTest extends TestCase
     {
         $result = Ok::of(5);
         $mapped = $result->mapOr(function ($x) {
-            assert(is_int($x));
-
             return $x * 2;
         }, 0);
         $this->assertSame(10, $mapped);
@@ -119,8 +111,6 @@ final class ShorthandMethodsTest extends TestCase
     {
         $result = Ok::of(42);
         $mapped = $result->mapOr(function ($x) {
-            assert(is_int($x));
-
             return "number: $x";
         }, 'default');
         $this->assertSame('number: 42', $mapped);
@@ -128,6 +118,7 @@ final class ShorthandMethodsTest extends TestCase
 
     public function testMapOrWithNullValues(): void
     {
+        /** @var Ok<mixed> $result */
         $result = Ok::of(null);
         $mapped = $result->mapOr(fn ($x) => $x ?? 'was null', 'default');
         $this->assertSame('was null', $mapped);
@@ -140,8 +131,6 @@ final class ShorthandMethodsTest extends TestCase
         $result = Ok::of($obj);
 
         $mapped = $result->mapOr(function ($o) {
-            assert(is_object($o) && property_exists($o, 'name'));
-
             return $o->name;
         }, 'no name');
         $this->assertSame('test', $mapped);
@@ -151,8 +140,6 @@ final class ShorthandMethodsTest extends TestCase
     {
         $result = Ok::of(10);
         $mapped = $result->mapOrElse(function ($x) {
-            assert(is_int($x));
-
             return $x / 2;
         }, fn ($err) => 0);
         $this->assertSame(5, $mapped);
@@ -172,8 +159,6 @@ final class ShorthandMethodsTest extends TestCase
 
         $mapped = $result->mapOrElse(
             function ($x) {
-                assert(is_int($x));
-
                 return $x * 3;
             },
             function ($err) use (&$sideEffect) {
@@ -193,10 +178,8 @@ final class ShorthandMethodsTest extends TestCase
         $mapped = $result->mapOrElse(
             fn ($x) => $x,
             function ($err) {
-                assert(is_array($err) && isset($err['code']) && isset($err['message']));
                 $code = $err['code'];
                 $message = $err['message'];
-                assert(is_int($code) && is_string($message));
 
                 return "Error {$code}: {$message}";
             },
@@ -209,8 +192,6 @@ final class ShorthandMethodsTest extends TestCase
         $result = Ok::of([1, 2, 3, 4, 5]);
         $mapped = $result->mapOrElse(
             function ($arr) {
-                assert(is_array($arr));
-
                 return array_sum($arr);
             },
             fn ($err) => 0,
@@ -231,8 +212,6 @@ final class ShorthandMethodsTest extends TestCase
         $mapped = $result->mapOrElse(
             fn ($x) => "success: $x",
             function ($code) {
-                assert(is_int($code));
-
                 return $code >= 400 && $code < 500 ? 'client error' : 'server error';
             },
         );
@@ -261,6 +240,7 @@ final class ShorthandMethodsTest extends TestCase
 
     public function testIsSomeAndWithNullValue(): void
     {
+        /** @var Some<mixed> $option */
         $option = Some::of(null);
         $this->assertTrue($option->isSomeAnd(fn ($x) => $x === null));
         $this->assertFalse($option->isSomeAnd(fn ($x) => $x !== null));
@@ -274,8 +254,6 @@ final class ShorthandMethodsTest extends TestCase
 
         $option = Some::of($obj);
         $this->assertTrue($option->isSomeAnd(function ($o) {
-            assert(is_object($o) && property_exists($o, 'valid') && property_exists($o, 'score'));
-
             return $o->valid && $o->score >= 80;
         }));
     }
@@ -291,17 +269,15 @@ final class ShorthandMethodsTest extends TestCase
 
     public function testIsSomeAndWithArrayValidation(): void
     {
+        /** @var Some<array<int>> $option */
         $option = Some::of([1, 2, 3, 4, 5]);
         $this->assertTrue($option->isSomeAnd(function ($arr) {
-            assert(is_array($arr));
-
             return count($arr) > 3 && array_sum($arr) > 10;
         }));
 
+        /** @var Some<array<int>> $emptyOption */
         $emptyOption = Some::of([]);
         $this->assertFalse($emptyOption->isSomeAnd(function ($arr) {
-            assert(is_array($arr));
-
             return count($arr) > 0;
         }));
     }
@@ -323,11 +299,7 @@ final class ShorthandMethodsTest extends TestCase
         $result = Ok::of(Some::of(42));
 
         $hasValidValue = $result->isOkAnd(function ($opt) {
-            assert($opt instanceof \ba0918\Result\Option);
-
             return $opt->isSome() && $opt->isSomeAnd(function ($x) {
-                assert(is_int($x));
-
                 return $x > 40;
             });
         });
@@ -342,8 +314,6 @@ final class ShorthandMethodsTest extends TestCase
 
         $start = microtime(true);
         $isValid = $result->isOkAnd(function ($arr) {
-            assert(is_array($arr));
-
             return count($arr) === 1000;
         });
         $end = microtime(true);
@@ -369,8 +339,6 @@ final class ShorthandMethodsTest extends TestCase
         // Confirm that running the same predicate repeatedly does not leak memory
         for ($i = 0; $i < 100; $i++) {
             $result = $option->isSomeAnd(function ($x) {
-                assert(is_int($x));
-
                 return $x === 42;
             });
             $this->assertTrue($result);

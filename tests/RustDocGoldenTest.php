@@ -81,8 +81,6 @@ final class RustDocGoldenTest extends TestCase
         //       assert_eq!(x.map(|s| s.len()), Ok(5));
         $x = Ok::of('hello');
         $mapped = $x->map(function ($s) {
-            assert(is_string($s));
-
             return strlen($s);
         });
 
@@ -96,8 +94,6 @@ final class RustDocGoldenTest extends TestCase
         //       assert_eq!(x.map_err(|s| s.len()), Err(5));
         $x = Err::of('hello');
         $mapped = $x->mapErr(function ($s) {
-            assert(is_string($s));
-
             return strlen($s);
         });
 
@@ -121,8 +117,6 @@ final class RustDocGoldenTest extends TestCase
         //       assert_eq!(x.map_or(42, |v| v.len()), 3);
         $x = Ok::of('foo');
         $this->assertSame(3, $x->mapOr(function ($v) {
-            assert(is_string($v));
-
             return strlen($v);
         }, 42));
 
@@ -142,8 +136,6 @@ final class RustDocGoldenTest extends TestCase
         $k = 21;
         $x = Ok::of('foo');
         $this->assertSame(3, $x->mapOrElse(function ($v) {
-            assert(is_string($v));
-
             return strlen($v);
         }, function () use ($k): int {
             return $k * 2;
@@ -166,8 +158,6 @@ final class RustDocGoldenTest extends TestCase
         // Note: PHP omits the string conversion (to_string()); the integer 4 is asserted directly
         $result = (Ok::of(2))
             ->andThen(function ($x) {
-                assert(is_int($x));
-
                 return Ok::of($x * $x);
             });
 
@@ -209,8 +199,6 @@ final class RustDocGoldenTest extends TestCase
         // Rust: assert_eq!(Err("foo").unwrap_or_else(count), 3);
         $x = Err::of('foo');
         $this->assertSame(3, $x->unwrapOrElse(function ($s) {
-            assert(is_string($s));
-
             return strlen($s);
         }));
     }
@@ -301,8 +289,6 @@ final class RustDocGoldenTest extends TestCase
         // Rust: assert_eq!(Err(2).or_else(sq).or_else(sq), Ok(4));
         $result = (Err::of(2))
             ->orElse(function ($x) {
-                assert(is_int($x));
-
                 return Ok::of($x * $x);
             })
             ->orElse(function ($x) {
@@ -388,7 +374,6 @@ final class RustDocGoldenTest extends TestCase
         $inspected = [];
         $x = Err::of(2);
         $returned = $x->inspectErr(function ($error) use (&$inspected): void {
-            assert(is_int($error));
             $inspected[] = $error;
         });
 
@@ -419,8 +404,6 @@ final class RustDocGoldenTest extends TestCase
         //       assert_eq!(x.is_some_and(|x| x > 1), true);
         $x = Some::of(2);
         $this->assertTrue($x->isSomeAnd(function ($x) {
-            assert(is_int($x));
-
             return $x > 1;
         }));
 
@@ -428,8 +411,6 @@ final class RustDocGoldenTest extends TestCase
         //       assert_eq!(x.is_some_and(|x| x > 1), false);
         $x = Some::of(0);
         $this->assertFalse($x->isSomeAnd(function ($x) {
-            assert(is_int($x));
-
             return $x > 1;
         }));
 
@@ -448,8 +429,6 @@ final class RustDocGoldenTest extends TestCase
         //       assert_eq!(x.map(|s| s.len()), Some(13));
         $x = Some::of('Hello, world!');
         $mapped = $x->map(function ($s) {
-            assert(is_string($s));
-
             return strlen($s);
         });
 
@@ -472,8 +451,6 @@ final class RustDocGoldenTest extends TestCase
         //       assert_eq!(x.map_or(42, |v| v.len()), 3);
         $x = Some::of('foo');
         $this->assertSame(3, $x->mapOr(function ($v) {
-            assert(is_string($v));
-
             return strlen($v);
         }, 42));
 
@@ -493,8 +470,6 @@ final class RustDocGoldenTest extends TestCase
         $k = 21;
         $x = Some::of('foo');
         $this->assertSame(3, $x->mapOrElse(function ($v) {
-            assert(is_string($v));
-
             return strlen($v);
         }, function () use ($k): int {
             return 2 * $k;
@@ -517,13 +492,9 @@ final class RustDocGoldenTest extends TestCase
         //       assert_eq!(Some(2).and_then(sq).and_then(sq), Some(16));
         $result = Some::of(2)
             ->andThen(function ($x) {
-                assert(is_int($x));
-
                 return Some::of($x * $x);
             })
             ->andThen(function ($x) {
-                assert(is_int($x));
-
                 return Some::of($x * $x);
             });
 
@@ -532,8 +503,6 @@ final class RustDocGoldenTest extends TestCase
 
         // Rust: assert_eq!(Some(2).and_then(nope), None);
         $result = Some::of(2)->andThen(function ($x) {
-            assert(is_int($x));
-
             return None::instance();
         });
         $this->assertTrue($result->isNone());
@@ -550,8 +519,6 @@ final class RustDocGoldenTest extends TestCase
         // Rust: fn is_even(n: &i32) -> bool { n % 2 == 0 }
         //       assert_eq!(Some(4).filter(is_even), Some(4));
         $result = Some::of(4)->filter(function ($n) {
-            assert(is_int($n));
-
             return $n % 2 === 0;
         });
         $this->assertTrue($result->isSome());
@@ -559,8 +526,6 @@ final class RustDocGoldenTest extends TestCase
 
         // Rust: assert_eq!(Some(3).filter(is_even), None);
         $result = Some::of(3)->filter(function ($n) {
-            assert(is_int($n));
-
             return $n % 2 === 0;
         });
         $this->assertTrue($result->isNone());
@@ -586,7 +551,7 @@ final class RustDocGoldenTest extends TestCase
         // Note: PHP throws UnwrapException instead of panicking
         $x = None::instance();
         $this->expectException(UnwrapException::class);
-        $this->expectExceptionMessage('None value');
+        $this->expectExceptionMessage('Called unwrap() on a None value');
         $x->unwrap();
     }
 

@@ -58,9 +58,9 @@ use ba0918\Result\{Ok, Err, Some, None, Result, Option};
 function safeDivide(float $a, float $b): Result
 {
     if ($b === 0.0) {
-        return new Err("ゼロで割ることはできません");
+        return Err::of("ゼロで割ることはできません");
     }
-    return new Ok($a / $b);
+    return Ok::of($a / $b);
 }
 
 // Option型 - 値の有無を明示的に扱う
@@ -69,7 +69,7 @@ function findUser(int $id): Option
     $users = [1 => ['name' => 'Alice'], 2 => ['name' => 'Bob']];
     
     if (isset($users[$id])) {
-        return new Some($users[$id]);
+        return Some::of($users[$id]);
     }
     return None::instance();
 }
@@ -105,12 +105,12 @@ use ba0918\Result\{Ok, Err, Result};
 function validateAge(int $age): Result
 {
     if ($age < 0) {
-        return new Err("年齢は0以上である必要があります");
+        return Err::of("年齢は0以上である必要があります");
     }
     if ($age > 150) {
-        return new Err("年齢は150以下である必要があります");
+        return Err::of("年齢は150以下である必要があります");
     }
-    return new Ok($age);
+    return Ok::of($age);
 }
 
 // 2. 結果の確認
@@ -129,8 +129,8 @@ if ($result->isOk()) {
 #### isOk() / isErr() - 状態の確認
 
 ```php
-$success = new Ok(42);
-$failure = new Err("エラー");
+$success = Ok::of(42);
+$failure = Err::of("エラー");
 
 var_dump($success->isOk());  // true
 var_dump($success->isErr()); // false
@@ -141,8 +141,8 @@ var_dump($failure->isErr()); // true
 #### unwrap() / unwrapErr() - 値の取り出し
 
 ```php
-$success = new Ok(42);
-$failure = new Err("エラー");
+$success = Ok::of(42);
+$failure = Err::of("エラー");
 
 // 成功値の取り出し（失敗時は例外）
 echo $success->unwrap();     // 42
@@ -156,8 +156,8 @@ echo $failure->unwrapErr();  // "エラー"
 #### unwrapOr() - 安全な値の取り出し
 
 ```php
-$success = new Ok(42);
-$failure = new Err("エラー");
+$success = Ok::of(42);
+$failure = Err::of("エラー");
 
 // デフォルト値を指定して安全に取り出し
 echo $success->unwrapOr(0);  // 42（成功値）
@@ -188,7 +188,7 @@ function getConfig(string $key): Option
     ];
     
     if (isset($config[$key])) {
-        return new Some($config[$key]);
+        return Some::of($config[$key]);
     }
     return None::instance();
 }
@@ -208,7 +208,7 @@ if ($value->isSome()) {
 #### isSome() / isNone() - 状態の確認
 
 ```php
-$some = new Some("値");
+$some = Some::of("値");
 $none = None::instance();
 
 var_dump($some->isSome());  // true
@@ -220,7 +220,7 @@ var_dump($none->isNone());  // true
 #### unwrap() / unwrapOr() - 値の取り出し
 
 ```php
-$some = new Some("値");
+$some = Some::of("値");
 $none = None::instance();
 
 // 値の取り出し（Noneの場合は例外）
@@ -240,17 +240,17 @@ Result型やOption型の中身を変換するメソッドです。
 
 ```php
 // Result型のmap
-$result = new Ok(10);
+$result = Ok::of(10);
 $doubled = $result->map(fn($x) => $x * 2);
 echo $doubled->unwrap(); // 20
 
 // エラーの場合はそのまま
-$error = new Err("エラー");
+$error = Err::of("エラー");
 $mapped = $error->map(fn($x) => $x * 2);
 echo $mapped->unwrapErr(); // "エラー"（変換されない）
 
 // Option型のmap
-$some = new Some("hello");
+$some = Some::of("hello");
 $upper = $some->map(fn($s) => strtoupper($s));
 echo $upper->unwrap(); // "HELLO"
 
@@ -267,16 +267,16 @@ Result型やOption型を返す関数を連続して適用するメソッドで�
 ```php
 function validatePositive(int $n): Result
 {
-    return $n > 0 ? new Ok($n) : new Err("正の数である必要があります");
+    return $n > 0 ? Ok::of($n) : Err::of("正の数である必要があります");
 }
 
 function validateEven(int $n): Result
 {
-    return $n % 2 === 0 ? new Ok($n) : new Err("偶数である必要があります");
+    return $n % 2 === 0 ? Ok::of($n) : Err::of("偶数である必要があります");
 }
 
 // 連続した検証
-$result = new Ok(4)
+$result = Ok::of(4)
     ->andThen('validatePositive')
     ->andThen('validateEven');
 
@@ -295,20 +295,20 @@ use ba0918\Result\{Ok, Err, Result};
 function readConfigFile(string $path): Result
 {
     if (!file_exists($path)) {
-        return new Err("ファイルが存在しません: $path");
+        return Err::of("ファイルが存在しません: $path");
     }
     
     $content = file_get_contents($path);
     if ($content === false) {
-        return new Err("ファイルの読み込みに失敗しました: $path");
+        return Err::of("ファイルの読み込みに失敗しました: $path");
     }
     
     $data = json_decode($content, true);
     if (json_last_error() !== JSON_ERROR_NONE) {
-        return new Err("JSON解析エラー: " . json_last_error_msg());
+        return Err::of("JSON解析エラー: " . json_last_error_msg());
     }
     
-    return new Ok($data);
+    return Ok::of($data);
 }
 
 // 使用例
@@ -333,7 +333,7 @@ function findUserById(int $id): Option
     ];
     
     if (isset($users[$id])) {
-        return new Some($users[$id]);
+        return Some::of($users[$id]);
     }
     return None::instance();
 }
@@ -378,9 +378,9 @@ echo "ユーザーメール: " . $userEmail; // alice@example.com
 function divide(float $a, float $b): Result
 {
     if ($b === 0.0) {
-        return new Err("ゼロ除算は数学的に定義されていません");
+        return Err::of("ゼロ除算は数学的に定義されていません");
     }
-    return new Ok($a / $b);
+    return Ok::of($a / $b);
 }
 
 // 例外が適切な例

@@ -11,7 +11,7 @@ class ExpectTest extends TestCase
 {
     public function testExpectOnOk(): void
     {
-        $ok = new Ok(10);
+        $ok = Ok::of(10);
         $this->assertSame(10, $ok->expect('This should not fail'));
     }
 
@@ -22,7 +22,7 @@ class ExpectTest extends TestCase
         $this->expectException(UnwrapException::class);
         $this->expectExceptionMessage($errorMessage . ': ' . print_r($errorValue, true));
 
-        $err = new Err($errorValue);
+        $err = Err::of($errorValue);
         $err->expect($errorMessage);
     }
 }

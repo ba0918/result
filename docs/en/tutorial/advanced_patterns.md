@@ -27,8 +27,8 @@ use ba0918\Result\{Ok, Err, Some, None, Result, Option};
 // Result<Result<T, E>, E> → Result<T, E>
 function complexOperation(int $value): Result
 {
-    return new Ok($value)
-        ->map(fn($v) => $v > 0 ? new Ok($v * 2) : new Err("Negative value"))
+    return Ok::of($value)
+        ->map(fn($v) => $v > 0 ? Ok::of($v * 2) : Err::of("Negative value"))
         ->flatten(); // Ok(Ok(4)) → Ok(4), Ok(Err("Negative value")) → Err("Negative value")
 }
 
@@ -44,7 +44,7 @@ echo $result2->unwrapErr(); // "Negative value"
 // Usage in multi-layer processing
 function processData(array $data): Result
 {
-    return new Ok($data)
+    return Ok::of($data)
         ->map(fn($d) => validateData($d))    // Result<Result<T, E>, E>
         ->flatten()                          // Result<T, E>
         ->andThen(fn($d) => enrichData($d))  // Result<T, E>
@@ -54,15 +54,15 @@ function processData(array $data): Result
 function validateData(array $data): Result
 {
     return isset($data['id']) ? 
-        new Ok($data) : 
-        new Err("Missing ID");
+        Ok::of($data) : 
+        Err::of("Missing ID");
 }
 
 function enrichData(array $data): Result
 {
     // Enrich with information from an external data source
     $additionalInfo = ['timestamp' => time()];
-    return new Ok(array_merge($data, $additionalInfo));
+    return Ok::of(array_merge($data, $additionalInfo));
 }
 
 function transformData(array $data): array
@@ -86,14 +86,14 @@ function processOptionalValue(?string $input): Option
         return None::instance();
     }
     
-    return new Some(validateInput($input));
+    return Some::of(validateInput($input));
 }
 
 function validateInput(string $input): Result
 {
     return strlen($input) > 0 ? 
-        new Ok(trim($input)) : 
-        new Err("Empty input");
+        Ok::of(trim($input)) : 
+        Err::of("Empty input");
 }
 
 // Using transpose
@@ -137,11 +137,11 @@ class DataProcessor
         
         foreach ($required as $field) {
             if (!isset($input[$field])) {
-                return new Err("Missing required field: $field");
+                return Err::of("Missing required field: $field");
             }
         }
         
-        return new Ok($input);
+        return Ok::of($input);
     }
     
     private function enrichWithMetadata(array $data): Result
@@ -157,7 +157,7 @@ class DataProcessor
             'external_metadata' => $metadata->unwrap()
         ]);
         
-        return new Ok($enriched);
+        return Ok::of($enriched);
     }
     
     private function fetchExternalMetadata(string $type): Result
@@ -169,24 +169,24 @@ class DataProcessor
         ];
         
         if (!isset($metadataMap[$type])) {
-            return new Err("Unsupported data type: $type");
+            return Err::of("Unsupported data type: $type");
         }
         
-        return new Ok($metadataMap[$type]);
+        return Ok::of($metadataMap[$type]);
     }
     
     private function validateBusinessRules(array $data): Result
     {
         // Business rule validation
         if ($data['type'] === 'user' && !isset($data['data']['email'])) {
-            return new Err("User data requires an email address");
+            return Err::of("User data requires an email address");
         }
         
         if ($data['type'] === 'product' && !isset($data['data']['price'])) {
-            return new Err("Product data requires a price");
+            return Err::of("Product data requires a price");
         }
         
-        return new Ok($data);
+        return Ok::of($data);
     }
     
     private function persistData(array $data): Result
@@ -196,9 +196,9 @@ class DataProcessor
         
         // Simulate success/failure randomly
         if (rand(0, 10) < 8) {
-            return new Ok($id);
+            return Ok::of($id);
         } else {
-            return new Err("Failed to save to database");
+            return Err::of("Failed to save to database");
         }
     }
     
@@ -206,9 +206,9 @@ class DataProcessor
     {
         // Simulate sending a notification
         if (rand(0, 10) < 9) {
-            return new Ok("Notification sent: $recordId");
+            return Ok::of("Notification sent: $recordId");
         } else {
-            return new Err("Failed to send notification");
+            return Err::of("Failed to send notification");
         }
     }
 }
@@ -287,7 +287,7 @@ class RobustService
             }
         }
         
-        return new Err(new DetailedError(
+        return Err::of(new DetailedError(
             ErrorType::SYSTEM,
             "Maximum retry attempts reached",
             "Attempts: $maxRetries"
@@ -298,7 +298,7 @@ class RobustService
     {
         // Simulate a network error (recoverable)
         if (rand(0, 10) < 3) {
-            return new Err(new DetailedError(
+            return Err::of(new DetailedError(
                 ErrorType::NETWORK,
                 "Network connection failed",
                 "timeout after 30s"
@@ -307,14 +307,14 @@ class RobustService
         
         // Validation error (unrecoverable)
         if (!isset($data['id'])) {
-            return new Err(new DetailedError(
+            return Err::of(new DetailedError(
                 ErrorType::VALIDATION,
                 "ID field is required",
                 "required field missing"
             ));
         }
         
-        return new Ok("Data processed: " . $data['id']);
+        return Ok::of("Data processed: " . $data['id']);
     }
 }
 ```
@@ -378,10 +378,10 @@ class FormValidator
         
         // Return the result
         if ($validation->hasErrors()) {
-            return new Err($validation);
+            return Err::of($validation);
         }
         
-        return new Ok([
+        return Ok::of([
             'email' => $data['email'],
             'password' => $data['password'],
             'age' => $data['age']
@@ -391,36 +391,36 @@ class FormValidator
     private function validateEmail(string $email): Result
     {
         if (empty($email)) {
-            return new Err("Email address is required");
+            return Err::of("Email address is required");
         }
         
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return new Err("Invalid email address format");
+            return Err::of("Invalid email address format");
         }
         
-        return new Ok($email);
+        return Ok::of($email);
     }
     
     private function validatePassword(string $password): Result
     {
         if (strlen($password) < 8) {
-            return new Err("Password must be at least 8 characters");
+            return Err::of("Password must be at least 8 characters");
         }
         
-        return new Ok($password);
+        return Ok::of($password);
     }
     
     private function validateAge(?int $age): Result
     {
         if ($age === null) {
-            return new Err("Age is required");
+            return Err::of("Age is required");
         }
         
         if ($age < 0 || $age > 150) {
-            return new Err("Age must be between 0 and 150");
+            return Err::of("Age must be between 0 and 150");
         }
         
-        return new Ok($age);
+        return Ok::of($age);
     }
 }
 ```
@@ -464,24 +464,24 @@ class UserProfileBuilder
     private function findUser(int $id): Option
     {
         $users = [1 => ['id' => 1, 'name' => 'Alice']];
-        return isset($users[$id]) ? new Some($users[$id]) : None::instance();
+        return isset($users[$id]) ? Some::of($users[$id]) : None::instance();
     }
     
     private function findSettings(int $userId): Option
     {
         $settings = [1 => ['theme' => 'dark', 'lang' => 'ja']];
-        return isset($settings[$userId]) ? new Some($settings[$userId]) : None::instance();
+        return isset($settings[$userId]) ? Some::of($settings[$userId]) : None::instance();
     }
     
     private function findPreferences(int $userId): Option
     {
         $preferences = [1 => ['notifications' => true, 'newsletter' => false]];
-        return isset($preferences[$userId]) ? new Some($preferences[$userId]) : None::instance();
+        return isset($preferences[$userId]) ? Some::of($preferences[$userId]) : None::instance();
     }
     
     private function getDefaultSettings(): Option
     {
-        return new Some(['theme' => 'light', 'lang' => 'en']);
+        return Some::of(['theme' => 'light', 'lang' => 'en']);
     }
 }
 ```
@@ -506,7 +506,7 @@ class ProductFilter
             ->andThen(fn($product) => {
                 if ($product['discount'] > 0) {
                     $discountedPrice = $product['price'] * (1 - $product['discount'] / 100);
-                    return new Some(array_merge($product, ['final_price' => $discountedPrice]));
+                    return Some::of(array_merge($product, ['final_price' => $discountedPrice]));
                 }
                 return None::instance();
             });
@@ -525,7 +525,7 @@ class ProductFilter
             2 => ['id' => 2, 'name' => 'Mouse', 'price' => 0, 'available' => false, 'discount' => 0, 'category_id' => 2],
         ];
         
-        return isset($products[$id]) ? new Some($products[$id]) : None::instance();
+        return isset($products[$id]) ? Some::of($products[$id]) : None::instance();
     }
     
     private function findCategory(int $categoryId): Option
@@ -535,7 +535,7 @@ class ProductFilter
             2 => ['id' => 2, 'name' => 'Accessories'],
         ];
         
-        return isset($categories[$categoryId]) ? new Some($categories[$categoryId]) : None::instance();
+        return isset($categories[$categoryId]) ? Some::of($categories[$categoryId]) : None::instance();
     }
 }
 ```
@@ -560,9 +560,9 @@ class OptimizedProcessor
     private function validateDataset(array $items): Result
     {
         if (count($items) > 10000) {
-            return new Err("Dataset too large");
+            return Err::of("Dataset too large");
         }
-        return new Ok($items);
+        return Ok::of($items);
     }
     
     private function processInBatches(array $items): Result
@@ -579,13 +579,13 @@ class OptimizedProcessor
             $results = array_merge($results, $batchResult->unwrap());
         }
         
-        return new Ok($results);
+        return Ok::of($results);
     }
     
     private function processBatch(array $batch): Result
     {
         // Batch processing implementation
-        return new Ok(array_map(fn($item) => $item * 2, $batch));
+        return Ok::of(array_map(fn($item) => $item * 2, $batch));
     }
     
     private function fallbackToCache(): array
@@ -620,7 +620,7 @@ class MemoryEfficientProcessor
     private function processItem($item): Option
     {
         if (is_numeric($item) && $item > 0) {
-            return new Some($item * 2);
+            return Some::of($item * 2);
         }
         return None::instance();
     }
@@ -688,7 +688,7 @@ function badMixing(?string $input): Option
     if ($input === null) {
         return None::instance();
     }
-    return new Some($input); // Null checks are still required
+    return Some::of($input); // Null checks are still required
 }
 
 // ✅ Good example - consistent type usage
@@ -727,14 +727,14 @@ class OrderProcessingWorkflow
     private function validateOrder(array $data): Result
     {
         if (!isset($data['items']) || empty($data['items'])) {
-            return new Err("No items specified in order");
+            return Err::of("No items specified in order");
         }
         
         if (!isset($data['customer_id'])) {
-            return new Err("Customer ID is required");
+            return Err::of("Customer ID is required");
         }
         
-        return new Ok($data);
+        return Ok::of($data);
     }
     
     private function checkInventory(array $order): Result
@@ -743,18 +743,18 @@ class OrderProcessingWorkflow
             $available = $this->getInventoryCount($item['product_id']);
             
             if ($available->isNone() || $available->unwrap() < $item['quantity']) {
-                return new Err("Insufficient inventory for product ID {$item['product_id']}");
+                return Err::of("Insufficient inventory for product ID {$item['product_id']}");
             }
         }
         
-        return new Ok($order);
+        return Ok::of($order);
     }
     
     private function getInventoryCount(int $productId): Option
     {
         $inventory = [1 => 10, 2 => 5, 3 => 0];
         return isset($inventory[$productId]) ? 
-            new Some($inventory[$productId]) : 
+            Some::of($inventory[$productId]) : 
             None::instance();
     }
     
@@ -767,7 +767,7 @@ class OrderProcessingWorkflow
             $price = $this->getProductPrice($item['product_id']);
             
             if ($price->isNone()) {
-                return new Err("Price information not found for product ID {$item['product_id']}");
+                return Err::of("Price information not found for product ID {$item['product_id']}");
             }
             
             $itemTotal = $price->unwrap() * $item['quantity'];
@@ -779,7 +779,7 @@ class OrderProcessingWorkflow
             ]);
         }
         
-        return new Ok(array_merge($order, [
+        return Ok::of(array_merge($order, [
             'items' => $calculatedItems,
             'total_amount' => $total
         ]));
@@ -789,7 +789,7 @@ class OrderProcessingWorkflow
     {
         $prices = [1 => 1000, 2 => 2000, 3 => 3000];
         return isset($prices[$productId]) ? 
-            new Some($prices[$productId]) : 
+            Some::of($prices[$productId]) : 
             None::instance();
     }
     
@@ -797,23 +797,23 @@ class OrderProcessingWorkflow
     {
         // Simulate payment processing
         if ($order['total_amount'] > 100000) {
-            return new Err("Payment amount exceeds the limit");
+            return Err::of("Payment amount exceeds the limit");
         }
         
         $paymentId = 'pay_' . uniqid();
-        return new Ok(array_merge($order, ['payment_id' => $paymentId]));
+        return Ok::of(array_merge($order, ['payment_id' => $paymentId]));
     }
     
     private function reserveItems(array $order): Result
     {
         $reservationId = 'res_' . uniqid();
-        return new Ok(array_merge($order, ['reservation_id' => $reservationId]));
+        return Ok::of(array_merge($order, ['reservation_id' => $reservationId]));
     }
     
     private function generateInvoice(array $order): Result
     {
         $invoiceId = 'inv_' . uniqid();
-        return new Ok([
+        return Ok::of([
             'order_id' => 'ord_' . uniqid(),
             'invoice_id' => $invoiceId,
             'payment_id' => $order['payment_id'],
@@ -825,7 +825,7 @@ class OrderProcessingWorkflow
     private function sendNotifications(array $invoice): Result
     {
         // Simulate sending notifications
-        return new Ok($invoice);
+        return Ok::of($invoice);
     }
 }
 

@@ -14,7 +14,7 @@ class CustomExceptionTest extends TestCase
         $errorValue = 'error';
         $this->expectException(UnwrapException::class);
         $this->expectExceptionMessage('Called unwrap() on an Err value: ' . print_r($errorValue, true));
-        $err = new Err($errorValue);
+        $err = Err::of($errorValue);
         $err->unwrap();
     }
 
@@ -23,7 +23,7 @@ class CustomExceptionTest extends TestCase
         $successValue = 'success';
         $this->expectException(UnwrapException::class);
         $this->expectExceptionMessage('Called unwrapErr() on an Ok value: ' . print_r($successValue, true));
-        $ok = new Ok($successValue);
+        $ok = Ok::of($successValue);
         $ok->unwrapErr();
     }
 }

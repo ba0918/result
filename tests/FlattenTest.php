@@ -12,8 +12,8 @@ class FlattenTest extends TestCase
 
     public function testOkOkFlattensToOk(): void
     {
-        $inner = new Ok(42);
-        $outer = new Ok($inner);
+        $inner = Ok::of(42);
+        $outer = Ok::of($inner);
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(Ok::class, $flattened);
@@ -23,8 +23,8 @@ class FlattenTest extends TestCase
 
     public function testOkErrFlattensToErr(): void
     {
-        $inner = new Err('inner error');
-        $outer = new Ok($inner);
+        $inner = Err::of('inner error');
+        $outer = Ok::of($inner);
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(Err::class, $flattened);
@@ -34,7 +34,7 @@ class FlattenTest extends TestCase
 
     public function testErrFlattensToSelf(): void
     {
-        $err = new Err('original error');
+        $err = Err::of('original error');
         $flattened = $err->flatten();
 
         $this->assertSame($err, $flattened);
@@ -43,7 +43,7 @@ class FlattenTest extends TestCase
 
     public function testOkWithNonResultFlattensToSelf(): void
     {
-        $ok = new Ok('simple value');
+        $ok = Ok::of('simple value');
         $flattened = $ok->flatten();
 
         $this->assertSame($ok, $flattened);
@@ -54,8 +54,8 @@ class FlattenTest extends TestCase
 
     public function testFlattenWithStringValue(): void
     {
-        $inner = new Ok('hello world');
-        $outer = new Ok($inner);
+        $inner = Ok::of('hello world');
+        $outer = Ok::of($inner);
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(Ok::class, $flattened);
@@ -64,8 +64,8 @@ class FlattenTest extends TestCase
 
     public function testFlattenWithIntegerValue(): void
     {
-        $inner = new Ok(123);
-        $outer = new Ok($inner);
+        $inner = Ok::of(123);
+        $outer = Ok::of($inner);
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(Ok::class, $flattened);
@@ -75,8 +75,8 @@ class FlattenTest extends TestCase
     public function testFlattenWithArrayValue(): void
     {
         $array = [1, 2, 3];
-        $inner = new Ok($array);
-        $outer = new Ok($inner);
+        $inner = Ok::of($array);
+        $outer = Ok::of($inner);
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(Ok::class, $flattened);
@@ -87,8 +87,8 @@ class FlattenTest extends TestCase
     {
         $obj = new \stdClass();
         $obj->value = 'test';
-        $inner = new Ok($obj);
-        $outer = new Ok($inner);
+        $inner = Ok::of($obj);
+        $outer = Ok::of($inner);
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(Ok::class, $flattened);
@@ -99,8 +99,8 @@ class FlattenTest extends TestCase
 
     public function testFlattenWithStringError(): void
     {
-        $inner = new Err('string error');
-        $outer = new Ok($inner);
+        $inner = Err::of('string error');
+        $outer = Ok::of($inner);
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(Err::class, $flattened);
@@ -109,8 +109,8 @@ class FlattenTest extends TestCase
 
     public function testFlattenWithIntegerError(): void
     {
-        $inner = new Err(404);
-        $outer = new Ok($inner);
+        $inner = Err::of(404);
+        $outer = Ok::of($inner);
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(Err::class, $flattened);
@@ -120,8 +120,8 @@ class FlattenTest extends TestCase
     public function testFlattenWithArrayError(): void
     {
         $errorArray = ['code' => 500, 'message' => 'server error'];
-        $inner = new Err($errorArray);
-        $outer = new Ok($inner);
+        $inner = Err::of($errorArray);
+        $outer = Ok::of($inner);
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(Err::class, $flattened);
@@ -132,8 +132,8 @@ class FlattenTest extends TestCase
 
     public function testFlattenWithNullValue(): void
     {
-        $inner = new Ok(null);
-        $outer = new Ok($inner);
+        $inner = Ok::of(null);
+        $outer = Ok::of($inner);
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(Ok::class, $flattened);
@@ -142,8 +142,8 @@ class FlattenTest extends TestCase
 
     public function testFlattenWithNullError(): void
     {
-        $inner = new Err(null);
-        $outer = new Ok($inner);
+        $inner = Err::of(null);
+        $outer = Ok::of($inner);
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(Err::class, $flattened);
@@ -152,7 +152,7 @@ class FlattenTest extends TestCase
 
     public function testFlattenNonResultWithNull(): void
     {
-        $ok = new Ok(null);
+        $ok = Ok::of(null);
         $flattened = $ok->flatten();
 
         $this->assertSame($ok, $flattened);
@@ -163,9 +163,9 @@ class FlattenTest extends TestCase
 
     public function testFlattenOnlyRemovesOneLevel(): void
     {
-        $innermost = new Ok(42);
-        $middle = new Ok($innermost);
-        $outer = new Ok($middle);
+        $innermost = Ok::of(42);
+        $middle = Ok::of($innermost);
+        $outer = Ok::of($middle);
 
         $flattened = $outer->flatten();
 
@@ -177,9 +177,9 @@ class FlattenTest extends TestCase
 
     public function testMultipleFlattenCalls(): void
     {
-        $innermost = new Ok(42);
-        $middle = new Ok($innermost);
-        $outer = new Ok($middle);
+        $innermost = Ok::of(42);
+        $middle = Ok::of($innermost);
+        $outer = Ok::of($middle);
 
         $firstFlatten = $outer->flatten();
         $secondFlatten = $firstFlatten->flatten();
@@ -193,8 +193,8 @@ class FlattenTest extends TestCase
 
     public function testFlattenReturnTypeIsResult(): void
     {
-        $inner = new Ok('test');
-        $outer = new Ok($inner);
+        $inner = Ok::of('test');
+        $outer = Ok::of($inner);
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(\ba0918\Result\Result::class, $flattened);
@@ -202,7 +202,7 @@ class FlattenTest extends TestCase
 
     public function testErrFlattenReturnTypeIsResult(): void
     {
-        $err = new Err('error');
+        $err = Err::of('error');
         $flattened = $err->flatten();
 
         $this->assertInstanceOf(\ba0918\Result\Result::class, $flattened);
@@ -213,8 +213,8 @@ class FlattenTest extends TestCase
     public function testFlattenInMethodChain(): void
     {
         $innerValue = 42;
-        $inner = new Ok($innerValue);
-        $outer = new Ok($inner);
+        $inner = Ok::of($innerValue);
+        $outer = Ok::of($inner);
 
         $flattened = $outer->flatten();
         $this->assertInstanceOf(Ok::class, $flattened);
@@ -228,8 +228,8 @@ class FlattenTest extends TestCase
 
     public function testFlattenWithErrorInMethodChain(): void
     {
-        $inner = new Err('calculation failed');
-        $outer = new Ok($inner);
+        $inner = Err::of('calculation failed');
+        $outer = Ok::of($inner);
 
         $flattened = $outer->flatten();
         $this->assertInstanceOf(Err::class, $flattened);
@@ -248,10 +248,10 @@ class FlattenTest extends TestCase
         // When validation results are nested
         $validationResult = function ($input): \ba0918\Result\Result {
             if ($input > 0) {
-                return new Ok(new Ok($input));
+                return Ok::of(Ok::of($input));
             }
 
-            return new Ok(new Err('Value must be positive'));
+            return Ok::of(Err::of('Value must be positive'));
         };
 
         // Normal case
@@ -270,8 +270,8 @@ class FlattenTest extends TestCase
     public function testFlattenPerformanceWithLargeData(): void
     {
         $largeArray = range(1, 1000);
-        $inner = new Ok($largeArray);
-        $outer = new Ok($inner);
+        $inner = Ok::of($largeArray);
+        $outer = Ok::of($inner);
 
         $startTime = microtime(true);
         $flattened = $outer->flatten();
@@ -289,8 +289,8 @@ class FlattenTest extends TestCase
         $sharedObject = new \stdClass();
         $sharedObject->id = 123;
 
-        $inner = new Ok($sharedObject);
-        $outer = new Ok($inner);
+        $inner = Ok::of($sharedObject);
+        $outer = Ok::of($inner);
         $flattened = $outer->flatten();
 
         $this->assertSame($sharedObject, $flattened->unwrap());
@@ -305,14 +305,14 @@ class FlattenTest extends TestCase
     public function testFlattenWithBooleanValues(): void
     {
         // true value
-        $trueInner = new Ok(true);
-        $trueOuter = new Ok($trueInner);
+        $trueInner = Ok::of(true);
+        $trueOuter = Ok::of($trueInner);
         $trueFlattened = $trueOuter->flatten();
         $this->assertTrue($trueFlattened->unwrap());
 
         // false value
-        $falseInner = new Ok(false);
-        $falseOuter = new Ok($falseInner);
+        $falseInner = Ok::of(false);
+        $falseOuter = Ok::of($falseInner);
         $falseFlattened = $falseOuter->flatten();
         $this->assertFalse($falseFlattened->unwrap());
     }
@@ -320,14 +320,14 @@ class FlattenTest extends TestCase
     public function testFlattenWithEmptyArrayAndString(): void
     {
         // Empty array
-        $emptyArrayInner = new Ok([]);
-        $emptyArrayOuter = new Ok($emptyArrayInner);
+        $emptyArrayInner = Ok::of([]);
+        $emptyArrayOuter = Ok::of($emptyArrayInner);
         $emptyArrayFlattened = $emptyArrayOuter->flatten();
         $this->assertSame([], $emptyArrayFlattened->unwrap());
 
         // Empty string
-        $emptyStringInner = new Ok('');
-        $emptyStringOuter = new Ok($emptyStringInner);
+        $emptyStringInner = Ok::of('');
+        $emptyStringOuter = Ok::of($emptyStringInner);
         $emptyStringFlattened = $emptyStringOuter->flatten();
         $this->assertSame('', $emptyStringFlattened->unwrap());
     }

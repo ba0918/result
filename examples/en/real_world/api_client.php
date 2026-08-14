@@ -117,14 +117,14 @@ class ApiClient
     private function validateEndpoint(string $endpoint): Result
     {
         if (empty($endpoint)) {
-            return new Err('Endpoint not specified');
+            return Err::of('Endpoint not specified');
         }
 
         if (!str_starts_with($endpoint, '/')) {
             $endpoint = '/' . $endpoint;
         }
 
-        return new Ok($endpoint);
+        return Ok::of($endpoint);
     }
 
     /**
@@ -135,10 +135,10 @@ class ApiClient
         $url = $this->baseUrl . $endpoint;
 
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            return new Err("Invalid URL: $url");
+            return Err::of("Invalid URL: $url");
         }
 
-        return new Ok($url);
+        return Ok::of($url);
     }
 
     /**
@@ -149,7 +149,7 @@ class ApiClient
         $ch = curl_init();
 
         if ($ch === false) {
-            return new Err('Failed to initialize cURL session');
+            return Err::of('Failed to initialize cURL session');
         }
 
         $allHeaders = array_merge($this->defaultHeaders, $headers);
@@ -173,7 +173,7 @@ class ApiClient
             if (json_last_error() !== JSON_ERROR_NONE) {
                 curl_close($ch);
 
-                return new Err('Failed to JSON encode request data: ' . json_last_error_msg());
+                return Err::of('Failed to JSON encode request data: ' . json_last_error_msg());
             }
             curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
         }
@@ -184,10 +184,10 @@ class ApiClient
         curl_close($ch);
 
         if ($response === false) {
-            return new Err("HTTP request failed: $error");
+            return Err::of("HTTP request failed: $error");
         }
 
-        return new Ok([
+        return Ok::of([
             'body' => $response,
             'status_code' => $httpCode,
             'url' => $url,
@@ -204,20 +204,20 @@ class ApiClient
 
         // Check HTTP status code
         if ($statusCode >= 400) {
-            return new Err("HTTP error: $statusCode - " . $this->getStatusMessage($statusCode));
+            return Err::of("HTTP error: $statusCode - " . $this->getStatusMessage($statusCode));
         }
 
         // Parse JSON response
         if (empty($body)) {
-            return new Ok([]);
+            return Ok::of([]);
         }
 
         $data = json_decode($body, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return new Err('Failed to parse JSON response: ' . json_last_error_msg());
+            return Err::of('Failed to parse JSON response: ' . json_last_error_msg());
         }
 
-        return new Ok($data);
+        return Ok::of($data);
     }
 
     /**
@@ -264,8 +264,8 @@ class AuthenticatedApiClient extends ApiClient
         return $this->get('/auth/validate')
             ->andThen(
                 fn ($response) => isset($response['valid']) && $response['valid']
-                    ? new Ok($response)
-                    : new Err('API key is invalid'),
+                    ? Ok::of($response)
+                    : Err::of('API key is invalid'),
             );
     }
 }
@@ -358,14 +358,14 @@ class UserApiClient
     private function validatePagination(int $page, int $limit): Result
     {
         if ($page < 1) {
-            return new Err('Page number must be 1 or greater');
+            return Err::of('Page number must be 1 or greater');
         }
 
         if ($limit < 1 || $limit > 100) {
-            return new Err('Limit must be between 1 and 100');
+            return Err::of('Limit must be between 1 and 100');
         }
 
-        return new Ok(['page' => $page, 'limit' => $limit]);
+        return Ok::of(['page' => $page, 'limit' => $limit]);
     }
 
     /**
@@ -374,10 +374,10 @@ class UserApiClient
     private function validateUserId(int $userId): Result
     {
         if ($userId < 1) {
-            return new Err('User ID must be 1 or greater');
+            return Err::of('User ID must be 1 or greater');
         }
 
-        return new Ok($userId);
+        return Ok::of($userId);
     }
 
     /**
@@ -389,15 +389,15 @@ class UserApiClient
 
         foreach ($required as $field) {
             if (!isset($userData[$field]) || empty($userData[$field])) {
-                return new Err("Required field missing: $field");
+                return Err::of("Required field missing: $field");
             }
         }
 
         if (!filter_var($userData['email'], FILTER_VALIDATE_EMAIL)) {
-            return new Err('Invalid email address format');
+            return Err::of('Invalid email address format');
         }
 
-        return new Ok($userData);
+        return Ok::of($userData);
     }
 }
 

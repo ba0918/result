@@ -126,14 +126,14 @@ class ErrorCollector
         if ($this->hasCriticalErrors()) {
             $critical = $this->getCriticalErrors()[0];
 
-            return new Err($critical->toString());
+            return Err::of($critical->toString());
         }
 
         if ($this->hasErrors()) {
-            return new Err($this->getSummary());
+            return Err::of($this->getSummary());
         }
 
-        return new Ok('Processing completed');
+        return Ok::of('Processing completed');
     }
 }
 
@@ -196,7 +196,7 @@ class ResilientExecutor
             }
         }
 
-        return new Err("Maximum retry attempts reached. Last error: $lastError");
+        return Err::of("Maximum retry attempts reached. Last error: $lastError");
     }
 
     private function executeOperation(callable $operation): Result
@@ -208,9 +208,9 @@ class ResilientExecutor
                 return $result;
             }
 
-            return new Ok($result);
+            return Ok::of($result);
         } catch (Throwable $e) {
-            return new Err($e->getMessage());
+            return Err::of($e->getMessage());
         }
     }
 }
@@ -255,14 +255,14 @@ class BatchProcessor
         // If there are successful items, treat as partial success
         if (!empty($results) && !$this->errorCollector->hasCriticalErrors()) {
             if ($this->errorCollector->hasErrors()) {
-                return new Ok([
+                return Ok::of([
                     'results' => $results,
                     'partial_success' => true,
                     'errors' => $this->errorCollector->getSummary(),
                 ]);
             }
 
-            return new Ok(['results' => $results, 'partial_success' => false]);
+            return Ok::of(['results' => $results, 'partial_success' => false]);
         }
 
         return $this->errorCollector->toResult();
@@ -299,7 +299,7 @@ class BatchProcessor
         }
 
         if (!empty($allResults) && !$this->errorCollector->hasCriticalErrors()) {
-            return new Ok([
+            return Ok::of([
                 'results' => $allResults,
                 'errors' => $this->errorCollector->getSummary(),
             ]);
@@ -357,20 +357,20 @@ class WorkflowProcessor
 
         foreach ($required as $field) {
             if (!isset($data[$field])) {
-                return new Err("Required field missing: $field");
+                return Err::of("Required field missing: $field");
             }
         }
 
         if (!is_numeric($data['user_id']) || $data['user_id'] <= 0) {
-            return new Err('user_id must be a positive integer');
+            return Err::of('user_id must be a positive integer');
         }
 
         $validActions = ['create', 'update', 'delete', 'process'];
         if (!in_array($data['action'], $validActions)) {
-            return new Err("Invalid action: {$data['action']}");
+            return Err::of("Invalid action: {$data['action']}");
         }
 
-        return new Ok($data);
+        return Ok::of($data);
     }
 
     /**
@@ -393,55 +393,55 @@ class WorkflowProcessor
                 'update' => $this->preprocessUpdate($preprocessed),
                 'delete' => $this->preprocessDelete($preprocessed),
                 'process' => $this->preprocessProcess($preprocessed),
-                default => new Err("Unsupported action: {$data['action']}")
+                default => Err::of("Unsupported action: {$data['action']}")
             };
         } catch (Throwable $e) {
-            return new Err('Preprocessing error: ' . $e->getMessage());
+            return Err::of('Preprocessing error: ' . $e->getMessage());
         }
     }
 
     private function preprocessCreate(array $data): Result
     {
         if (empty($data['payload']['name'])) {
-            return new Err('Create operation requires a name');
+            return Err::of('Create operation requires a name');
         }
 
         $data['payload']['created_at'] = date('Y-m-d H:i:s');
 
-        return new Ok($data);
+        return Ok::of($data);
     }
 
     private function preprocessUpdate(array $data): Result
     {
         if (empty($data['payload']['id'])) {
-            return new Err('Update operation requires an ID');
+            return Err::of('Update operation requires an ID');
         }
 
         $data['payload']['updated_at'] = date('Y-m-d H:i:s');
 
-        return new Ok($data);
+        return Ok::of($data);
     }
 
     private function preprocessDelete(array $data): Result
     {
         if (empty($data['payload']['id'])) {
-            return new Err('Delete operation requires an ID');
+            return Err::of('Delete operation requires an ID');
         }
 
         $data['payload']['deleted_at'] = date('Y-m-d H:i:s');
 
-        return new Ok($data);
+        return Ok::of($data);
     }
 
     private function preprocessProcess(array $data): Result
     {
         if (empty($data['payload']['items'])) {
-            return new Err('Process operation requires items');
+            return Err::of('Process operation requires items');
         }
 
         $data['payload']['processed_count'] = count($data['payload']['items']);
 
-        return new Ok($data);
+        return Ok::of($data);
     }
 
     /**
@@ -478,11 +478,11 @@ class WorkflowProcessor
                 'payload' => $data['payload'],
             ];
 
-            return new Ok($result);
+            return Ok::of($result);
         }
         $errorType = rand(1, 100) <= 10 ? 'fatal' : 'recoverable';
 
-        return new Err("$errorType error in {$data['action']} processing");
+        return Err::of("$errorType error in {$data['action']} processing");
     }
 
     /**
@@ -496,12 +496,12 @@ class WorkflowProcessor
 
             // Post-process validation
             if (empty($result['result'])) {
-                return new Err('Post-process: Processing result is empty');
+                return Err::of('Post-process: Processing result is empty');
             }
 
-            return new Ok($result);
+            return Ok::of($result);
         } catch (Throwable $e) {
-            return new Err('Post-processing error: ' . $e->getMessage());
+            return Err::of('Post-processing error: ' . $e->getMessage());
         }
     }
 
@@ -515,15 +515,15 @@ class WorkflowProcessor
             $saveSuccess = rand(1, 100) <= 90;
 
             if (!$saveSuccess) {
-                return new Err('Database save failed');
+                return Err::of('Database save failed');
             }
 
             $result['saved'] = true;
             $result['save_id'] = 'save_' . uniqid();
 
-            return new Ok($result);
+            return Ok::of($result);
         } catch (Throwable $e) {
-            return new Err('Save error: ' . $e->getMessage());
+            return Err::of('Save error: ' . $e->getMessage());
         }
     }
 
@@ -547,7 +547,7 @@ class WorkflowProcessor
 
             $result['notification_sent'] = $notificationSuccess;
 
-            return new Ok($result);
+            return Ok::of($result);
         } catch (Throwable $e) {
             // Notification error is warning level
             $this->errorCollector->addError(
@@ -557,7 +557,7 @@ class WorkflowProcessor
 
             $result['notification_sent'] = false;
 
-            return new Ok($result);
+            return Ok::of($result);
         }
     }
 
@@ -597,7 +597,7 @@ class CircuitBreaker
             if ($this->shouldAttemptReset()) {
                 $this->state = 'half-open';
             } else {
-                return new Err('Circuit breaker is open');
+                return Err::of('Circuit breaker is open');
             }
         }
 
@@ -610,7 +610,7 @@ class CircuitBreaker
 
             $this->onSuccess();
 
-            return $result instanceof Result ? $result : new Ok($result);
+            return $result instanceof Result ? $result : Ok::of($result);
         } catch (Throwable $e) {
             return $this->onFailure($e->getMessage());
         }
@@ -641,7 +641,7 @@ class CircuitBreaker
             $this->state = 'open';
         }
 
-        return new Err($error);
+        return Err::of($error);
     }
 
     private function shouldAttemptReset(): bool
@@ -670,11 +670,11 @@ if ($_SERVER['SCRIPT_NAME'] === __FILE__) {
 
     $processor = function ($item, $index) {
         if ($item['value'] < 0) {
-            return new Err("Cannot process negative value: {$item['value']}");
+            return Err::of("Cannot process negative value: {$item['value']}");
         }
 
         // Simulate processing
-        return new Ok([
+        return Ok::of([
             'id' => $item['id'],
             'processed_name' => strtoupper($item['name']),
             'processed_value' => $item['value'] * 2,
@@ -739,10 +739,10 @@ if ($_SERVER['SCRIPT_NAME'] === __FILE__) {
 
         // First 2 attempts fail, 3rd succeeds
         if ($attempts < 3) {
-            return new Err("Temporary error (attempt $attempts)");
+            return Err::of("Temporary error (attempt $attempts)");
         }
 
-        return new Ok("Success (attempt $attempts)");
+        return Ok::of("Success (attempt $attempts)");
     };
 
     $retryResult = $executor->execute($unreliableOperation);

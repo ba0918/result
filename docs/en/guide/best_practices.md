@@ -21,15 +21,15 @@ Practical guidelines and operational best practices for effectively utilizing Re
 function readConfigFile(string $path): Result
 {
     if (!file_exists($path)) {
-        return new Err("File does not exist: $path");
+        return Err::of("File does not exist: $path");
     }
     
     $content = file_get_contents($path);
     if ($content === false) {
-        return new Err("Failed to read file");
+        return Err::of("Failed to read file");
     }
     
-    return new Ok($content);
+    return Ok::of($content);
 }
 
 // 2. External API calls
@@ -46,30 +46,30 @@ function callExternalAPI(string $endpoint): Result
     if ($response === false) {
         $error = curl_error($ch);
         curl_close($ch);
-        return new Err("API call error: $error");
+        return Err::of("API call error: $error");
     }
     
     curl_close($ch);
     
     if ($httpCode >= 400) {
-        return new Err("HTTP error: $httpCode");
+        return Err::of("HTTP error: $httpCode");
     }
     
-    return new Ok($response);
+    return Ok::of($response);
 }
 
 // 3. Validation processing
 function validateEmail(string $email): Result
 {
     if (empty($email)) {
-        return new Err("Email address is empty");
+        return Err::of("Email address is empty");
     }
     
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        return new Err("Email address format is invalid");
+        return Err::of("Email address format is invalid");
     }
     
-    return new Ok($email);
+    return Ok::of($email);
 }
 
 // 4. Data transformation processing
@@ -78,10 +78,10 @@ function parseJSON(string $json): Result
     $data = json_decode($json, true);
     
     if (json_last_error() !== JSON_ERROR_NONE) {
-        return new Err("JSON parsing error: " . json_last_error_msg());
+        return Err::of("JSON parsing error: " . json_last_error_msg());
     }
     
-    return new Ok($data);
+    return Ok::of($data);
 }
 ```
 
@@ -91,16 +91,16 @@ function parseJSON(string $json): Result
 // Simple calculations (exceptions are more appropriate)
 function add(int $a, int $b): Result
 {
-    return new Ok($a + $b); // This is unnecessary
+    return Ok::of($a + $b); // This is unnecessary
 }
 
 // Program errors (exceptions are more appropriate)
 function getConfig(): Result
 {
     if (!class_exists('Config')) {
-        return new Err("Config class does not exist"); // This should be an exception
+        return Err::of("Config class does not exist"); // This should be an exception
     }
-    return new Ok(new Config());
+    return Ok::of(new Config());
 }
 ```
 
@@ -118,7 +118,7 @@ function findUserById(int $id): Option
         return None::instance();
     }
     
-    return new Some($user);
+    return Some::of($user);
 }
 
 // 2. Configuration value retrieval
@@ -130,7 +130,7 @@ function getConfigValue(string $key): Option
         return None::instance();
     }
     
-    return new Some($value);
+    return Some::of($value);
 }
 
 // 3. Safe retrieval from arrays/associative arrays
@@ -140,7 +140,7 @@ function safeArrayGet(array $array, string $key): Option
         return None::instance();
     }
     
-    return new Some($array[$key]);
+    return Some::of($array[$key]);
 }
 
 // 4. String operation results
@@ -152,7 +152,7 @@ function extractDomain(string $email): Option
         return None::instance();
     }
     
-    return new Some($parts[1]);
+    return Some::of($parts[1]);
 }
 ```
 
@@ -169,7 +169,7 @@ function getCurrentUser(): Option
 // Simple null checks (conventional methods are sufficient)
 function getName(?string $name): Option
 {
-    return $name === null ? None::instance() : new Some($name);
+    return $name === null ? None::instance() : Some::of($name);
     // This case is too simple
 }
 ```
@@ -285,8 +285,8 @@ $result = getUser($id)
 $permission = getUser($id)
     ->andThen(fn($user) => 
         $user['is_admin'] ? 
-            new Ok($user) : 
-            new Err('Administrator privileges required')
+            Ok::of($user) : 
+            Err::of('Administrator privileges required')
     );
 ```
 
@@ -299,28 +299,28 @@ $permission = getUser($id)
 function validatePassword(string $password): Result
 {
     if (strlen($password) < 8) {
-        return new Err("Password must be at least 8 characters (current: " . strlen($password) . " characters)");
+        return Err::of("Password must be at least 8 characters (current: " . strlen($password) . " characters)");
     }
     
     if (!preg_match('/[A-Z]/', $password)) {
-        return new Err("Password must contain at least one uppercase letter");
+        return Err::of("Password must contain at least one uppercase letter");
     }
     
     if (!preg_match('/[0-9]/', $password)) {
-        return new Err("Password must contain at least one digit");
+        return Err::of("Password must contain at least one digit");
     }
     
-    return new Ok($password);
+    return Ok::of($password);
 }
 
 // ❌ Bad example
 function validatePassword(string $password): Result
 {
     if (!isValidPassword($password)) {
-        return new Err("Invalid password"); // Unclear what's wrong
+        return Err::of("Invalid password"); // Unclear what's wrong
     }
     
-    return new Ok($password);
+    return Ok::of($password);
 }
 ```
 
@@ -331,15 +331,15 @@ function validatePassword(string $password): Result
 function processFile(string $filePath): Result
 {
     if (!file_exists($filePath)) {
-        return new Err("File not found: $filePath");
+        return Err::of("File not found: $filePath");
     }
     
     $content = file_get_contents($filePath);
     if ($content === false) {
-        return new Err("Failed to read file: $filePath (please check permissions)");
+        return Err::of("Failed to read file: $filePath (please check permissions)");
     }
     
-    return new Ok($content);
+    return Ok::of($content);
 }
 
 // ❌ Bad example
@@ -347,10 +347,10 @@ function processFile(string $filePath): Result
 {
     $content = file_get_contents($filePath);
     if ($content === false) {
-        return new Err("Error"); // Insufficient information
+        return Err::of("Error"); // Insufficient information
     }
     
-    return new Ok($content);
+    return Ok::of($content);
 }
 ```
 
@@ -381,10 +381,10 @@ class ErrorMessages
 function validateEmail(string $email): Result
 {
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        return new Err(ErrorMessages::validationFailed('email', 'a valid email address format'));
+        return Err::of(ErrorMessages::validationFailed('email', 'a valid email address format'));
     }
     
-    return new Ok($email);
+    return Ok::of($email);
 }
 ```
 
@@ -423,7 +423,7 @@ function findUser(int $id): Option
 // ❌ Bad example - unclear type
 function loadConfig(string $path)
 {
-    return new Ok($config); // Return type unclear
+    return Ok::of($config); // Return type unclear
 }
 ```
 
@@ -467,12 +467,12 @@ class UserRepository
             $user = $stmt->fetch();
             
             if ($user === false) {
-                return new Err("User not found: ID $id");
+                return Err::of("User not found: ID $id");
             }
             
-            return new Ok($user);
+            return Ok::of($user);
         } catch (PDOException $e) {
-            return new Err("Database error: " . $e->getMessage());
+            return Err::of("Database error: " . $e->getMessage());
         }
     }
 }
@@ -491,14 +491,14 @@ class UserService
     private function validateUserStatus(array $user): Result
     {
         if ($user['status'] === 'active') {
-            return new Err("User is already activated");
+            return Err::of("User is already activated");
         }
         
         if ($user['status'] === 'banned') {
-            return new Err("Banned users cannot be activated");
+            return Err::of("Banned users cannot be activated");
         }
         
-        return new Ok($user);
+        return Ok::of($user);
     }
 }
 
@@ -600,9 +600,9 @@ class LegacyUserService
     {
         try {
             $user = $this->createUser($userData); // Existing method
-            return new Ok($user);
+            return Ok::of($user);
         } catch (Exception $e) {
-            return new Err($e->getMessage());
+            return Err::of($e->getMessage());
         }
     }
     
@@ -685,9 +685,9 @@ function clearPipeline(array $data): Result
 function validateUser(array $data): Result
 {
     if (!$this->isValidUser($data)) {
-        return new Err("User data is invalid"); // Unclear what's invalid
+        return Err::of("User data is invalid"); // Unclear what's invalid
     }
-    return new Ok($data);
+    return Ok::of($data);
 }
 
 // ✅ Good example - appropriate granularity

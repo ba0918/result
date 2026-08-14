@@ -75,21 +75,21 @@ class UserService
         // API call
         $response = file_get_contents("https://api.example.com/users/$id");
         if ($response === false) {
-            return new Err("API call failed");
+            return Err::of("API call failed");
         }
         
         // JSON parsing
         $data = json_decode($response, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return new Err("JSON parse error: " . json_last_error_msg());
+            return Err::of("JSON parse error: " . json_last_error_msg());
         }
         
         // Data validation
         if (!isset($data['id'])) {
-            return new Err("Invalid user data: ID not found");
+            return Err::of("Invalid user data: ID not found");
         }
         
-        return new Ok($data);
+        return Ok::of($data);
     }
     
     public function displayUser(int $id): string
@@ -169,7 +169,7 @@ class ProductRepository
         ];
         
         if (isset($products[$id])) {
-            return new Some($products[$id]);
+            return Some::of($products[$id]);
         }
         return None::instance();
     }
@@ -206,15 +206,15 @@ use ba0918\Result\{Ok, Err, Some, None};
 // String normalization and validation
 function processUsername(string $input): Result
 {
-    return new Ok($input)
+    return Ok::of($input)
         ->map(fn($s) => trim($s))                    // 1. Remove whitespace
         ->map(fn($s) => strtolower($s))              // 2. Convert to lowercase
         ->andThen(fn($s) => strlen($s) >= 3 ? 
-            new Ok($s) : 
-            new Err("Username must be at least 3 characters"))  // 3. Length validation
+            Ok::of($s) : 
+            Err::of("Username must be at least 3 characters"))  // 3. Length validation
         ->andThen(fn($s) => preg_match('/^[a-z0-9_]+$/', $s) ? 
-            new Ok($s) : 
-            new Err("Username contains invalid characters"));    // 4. Character validation
+            Ok::of($s) : 
+            Err::of("Username contains invalid characters"));    // 4. Character validation
 }
 
 // Usage example
@@ -241,13 +241,13 @@ function getUserWithSettings(int $userId): Option
 function findUser(int $id): Option
 {
     $users = [1 => ['id' => 1, 'name' => 'Alice']];
-    return isset($users[$id]) ? new Some($users[$id]) : None::instance();
+    return isset($users[$id]) ? Some::of($users[$id]) : None::instance();
 }
 
 function getSettings(int $userId): Option
 {
     $settings = [1 => ['theme' => 'dark', 'lang' => 'en']];
-    return isset($settings[$userId]) ? new Some($settings[$userId]) : None::instance();
+    return isset($settings[$userId]) ? Some::of($settings[$userId]) : None::instance();
 }
 
 // Usage example
@@ -269,30 +269,30 @@ function loadConfiguration(string $configPath): Result
 {
     // Check file existence
     if (!file_exists($configPath)) {
-        return new Err("Configuration file not found: $configPath");
+        return Err::of("Configuration file not found: $configPath");
     }
     
     // Read file
     $content = file_get_contents($configPath);
     if ($content === false) {
-        return new Err("Failed to read configuration file: $configPath");
+        return Err::of("Failed to read configuration file: $configPath");
     }
     
     // Parse JSON
     $config = json_decode($content, true);
     if (json_last_error() !== JSON_ERROR_NONE) {
-        return new Err("Invalid JSON format in configuration file: " . json_last_error_msg());
+        return Err::of("Invalid JSON format in configuration file: " . json_last_error_msg());
     }
     
     // Check required fields
     $required = ['app_name', 'database'];
     foreach ($required as $key) {
         if (!isset($config[$key])) {
-            return new Err("Missing required configuration key: $key");
+            return Err::of("Missing required configuration key: $key");
         }
     }
     
-    return new Ok($config);
+    return Ok::of($config);
 }
 
 // Usage example - merge with default configuration
@@ -332,40 +332,40 @@ class UserValidator
     private function validateEmail(string $email): Result
     {
         if (empty($email)) {
-            return new Err("Email address is required");
+            return Err::of("Email address is required");
         }
         
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return new Err("Invalid email address format");
+            return Err::of("Invalid email address format");
         }
         
-        return new Ok($email);
+        return Ok::of($email);
     }
     
     private function validatePassword(string $password): Result
     {
         if (strlen($password) < 8) {
-            return new Err("Password must be at least 8 characters");
+            return Err::of("Password must be at least 8 characters");
         }
         
         if (!preg_match('/[A-Za-z]/', $password) || !preg_match('/[0-9]/', $password)) {
-            return new Err("Password must contain both letters and numbers");
+            return Err::of("Password must contain both letters and numbers");
         }
         
-        return new Ok($password);
+        return Ok::of($password);
     }
     
     private function validateAge(?int $age): Result
     {
         if ($age === null) {
-            return new Err("Age is required");
+            return Err::of("Age is required");
         }
         
         if ($age < 0 || $age > 150) {
-            return new Err("Age must be between 0 and 150");
+            return Err::of("Age must be between 0 and 150");
         }
         
-        return new Ok($age);
+        return Ok::of($age);
     }
 }
 
@@ -394,7 +394,7 @@ use ba0918\Result\{Some, None, Option};
 
 function safeGet(array $array, string $key): Option
 {
-    return isset($array[$key]) ? new Some($array[$key]) : None::instance();
+    return isset($array[$key]) ? Some::of($array[$key]) : None::instance();
 }
 
 function safeGetNested(array $array, array $keys): Option
@@ -408,7 +408,7 @@ function safeGetNested(array $array, array $keys): Option
         $current = $current[$key];
     }
     
-    return new Some($current);
+    return Some::of($current);
 }
 
 // Usage example
@@ -449,7 +449,7 @@ class UserRepository
         ];
         
         if (isset($users[$email])) {
-            return new Some($users[$email]);
+            return Some::of($users[$email]);
         }
         return None::instance();
     }
@@ -502,24 +502,24 @@ class ContactFormProcessor
         $message = $this->getFormValue($data, 'message');
         
         if ($name->isNone()) {
-            return new Err("Name is required");
+            return Err::of("Name is required");
         }
         
         if ($email->isNone()) {
-            return new Err("Email address is required");
+            return Err::of("Email address is required");
         }
         
         if ($message->isNone()) {
-            return new Err("Message is required");
+            return Err::of("Message is required");
         }
         
-        return new Ok($data);
+        return Ok::of($data);
     }
     
     private function getFormValue(array $data, string $key): Option
     {
         $value = trim($data[$key] ?? '');
-        return empty($value) ? None::instance() : new Some($value);
+        return empty($value) ? None::instance() : Some::of($value);
     }
     
     private function sendEmail(array $data): Result
@@ -528,9 +528,9 @@ class ContactFormProcessor
         $success = rand(0, 1); // Random success/failure
         
         if ($success) {
-            return new Ok("Email sent successfully");
+            return Ok::of("Email sent successfully");
         } else {
-            return new Err("Failed to send email");
+            return Err::of("Failed to send email");
         }
     }
     
@@ -538,7 +538,7 @@ class ContactFormProcessor
     {
         // Simulate DB save
         $id = rand(1000, 9999);
-        return new Ok($id);
+        return Ok::of($id);
     }
 }
 
@@ -574,7 +574,7 @@ class WeatherService
         $validCities = ['Tokyo', 'Osaka', 'Nagoya'];
         
         if (!in_array($city, $validCities, true)) {
-            return new Err("Unsupported city: $city");
+            return Err::of("Unsupported city: $city");
         }
         
         // Simulate API response
@@ -584,7 +584,7 @@ class WeatherService
             ]
         ]);
         
-        return new Ok($response);
+        return Ok::of($response);
     }
     
     private function parseResponse(string $response): Result
@@ -592,19 +592,19 @@ class WeatherService
         $data = json_decode($response, true);
         
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return new Err("Failed to parse API response");
+            return Err::of("Failed to parse API response");
         }
         
-        return new Ok($data);
+        return Ok::of($data);
     }
     
     private function extractTemperature(array $data): Result
     {
         if (!isset($data['weather']['main']['temp'])) {
-            return new Err("Temperature data not found");
+            return Err::of("Temperature data not found");
         }
         
-        return new Ok($data['weather']['main']['temp']);
+        return Ok::of($data['weather']['main']['temp']);
     }
     
     private function formatTemperature(int $temp): string

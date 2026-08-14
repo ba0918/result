@@ -12,8 +12,8 @@ class AndMethodTest extends TestCase
 
     public function testAndWithOkAndOk(): void
     {
-        $first = new Ok(10);
-        $second = new Ok(20);
+        $first = Ok::of(10);
+        $second = Ok::of(20);
 
         $result = $first->and($second);
 
@@ -23,8 +23,8 @@ class AndMethodTest extends TestCase
 
     public function testAndWithOkAndErr(): void
     {
-        $ok = new Ok(10);
-        $err = new Err('error');
+        $ok = Ok::of(10);
+        $err = Err::of('error');
 
         $result = $ok->and($err);
 
@@ -34,8 +34,8 @@ class AndMethodTest extends TestCase
 
     public function testAndWithErrAndOk(): void
     {
-        $err = new Err('error');
-        $ok = new Ok(20);
+        $err = Err::of('error');
+        $ok = Ok::of(20);
 
         $result = $err->and($ok);
 
@@ -45,8 +45,8 @@ class AndMethodTest extends TestCase
 
     public function testAndWithErrAndErr(): void
     {
-        $firstErr = new Err('first error');
-        $secondErr = new Err('second error');
+        $firstErr = Err::of('first error');
+        $secondErr = Err::of('second error');
 
         $result = $firstErr->and($secondErr);
 
@@ -58,8 +58,8 @@ class AndMethodTest extends TestCase
 
     public function testAndWithDifferentTypes(): void
     {
-        $intOk = new Ok(123);
-        $stringOk = new Ok('text');
+        $intOk = Ok::of(123);
+        $stringOk = Ok::of('text');
 
         $result = $intOk->and($stringOk);
 
@@ -69,8 +69,8 @@ class AndMethodTest extends TestCase
 
     public function testAndWithDifferentErrorTypes(): void
     {
-        $stringErr = new Err('text error');
-        $intErr = new Err(404);
+        $stringErr = Err::of('text error');
+        $intErr = Err::of(404);
 
         $result = $stringErr->and($intErr);
 
@@ -82,9 +82,9 @@ class AndMethodTest extends TestCase
 
     public function testAndChaining(): void
     {
-        $result = (new Ok('start'))
-            ->and(new Ok('middle'))
-            ->and(new Ok('end'));
+        $result = (Ok::of('start'))
+            ->and(Ok::of('middle'))
+            ->and(Ok::of('end'));
 
         $this->assertTrue($result->isOk());
         $this->assertSame('end', $result->unwrap());
@@ -92,9 +92,9 @@ class AndMethodTest extends TestCase
 
     public function testAndChainingWithError(): void
     {
-        $result = (new Ok('start'))
-            ->and(new Err('failed'))
-            ->and(new Ok('never reached'));
+        $result = (Ok::of('start'))
+            ->and(Err::of('failed'))
+            ->and(Ok::of('never reached'));
 
         $this->assertTrue($result->isErr());
         $this->assertSame('failed', $result->unwrapErr());
@@ -102,10 +102,10 @@ class AndMethodTest extends TestCase
 
     public function testAndWithOtherMethods(): void
     {
-        $result = (new Ok(10))
+        $result = (Ok::of(10))
             ->map(fn ($x) => $x * 2)  // Ok(20)
-            ->and(new Ok('success')) // Ok('success')
-            ->or(new Ok('fallback')); // Ok('success')
+            ->and(Ok::of('success')) // Ok('success')
+            ->or(Ok::of('fallback')); // Ok('success')
 
         $this->assertTrue($result->isOk());
         $this->assertSame('success', $result->unwrap());
@@ -113,10 +113,10 @@ class AndMethodTest extends TestCase
 
     public function testAndWithOtherMethodsError(): void
     {
-        $result = (new Err('initial error'))
+        $result = (Err::of('initial error'))
             ->mapErr(fn ($e) => 'mapped: ' . $e)  // Err('mapped: initial error')
-            ->and(new Ok('never used'))          // Err('mapped: initial error')
-            ->or(new Ok('recovered'));           // Ok('recovered')
+            ->and(Ok::of('never used'))          // Err('mapped: initial error')
+            ->or(Ok::of('recovered'));           // Ok('recovered')
 
         $this->assertTrue($result->isOk());
         $this->assertSame('recovered', $result->unwrap());
@@ -126,9 +126,9 @@ class AndMethodTest extends TestCase
 
     public function testAndWithComplexTypes(): void
     {
-        $arrayOk = new Ok(['key' => 'value']);
+        $arrayOk = Ok::of(['key' => 'value']);
         $objectValue = (object) ['prop' => 'data'];
-        $objectOk = new Ok($objectValue);
+        $objectOk = Ok::of($objectValue);
 
         $result = $arrayOk->and($objectOk);
 
@@ -138,8 +138,8 @@ class AndMethodTest extends TestCase
 
     public function testAndWithComplexErrorTypes(): void
     {
-        $arrayErr = new Err(['code' => 404, 'message' => 'Not found']);
-        $exceptionErr = new Err(new \Exception('Exception error'));
+        $arrayErr = Err::of(['code' => 404, 'message' => 'Not found']);
+        $exceptionErr = Err::of(new \Exception('Exception error'));
 
         $result = $arrayErr->and($exceptionErr);
 
@@ -151,8 +151,8 @@ class AndMethodTest extends TestCase
 
     public function testAndWithNullValues(): void
     {
-        $nullOk = new Ok(null);
-        $valueOk = new Ok('value');
+        $nullOk = Ok::of(null);
+        $valueOk = Ok::of('value');
 
         $result = $nullOk->and($valueOk);
 
@@ -162,8 +162,8 @@ class AndMethodTest extends TestCase
 
     public function testAndWithNullErrors(): void
     {
-        $nullErr = new Err(null);
-        $valueErr = new Err('error');
+        $nullErr = Err::of(null);
+        $valueErr = Err::of('error');
 
         $result = $nullErr->and($valueErr);
 

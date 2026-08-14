@@ -259,11 +259,11 @@ use ba0918\Result\Ok;
 use ba0918\Result\Err;
 
 // 成功ケース
-$result = new Ok(42);
+$result = Ok::of(42);
 echo $result->unwrap(); // 42
 
 // 失敗ケース
-$result = new Err("エラーメッセージ");
+$result = Err::of("エラーメッセージ");
 echo $result->unwrapOr(0); // 0
 ```
 
@@ -285,10 +285,10 @@ echo $option->unwrapOr("デフォルト値"); // "デフォルト値"
 
 **Result型:**
 ```php
-$result = new Ok(10)
+$result = Ok::of(10)
     ->map(fn($x) => $x * 2)
     ->inspect(fn($value) => print("中間値: $value\n")) // デバッグ出力
-    ->andThen(fn($x) => $x > 15 ? new Ok($x) : new Err("値が小さすぎます"))
+    ->andThen(fn($x) => $x > 15 ? Ok::of($x) : Err::of("値が小さすぎます"))
     ->unwrapOr(0);
 ```
 
@@ -307,22 +307,22 @@ echo $result; // "HELLO WORLD"
 
 ```php
 // デバッグ用途での値確認
-$result = new Ok("重要なデータ")
+$result = Ok::of("重要なデータ")
     ->inspect(fn($value) => error_log("処理中のデータ: $value"))
     ->map(fn($value) => strtoupper($value));
 
 // エラー時のログ出力
-$result = new Err("ネットワークエラー")
+$result = Err::of("ネットワークエラー")
     ->inspectErr(fn($error) => error_log("エラー発生: $error"))
-    ->or(new Ok("デフォルト値"));
+    ->or(Ok::of("デフォルト値"));
 
 // メソッドチェーンでの段階的デバッグ
-$result = new Ok(100)
+$result = Ok::of(100)
     ->map(fn($x) => $x / 2)
     ->inspect(fn($value) => print("Step 1: $value\n"))
     ->map(fn($x) => $x - 10)
     ->inspect(fn($value) => print("Step 2: $value\n"))
-    ->andThen(fn($x) => $x > 0 ? new Ok($x) : new Err("負の値"))
+    ->andThen(fn($x) => $x > 0 ? Ok::of($x) : Err::of("負の値"))
     ->inspectErr(fn($error) => print("エラー: $error\n"));
 ```
 
@@ -330,8 +330,8 @@ $result = new Ok(100)
 
 ```php
 // or(): 即座評価での代替値提供
-$primaryResult = new Err("データベース接続失敗");
-$fallbackResult = new Ok("キャッシュからのデータ");
+$primaryResult = Err::of("データベース接続失敗");
+$fallbackResult = Ok::of("キャッシュからのデータ");
 
 $result = $primaryResult->or($fallbackResult);
 echo $result->unwrap(); // "キャッシュからのデータ"
@@ -339,16 +339,16 @@ echo $result->unwrap(); // "キャッシュからのデータ"
 // orElse(): 遅延評価での動的な代替値生成
 function createFallback(string $error): Result {
     error_log("代替処理実行: $error");
-    return new Ok("代替データ: " . date('Y-m-d H:i:s'));
+    return Ok::of("代替データ: " . date('Y-m-d H:i:s'));
 }
 
-$result = new Err("API呼び出し失敗")
+$result = Err::of("API呼び出し失敗")
     ->orElse(fn($error) => createFallback($error));
 
 // 複数の代替戦略の組み合わせ
-$result = new Err("主処理失敗")
-    ->or(new Err("代替処理1も失敗"))
-    ->orElse(fn($error) => new Ok("最終的な代替値"))
+$result = Err::of("主処理失敗")
+    ->or(Err::of("代替処理1も失敗"))
+    ->orElse(fn($error) => Ok::of("最終的な代替値"))
     ->unwrap(); // "最終的な代替値"
 ```
 
@@ -356,32 +356,32 @@ $result = new Err("主処理失敗")
 
 ```php
 // Ok値での値確認
-$ok = new Ok("success");
+$ok = Ok::of("success");
 var_dump($ok->contains("success")); // true
 var_dump($ok->contains("failure")); // false
 var_dump($ok->containsErr("error")); // false (Okは常にエラーを含まない)
 
 // Err値でのエラー確認
-$err = new Err("network error");
+$err = Err::of("network error");
 var_dump($err->containsErr("network error")); // true
 var_dump($err->containsErr("database error")); // false
 var_dump($err->contains("success")); // false (Errは常に値を含まない)
 
 // 厳密比較の動作
-$intOk = new Ok(42);
+$intOk = Ok::of(42);
 var_dump($intOk->contains(42)); // true
 var_dump($intOk->contains("42")); // false (型が異なる)
 var_dump($intOk->contains(42.0)); // false (型が異なる)
 
 // 複雑なデータ構造での確認
 $userData = ["id" => 123, "name" => "Alice"];
-$ok = new Ok($userData);
+$ok = Ok::of($userData);
 var_dump($ok->contains(["id" => 123, "name" => "Alice"])); // true
 var_dump($ok->contains(["id" => 123, "name" => "Bob"])); // false
 
 // オブジェクト参照の確認
 $obj = new stdClass();
-$ok = new Ok($obj);
+$ok = Ok::of($obj);
 var_dump($ok->contains($obj)); // true (同じ参照)
 var_dump($ok->contains(new stdClass())); // false (異なる参照)
 ```
@@ -390,30 +390,30 @@ var_dump($ok->contains(new stdClass())); // false (異なる参照)
 
 ```php
 // and(): 即座評価での連続的な成功チェック
-$validation = new Ok("ユーザー認証成功");
-$authorization = new Ok("権限確認完了");
+$validation = Ok::of("ユーザー認証成功");
+$authorization = Ok::of("権限確認完了");
 
 $result = $validation->and($authorization);
 echo $result->unwrap(); // "権限確認完了"
 
 // 一つでも失敗すると最初のエラーが返される
-$authOk = new Ok("認証成功");
-$authErr = new Err("権限不足");
+$authOk = Ok::of("認証成功");
+$authErr = Err::of("権限不足");
 
 $result = $authOk->and($authErr);
 echo $result->unwrapErr(); // "権限不足"
 
 // エラーが最初にあると後続は評価されない
-$firstErr = new Err("最初のエラー");
-$secondResult = new Ok("到達しない値");
+$firstErr = Err::of("最初のエラー");
+$secondResult = Ok::of("到達しない値");
 
 $result = $firstErr->and($secondResult);
 echo $result->unwrapErr(); // "最初のエラー"
 
 // 複数のチェックポイント
-$userValidation = new Ok("ユーザー有効");
-$sessionValidation = new Ok("セッション有効");  
-$permissionValidation = new Ok("権限有効");
+$userValidation = Ok::of("ユーザー有効");
+$sessionValidation = Ok::of("セッション有効");  
+$permissionValidation = Ok::of("権限有効");
 
 $result = $userValidation
     ->and($sessionValidation)
@@ -421,8 +421,8 @@ $result = $userValidation
 echo $result->unwrap(); // "権限有効"
 
 // 型の異なるResult間での使用
-$intResult = new Ok(42);
-$stringResult = new Ok("処理完了");
+$intResult = Ok::of(42);
+$stringResult = Ok::of("処理完了");
 
 $final = $intResult->and($stringResult);
 echo $final->unwrap(); // "処理完了"
@@ -432,27 +432,27 @@ echo $final->unwrap(); // "処理完了"
 
 ```php
 // flatten(): ネストしたResultを一段階平坦化
-$okOk = new Ok(new Ok(42));
+$okOk = Ok::of(Ok::of(42));
 $flattened = $okOk->flatten();
 echo $flattened->unwrap(); // 42
 
 // ネストしたエラーの平坦化
-$okErr = new Ok(new Err("内部エラー"));
+$okErr = Ok::of(Err::of("内部エラー"));
 $flattened = $okErr->flatten();
 echo $flattened->unwrapErr(); // "内部エラー"
 
 // Errは自身をそのまま返す
-$err = new Err("外部エラー");
+$err = Err::of("外部エラー");
 $flattened = $err->flatten();
 echo $flattened->unwrapErr(); // "外部エラー"
 
 // 非Resultの値はそのまま
-$simple = new Ok("単純な値");
+$simple = Ok::of("単純な値");
 $flattened = $simple->flatten();
 echo $flattened->unwrap(); // "単純な値"
 
 // 多重ネストの段階的平坦化
-$tripleNested = new Ok(new Ok(new Ok("深い値")));
+$tripleNested = Ok::of(Ok::of(Ok::of("深い値")));
 $firstFlatten = $tripleNested->flatten();
 $secondFlatten = $firstFlatten->flatten();
 echo $secondFlatten->unwrap(); // "深い値"
@@ -460,15 +460,15 @@ echo $secondFlatten->unwrap(); // "深い値"
 // 実用例：バリデーション結果の平坦化
 function validateAndParse(string $input): \ba0918\Result\Result {
     if (empty($input)) {
-        return new Ok(new Err("入力が空です"));
+        return Ok::of(Err::of("入力が空です"));
     }
     
     $parsed = intval($input);
     if ($parsed === 0 && $input !== "0") {
-        return new Ok(new Err("数値変換に失敗しました"));
+        return Ok::of(Err::of("数値変換に失敗しました"));
     }
     
-    return new Ok(new Ok($parsed));
+    return Ok::of(Ok::of($parsed));
 }
 
 $result = validateAndParse("42")
@@ -823,7 +823,7 @@ final class None implements Option { }
 **Option型:**
 - None値でunwrap()を呼んだ場合:
   ```
-  None value
+  Called unwrap() on a None value
   ```
 - None値でexpect()を呼んだ場合:
   ```

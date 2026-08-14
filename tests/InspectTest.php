@@ -13,7 +13,7 @@ class InspectTest extends TestCase
         $sideEffectExecuted = false;
         $inspectedValue = null;
 
-        $result = new Ok(42);
+        $result = Ok::of(42);
         $returnedResult = $result->inspect(function ($value) use (&$sideEffectExecuted, &$inspectedValue): void {
             $sideEffectExecuted = true;
             $inspectedValue = $value;
@@ -28,7 +28,7 @@ class InspectTest extends TestCase
     {
         $sideEffectExecuted = false;
 
-        $result = new Err('error message');
+        $result = Err::of('error message');
         $returnedResult = $result->inspect(function ($value) use (&$sideEffectExecuted): void {
             $sideEffectExecuted = true;
         });
@@ -41,7 +41,7 @@ class InspectTest extends TestCase
     {
         $sideEffectExecuted = false;
 
-        $result = new Ok(42);
+        $result = Ok::of(42);
         $returnedResult = $result->inspectErr(function ($error) use (&$sideEffectExecuted): void {
             $sideEffectExecuted = true;
         });
@@ -55,7 +55,7 @@ class InspectTest extends TestCase
         $sideEffectExecuted = false;
         $inspectedError = null;
 
-        $result = new Err('error message');
+        $result = Err::of('error message');
         $returnedResult = $result->inspectErr(function ($error) use (&$sideEffectExecuted, &$inspectedError): void {
             $sideEffectExecuted = true;
             $inspectedError = $error;
@@ -68,8 +68,8 @@ class InspectTest extends TestCase
 
     public function testInspectReturnsOriginalResult(): void
     {
-        $okResult = new Ok(100);
-        $errResult = new Err('test error');
+        $okResult = Ok::of(100);
+        $errResult = Err::of('test error');
 
         $okInspected = $okResult->inspect(fn ($value) => null);
         $errInspected = $errResult->inspect(fn ($value) => null);
@@ -80,8 +80,8 @@ class InspectTest extends TestCase
 
     public function testInspectErrReturnsOriginalResult(): void
     {
-        $okResult = new Ok(100);
-        $errResult = new Err('test error');
+        $okResult = Ok::of(100);
+        $errResult = Err::of('test error');
 
         $okInspected = $okResult->inspectErr(fn ($error) => null);
         $errInspected = $errResult->inspectErr(fn ($error) => null);
@@ -94,7 +94,7 @@ class InspectTest extends TestCase
     {
         $inspectedValues = [];
 
-        $result = (new Ok(10))
+        $result = (Ok::of(10))
             ->map(fn ($x) => $x * 2)
             ->inspect(function ($value) use (&$inspectedValues): void {
                 $inspectedValues[] = $value;
@@ -111,7 +111,7 @@ class InspectTest extends TestCase
     public function testInspectDoesNotModifyValue(): void
     {
         $originalValue = 'original';
-        $result = new Ok($originalValue);
+        $result = Ok::of($originalValue);
 
         $result->inspect(function ($value): void {
             // Confirm that attempting to change the value has no effect
@@ -124,7 +124,7 @@ class InspectTest extends TestCase
     public function testInspectErrDoesNotModifyError(): void
     {
         $originalError = 'original error';
-        $result = new Err($originalError);
+        $result = Err::of($originalError);
 
         $result->inspectErr(function ($error): void {
             // Confirm that attempting to change the error has no effect
@@ -138,11 +138,11 @@ class InspectTest extends TestCase
     {
         $log = [];
 
-        (new Ok('test value'))->inspect(function ($value) use (&$log): void {
+        (Ok::of('test value'))->inspect(function ($value) use (&$log): void {
             $log[] = "Inspected value: $value";
         });
 
-        (new Err('test error'))->inspectErr(function ($error) use (&$log): void {
+        (Err::of('test error'))->inspectErr(function ($error) use (&$log): void {
             $log[] = "Inspected error: $error";
         });
 

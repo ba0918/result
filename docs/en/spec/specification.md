@@ -263,11 +263,11 @@ use ba0918\Result\Ok;
 use ba0918\Result\Err;
 
 // Success case
-$result = new Ok(42);
+$result = Ok::of(42);
 echo $result->unwrap(); // 42
 
 // Failure case
-$result = new Err("Error message");
+$result = Err::of("Error message");
 echo $result->unwrapOr(0); // 0
 ```
 
@@ -289,10 +289,10 @@ echo $option->unwrapOr("Default value"); // "Default value"
 
 **Result type:**
 ```php
-$result = new Ok(10)
+$result = Ok::of(10)
     ->map(fn($x) => $x * 2)
     ->inspect(fn($value) => print("Intermediate value: $value\n")) // Debug output
-    ->andThen(fn($x) => $x > 15 ? new Ok($x) : new Err("Value too small"))
+    ->andThen(fn($x) => $x > 15 ? Ok::of($x) : Err::of("Value too small"))
     ->unwrapOr(0);
 ```
 
@@ -311,22 +311,22 @@ echo $result; // "HELLO WORLD"
 
 ```php
 // Value inspection for debugging
-$result = new Ok("Important data")
+$result = Ok::of("Important data")
     ->inspect(fn($value) => error_log("Processing data: $value"))
     ->map(fn($value) => strtoupper($value));
 
 // Error logging
-$result = new Err("Network error")
+$result = Err::of("Network error")
     ->inspectErr(fn($error) => error_log("Error occurred: $error"))
-    ->or(new Ok("Default value"));
+    ->or(Ok::of("Default value"));
 
 // Stepwise debugging in method chains
-$result = new Ok(100)
+$result = Ok::of(100)
     ->map(fn($x) => $x / 2)
     ->inspect(fn($value) => print("Step 1: $value\n"))
     ->map(fn($x) => $x - 10)
     ->inspect(fn($value) => print("Step 2: $value\n"))
-    ->andThen(fn($x) => $x > 0 ? new Ok($x) : new Err("Negative value"))
+    ->andThen(fn($x) => $x > 0 ? Ok::of($x) : Err::of("Negative value"))
     ->inspectErr(fn($error) => print("Error: $error\n"));
 ```
 
@@ -334,8 +334,8 @@ $result = new Ok(100)
 
 ```php
 // or(): Eager evaluation for providing alternative values
-$primaryResult = new Err("Database connection failed");
-$fallbackResult = new Ok("Data from cache");
+$primaryResult = Err::of("Database connection failed");
+$fallbackResult = Ok::of("Data from cache");
 
 $result = $primaryResult->or($fallbackResult);
 echo $result->unwrap(); // "Data from cache"
@@ -343,16 +343,16 @@ echo $result->unwrap(); // "Data from cache"
 // orElse(): Lazy evaluation for dynamic alternative value generation
 function createFallback(string $error): Result {
     error_log("Executing fallback processing: $error");
-    return new Ok("Alternative data: " . date('Y-m-d H:i:s'));
+    return Ok::of("Alternative data: " . date('Y-m-d H:i:s'));
 }
 
-$result = new Err("API call failed")
+$result = Err::of("API call failed")
     ->orElse(fn($error) => createFallback($error));
 
 // Combining multiple alternative strategies
-$result = new Err("Primary processing failed")
-    ->or(new Err("Alternative processing 1 also failed"))
-    ->orElse(fn($error) => new Ok("Final alternative value"))
+$result = Err::of("Primary processing failed")
+    ->or(Err::of("Alternative processing 1 also failed"))
+    ->orElse(fn($error) => Ok::of("Final alternative value"))
     ->unwrap(); // "Final alternative value"
 ```
 
@@ -360,32 +360,32 @@ $result = new Err("Primary processing failed")
 
 ```php
 // Value confirmation in Ok values
-$ok = new Ok("success");
+$ok = Ok::of("success");
 var_dump($ok->contains("success")); // true
 var_dump($ok->contains("failure")); // false
 var_dump($ok->containsErr("error")); // false (Ok never contains errors)
 
 // Error confirmation in Err values
-$err = new Err("network error");
+$err = Err::of("network error");
 var_dump($err->containsErr("network error")); // true
 var_dump($err->containsErr("database error")); // false
 var_dump($err->contains("success")); // false (Err never contains values)
 
 // Strict comparison behavior
-$intOk = new Ok(42);
+$intOk = Ok::of(42);
 var_dump($intOk->contains(42)); // true
 var_dump($intOk->contains("42")); // false (different types)
 var_dump($intOk->contains(42.0)); // false (different types)
 
 // Confirmation with complex data structures
 $userData = ["id" => 123, "name" => "Alice"];
-$ok = new Ok($userData);
+$ok = Ok::of($userData);
 var_dump($ok->contains(["id" => 123, "name" => "Alice"])); // true
 var_dump($ok->contains(["id" => 123, "name" => "Bob"])); // false
 
 // Object reference confirmation
 $obj = new stdClass();
-$ok = new Ok($obj);
+$ok = Ok::of($obj);
 var_dump($ok->contains($obj)); // true (same reference)
 var_dump($ok->contains(new stdClass())); // false (different reference)
 ```
@@ -394,30 +394,30 @@ var_dump($ok->contains(new stdClass())); // false (different reference)
 
 ```php
 // and(): Eager evaluation for continuous success checking
-$validation = new Ok("User authentication successful");
-$authorization = new Ok("Permission verification complete");
+$validation = Ok::of("User authentication successful");
+$authorization = Ok::of("Permission verification complete");
 
 $result = $validation->and($authorization);
 echo $result->unwrap(); // "Permission verification complete"
 
 // If any fails, the first error is returned
-$authOk = new Ok("Authentication successful");
-$authErr = new Err("Insufficient permissions");
+$authOk = Ok::of("Authentication successful");
+$authErr = Err::of("Insufficient permissions");
 
 $result = $authOk->and($authErr);
 echo $result->unwrapErr(); // "Insufficient permissions"
 
 // If error comes first, subsequent ones are not evaluated
-$firstErr = new Err("First error");
-$secondResult = new Ok("Unreachable value");
+$firstErr = Err::of("First error");
+$secondResult = Ok::of("Unreachable value");
 
 $result = $firstErr->and($secondResult);
 echo $result->unwrapErr(); // "First error"
 
 // Multiple checkpoints
-$userValidation = new Ok("User valid");
-$sessionValidation = new Ok("Session valid");  
-$permissionValidation = new Ok("Permission valid");
+$userValidation = Ok::of("User valid");
+$sessionValidation = Ok::of("Session valid");  
+$permissionValidation = Ok::of("Permission valid");
 
 $result = $userValidation
     ->and($sessionValidation)
@@ -425,8 +425,8 @@ $result = $userValidation
 echo $result->unwrap(); // "Permission valid"
 
 // Usage between Results of different types
-$intResult = new Ok(42);
-$stringResult = new Ok("Processing complete");
+$intResult = Ok::of(42);
+$stringResult = Ok::of("Processing complete");
 
 $final = $intResult->and($stringResult);
 echo $final->unwrap(); // "Processing complete"
@@ -436,27 +436,27 @@ echo $final->unwrap(); // "Processing complete"
 
 ```php
 // flatten(): One-level flattening of nested Results
-$okOk = new Ok(new Ok(42));
+$okOk = Ok::of(Ok::of(42));
 $flattened = $okOk->flatten();
 echo $flattened->unwrap(); // 42
 
 // Flattening nested errors
-$okErr = new Ok(new Err("Internal error"));
+$okErr = Ok::of(Err::of("Internal error"));
 $flattened = $okErr->flatten();
 echo $flattened->unwrapErr(); // "Internal error"
 
 // Err returns self unchanged
-$err = new Err("External error");
+$err = Err::of("External error");
 $flattened = $err->flatten();
 echo $flattened->unwrapErr(); // "External error"
 
 // Non-Result values remain unchanged
-$simple = new Ok("Simple value");
+$simple = Ok::of("Simple value");
 $flattened = $simple->flatten();
 echo $flattened->unwrap(); // "Simple value"
 
 // Stepwise flattening of multiple nesting
-$tripleNested = new Ok(new Ok(new Ok("Deep value")));
+$tripleNested = Ok::of(Ok::of(Ok::of("Deep value")));
 $firstFlatten = $tripleNested->flatten();
 $secondFlatten = $firstFlatten->flatten();
 echo $secondFlatten->unwrap(); // "Deep value"
@@ -464,15 +464,15 @@ echo $secondFlatten->unwrap(); // "Deep value"
 // Practical example: Flattening validation results
 function validateAndParse(string $input): \ba0918\Result\Result {
     if (empty($input)) {
-        return new Ok(new Err("Input is empty"));
+        return Ok::of(Err::of("Input is empty"));
     }
     
     $parsed = intval($input);
     if ($parsed === 0 && $input !== "0") {
-        return new Ok(new Err("Number conversion failed"));
+        return Ok::of(Err::of("Number conversion failed"));
     }
     
-    return new Ok(new Ok($parsed));
+    return Ok::of(Ok::of($parsed));
 }
 
 $result = validateAndParse("42")
@@ -827,7 +827,7 @@ final class None implements Option { }
 **Option type:**
 - When unwrap() is called on None value:
   ```
-  None value
+  Called unwrap() on a None value
   ```
 - When expect() is called on None value:
   ```

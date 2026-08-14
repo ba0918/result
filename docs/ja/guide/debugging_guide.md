@@ -19,7 +19,7 @@
 #### 問題
 ```php
 $option = None::instance();
-$value = $option->unwrap(); // UnwrapException: None value
+$value = $option->unwrap(); // UnwrapException: Called unwrap() on a None value
 ```
 
 #### 解決方法

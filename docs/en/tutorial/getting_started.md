@@ -58,9 +58,9 @@ use ba0918\Result\{Ok, Err, Some, None, Result, Option};
 function safeDivide(float $a, float $b): Result
 {
     if ($b === 0.0) {
-        return new Err("Cannot divide by zero");
+        return Err::of("Cannot divide by zero");
     }
-    return new Ok($a / $b);
+    return Ok::of($a / $b);
 }
 
 // Option type - explicitly handle presence/absence of values
@@ -69,7 +69,7 @@ function findUser(int $id): Option
     $users = [1 => ['name' => 'Alice'], 2 => ['name' => 'Bob']];
     
     if (isset($users[$id])) {
-        return new Some($users[$id]);
+        return Some::of($users[$id]);
     }
     return None::instance();
 }
@@ -105,12 +105,12 @@ use ba0918\Result\{Ok, Err, Result};
 function validateAge(int $age): Result
 {
     if ($age < 0) {
-        return new Err("Age must be 0 or greater");
+        return Err::of("Age must be 0 or greater");
     }
     if ($age > 150) {
-        return new Err("Age must be 150 or less");
+        return Err::of("Age must be 150 or less");
     }
-    return new Ok($age);
+    return Ok::of($age);
 }
 
 // 2. Check the result
@@ -129,8 +129,8 @@ if ($result->isOk()) {
 #### isOk() / isErr() - State checking
 
 ```php
-$success = new Ok(42);
-$failure = new Err("error");
+$success = Ok::of(42);
+$failure = Err::of("error");
 
 var_dump($success->isOk());  // true
 var_dump($success->isErr()); // false
@@ -141,8 +141,8 @@ var_dump($failure->isErr()); // true
 #### unwrap() / unwrapErr() - Value extraction
 
 ```php
-$success = new Ok(42);
-$failure = new Err("error");
+$success = Ok::of(42);
+$failure = Err::of("error");
 
 // Extract success value (throws exception on failure)
 echo $success->unwrap();     // 42
@@ -156,8 +156,8 @@ echo $failure->unwrapErr();  // "error"
 #### unwrapOr() - Safe value extraction
 
 ```php
-$success = new Ok(42);
-$failure = new Err("error");
+$success = Ok::of(42);
+$failure = Err::of("error");
 
 // Safe extraction with default value
 echo $success->unwrapOr(0);  // 42 (success value)
@@ -188,7 +188,7 @@ function getConfig(string $key): Option
     ];
     
     if (isset($config[$key])) {
-        return new Some($config[$key]);
+        return Some::of($config[$key]);
     }
     return None::instance();
 }
@@ -208,7 +208,7 @@ if ($value->isSome()) {
 #### isSome() / isNone() - State checking
 
 ```php
-$some = new Some("value");
+$some = Some::of("value");
 $none = None::instance();
 
 var_dump($some->isSome());  // true
@@ -220,7 +220,7 @@ var_dump($none->isNone());  // true
 #### unwrap() / unwrapOr() - Value extraction
 
 ```php
-$some = new Some("value");
+$some = Some::of("value");
 $none = None::instance();
 
 // Extract value (throws exception on None)
@@ -240,17 +240,17 @@ A method to transform the contents of Result or Option types.
 
 ```php
 // Result type map
-$result = new Ok(10);
+$result = Ok::of(10);
 $doubled = $result->map(fn($x) => $x * 2);
 echo $doubled->unwrap(); // 20
 
 // Error case remains unchanged
-$error = new Err("error");
+$error = Err::of("error");
 $mapped = $error->map(fn($x) => $x * 2);
 echo $mapped->unwrapErr(); // "error" (not transformed)
 
 // Option type map
-$some = new Some("hello");
+$some = Some::of("hello");
 $upper = $some->map(fn($s) => strtoupper($s));
 echo $upper->unwrap(); // "HELLO"
 
@@ -267,16 +267,16 @@ A method to sequentially apply functions that return Result or Option types.
 ```php
 function validatePositive(int $n): Result
 {
-    return $n > 0 ? new Ok($n) : new Err("Must be a positive number");
+    return $n > 0 ? Ok::of($n) : Err::of("Must be a positive number");
 }
 
 function validateEven(int $n): Result
 {
-    return $n % 2 === 0 ? new Ok($n) : new Err("Must be an even number");
+    return $n % 2 === 0 ? Ok::of($n) : Err::of("Must be an even number");
 }
 
 // Sequential validation
-$result = new Ok(4)
+$result = Ok::of(4)
     ->andThen('validatePositive')
     ->andThen('validateEven');
 
@@ -295,20 +295,20 @@ use ba0918\Result\{Ok, Err, Result};
 function readConfigFile(string $path): Result
 {
     if (!file_exists($path)) {
-        return new Err("File does not exist: $path");
+        return Err::of("File does not exist: $path");
     }
     
     $content = file_get_contents($path);
     if ($content === false) {
-        return new Err("Failed to read file: $path");
+        return Err::of("Failed to read file: $path");
     }
     
     $data = json_decode($content, true);
     if (json_last_error() !== JSON_ERROR_NONE) {
-        return new Err("JSON parse error: " . json_last_error_msg());
+        return Err::of("JSON parse error: " . json_last_error_msg());
     }
     
-    return new Ok($data);
+    return Ok::of($data);
 }
 
 // Usage example
@@ -333,7 +333,7 @@ function findUserById(int $id): Option
     ];
     
     if (isset($users[$id])) {
-        return new Some($users[$id]);
+        return Some::of($users[$id]);
     }
     return None::instance();
 }
@@ -378,9 +378,9 @@ echo "User email: " . $userEmail; // alice@example.com
 function divide(float $a, float $b): Result
 {
     if ($b === 0.0) {
-        return new Err("Division by zero is mathematically undefined");
+        return Err::of("Division by zero is mathematically undefined");
     }
-    return new Ok($a / $b);
+    return Ok::of($a / $b);
 }
 
 // Exception is appropriate

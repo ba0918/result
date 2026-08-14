@@ -83,8 +83,6 @@ final class OptionBasicTest extends TestCase
     {
         $option = Some::of(5);
         $mapped = $option->map(function (mixed $x): int {
-            assert(is_int($x));
-
             return $x * 2;
         });
 
@@ -104,8 +102,6 @@ final class OptionBasicTest extends TestCase
     {
         $option = Some::of(3);
         $result = $option->mapOr(function (mixed $x): int {
-            assert(is_int($x));
-
             return $x * 3;
         }, 'default');
 
@@ -124,8 +120,6 @@ final class OptionBasicTest extends TestCase
     {
         $option = Some::of(4);
         $result = $option->mapOrElse(function (mixed $x): int {
-            assert(is_int($x));
-
             return $x + 1;
         }, fn () => 'fallback');
 
@@ -144,8 +138,6 @@ final class OptionBasicTest extends TestCase
     {
         $option = Some::of(10);
         $result = $option->andThen(function (mixed $x) {
-            assert(is_int($x));
-
             return Some::of((float) $x / 2);
         });
 

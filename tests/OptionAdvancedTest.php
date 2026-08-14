@@ -11,8 +11,8 @@ class OptionAdvancedTest extends TestCase
     // Tests for the xor() method
     public function testXorSomeSome(): void
     {
-        $some1 = new Some(1);
-        $some2 = new Some(2);
+        $some1 = Some::of(1);
+        $some2 = Some::of(2);
         $result = $some1->xor($some2);
 
         $this->assertInstanceOf(None::class, $result);
@@ -21,7 +21,7 @@ class OptionAdvancedTest extends TestCase
 
     public function testXorSomeNone(): void
     {
-        $some = new Some(42);
+        $some = Some::of(42);
         $none = None::instance();
         $result = $some->xor($none);
 
@@ -33,7 +33,7 @@ class OptionAdvancedTest extends TestCase
     public function testXorNoneSome(): void
     {
         $none = None::instance();
-        $some = new Some(100);
+        $some = Some::of(100);
         $result = $none->xor($some);
 
         $this->assertInstanceOf(Some::class, $result);
@@ -53,8 +53,8 @@ class OptionAdvancedTest extends TestCase
 
     public function testXorWithDifferentTypes(): void
     {
-        $stringOption = new Some('hello');
-        $intOption = new Some(123);
+        $stringOption = Some::of('hello');
+        $intOption = Some::of(123);
         $result = $stringOption->xor($intOption);
 
         $this->assertInstanceOf(None::class, $result);
@@ -63,7 +63,7 @@ class OptionAdvancedTest extends TestCase
 
     public function testXorWithComplexValues(): void
     {
-        $arrayOption = new Some(['key' => 'value']);
+        $arrayOption = Some::of(['key' => 'value']);
         $none = None::instance();
         $result = $arrayOption->xor($none);
 
@@ -73,7 +73,7 @@ class OptionAdvancedTest extends TestCase
 
     public function testXorWithNullValue(): void
     {
-        $nullOption = new Some(null);
+        $nullOption = Some::of(null);
         $none = None::instance();
         $result = $nullOption->xor($none);
 
@@ -84,8 +84,8 @@ class OptionAdvancedTest extends TestCase
     // Tests for the zip() method
     public function testZipSomeSome(): void
     {
-        $some1 = new Some(1);
-        $some2 = new Some('hello');
+        $some1 = Some::of(1);
+        $some2 = Some::of('hello');
         $result = $some1->zip($some2);
 
         $this->assertInstanceOf(Some::class, $result);
@@ -95,7 +95,7 @@ class OptionAdvancedTest extends TestCase
 
     public function testZipSomeNone(): void
     {
-        $some = new Some(42);
+        $some = Some::of(42);
         $none = None::instance();
         $result = $some->zip($none);
 
@@ -106,7 +106,7 @@ class OptionAdvancedTest extends TestCase
     public function testZipNoneSome(): void
     {
         $none = None::instance();
-        $some = new Some(100);
+        $some = Some::of(100);
         $result = $none->zip($some);
 
         $this->assertInstanceOf(None::class, $result);
@@ -127,8 +127,8 @@ class OptionAdvancedTest extends TestCase
     {
         $arrayValue = ['a' => 1, 'b' => 2];
         $objectValue = (object) ['x' => 10, 'y' => 20];
-        $arrayOption = new Some($arrayValue);
-        $objectOption = new Some($objectValue);
+        $arrayOption = Some::of($arrayValue);
+        $objectOption = Some::of($objectValue);
         $result = $arrayOption->zip($objectOption);
 
         $this->assertTrue($result->isSome());
@@ -142,8 +142,8 @@ class OptionAdvancedTest extends TestCase
 
     public function testZipWithNullValues(): void
     {
-        $nullOption1 = new Some(null);
-        $nullOption2 = new Some(null);
+        $nullOption1 = Some::of(null);
+        $nullOption2 = Some::of(null);
         $result = $nullOption1->zip($nullOption2);
 
         $this->assertTrue($result->isSome());
@@ -152,8 +152,8 @@ class OptionAdvancedTest extends TestCase
 
     public function testZipWithMixedTypes(): void
     {
-        $intOption = new Some(123);
-        $boolOption = new Some(true);
+        $intOption = Some::of(123);
+        $boolOption = Some::of(true);
         $result = $intOption->zip($boolOption);
 
         $this->assertTrue($result->isSome());
@@ -163,8 +163,8 @@ class OptionAdvancedTest extends TestCase
     // Integration tests
     public function testXorChaining(): void
     {
-        $some1 = new Some(1);
-        $some2 = new Some(2);
+        $some1 = Some::of(1);
+        $some2 = Some::of(2);
         $none = None::instance();
 
         // Some.xor(Some) -> None
@@ -179,9 +179,9 @@ class OptionAdvancedTest extends TestCase
 
     public function testZipChaining(): void
     {
-        $some1 = new Some(1);
-        $some2 = new Some(2);
-        $some3 = new Some(3);
+        $some1 = Some::of(1);
+        $some2 = Some::of(2);
+        $some3 = Some::of(3);
 
         // zip creates tuple, then zip with another value
         $result1 = $some1->zip($some2);
@@ -193,9 +193,9 @@ class OptionAdvancedTest extends TestCase
 
     public function testXorZipCombination(): void
     {
-        $some1 = new Some(10);
-        $some2 = new Some(20);
-        $some3 = new Some(30);
+        $some1 = Some::of(10);
+        $some2 = Some::of(20);
+        $some3 = Some::of(30);
         $none = None::instance();
 
         // xor with Some results in None, then zip should be None
@@ -217,12 +217,12 @@ class OptionAdvancedTest extends TestCase
     public function testComplexScenario(): void
     {
         // Complex scenario: operations between Options holding array values
-        $users = new Some([
+        $users = Some::of([
             ['name' => 'Alice', 'age' => 25],
             ['name' => 'Bob', 'age' => 30],
         ]);
 
-        $settings = new Some([
+        $settings = Some::of([
             'theme' => 'dark',
             'language' => 'en',
         ]);

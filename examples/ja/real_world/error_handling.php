@@ -126,14 +126,14 @@ class ErrorCollector
         if ($this->hasCriticalErrors()) {
             $critical = $this->getCriticalErrors()[0];
 
-            return new Err($critical->toString());
+            return Err::of($critical->toString());
         }
 
         if ($this->hasErrors()) {
-            return new Err($this->getSummary());
+            return Err::of($this->getSummary());
         }
 
-        return new Ok('処理完了');
+        return Ok::of('処理完了');
     }
 }
 
@@ -196,7 +196,7 @@ class ResilientExecutor
             }
         }
 
-        return new Err("最大試行回数に達しました。最後のエラー: $lastError");
+        return Err::of("最大試行回数に達しました。最後のエラー: $lastError");
     }
 
     private function executeOperation(callable $operation): Result
@@ -208,9 +208,9 @@ class ResilientExecutor
                 return $result;
             }
 
-            return new Ok($result);
+            return Ok::of($result);
         } catch (Throwable $e) {
-            return new Err($e->getMessage());
+            return Err::of($e->getMessage());
         }
     }
 }
@@ -255,14 +255,14 @@ class BatchProcessor
         // 成功したアイテムがある場合は部分成功として処理
         if (!empty($results) && !$this->errorCollector->hasCriticalErrors()) {
             if ($this->errorCollector->hasErrors()) {
-                return new Ok([
+                return Ok::of([
                     'results' => $results,
                     'partial_success' => true,
                     'errors' => $this->errorCollector->getSummary(),
                 ]);
             }
 
-            return new Ok(['results' => $results, 'partial_success' => false]);
+            return Ok::of(['results' => $results, 'partial_success' => false]);
         }
 
         return $this->errorCollector->toResult();
@@ -299,7 +299,7 @@ class BatchProcessor
         }
 
         if (!empty($allResults) && !$this->errorCollector->hasCriticalErrors()) {
-            return new Ok([
+            return Ok::of([
                 'results' => $allResults,
                 'errors' => $this->errorCollector->getSummary(),
             ]);
@@ -357,20 +357,20 @@ class WorkflowProcessor
 
         foreach ($required as $field) {
             if (!isset($data[$field])) {
-                return new Err("必須フィールドが不足しています: $field");
+                return Err::of("必須フィールドが不足しています: $field");
             }
         }
 
         if (!is_numeric($data['user_id']) || $data['user_id'] <= 0) {
-            return new Err('user_id は正の整数である必要があります');
+            return Err::of('user_id は正の整数である必要があります');
         }
 
         $validActions = ['create', 'update', 'delete', 'process'];
         if (!in_array($data['action'], $validActions)) {
-            return new Err("無効なアクション: {$data['action']}");
+            return Err::of("無効なアクション: {$data['action']}");
         }
 
-        return new Ok($data);
+        return Ok::of($data);
     }
 
     /**
@@ -393,55 +393,55 @@ class WorkflowProcessor
                 'update' => $this->preprocessUpdate($preprocessed),
                 'delete' => $this->preprocessDelete($preprocessed),
                 'process' => $this->preprocessProcess($preprocessed),
-                default => new Err("未対応のアクション: {$data['action']}")
+                default => Err::of("未対応のアクション: {$data['action']}")
             };
         } catch (Throwable $e) {
-            return new Err('前処理エラー: ' . $e->getMessage());
+            return Err::of('前処理エラー: ' . $e->getMessage());
         }
     }
 
     private function preprocessCreate(array $data): Result
     {
         if (empty($data['payload']['name'])) {
-            return new Err('作成処理には名前が必要です');
+            return Err::of('作成処理には名前が必要です');
         }
 
         $data['payload']['created_at'] = date('Y-m-d H:i:s');
 
-        return new Ok($data);
+        return Ok::of($data);
     }
 
     private function preprocessUpdate(array $data): Result
     {
         if (empty($data['payload']['id'])) {
-            return new Err('更新処理にはIDが必要です');
+            return Err::of('更新処理にはIDが必要です');
         }
 
         $data['payload']['updated_at'] = date('Y-m-d H:i:s');
 
-        return new Ok($data);
+        return Ok::of($data);
     }
 
     private function preprocessDelete(array $data): Result
     {
         if (empty($data['payload']['id'])) {
-            return new Err('削除処理にはIDが必要です');
+            return Err::of('削除処理にはIDが必要です');
         }
 
         $data['payload']['deleted_at'] = date('Y-m-d H:i:s');
 
-        return new Ok($data);
+        return Ok::of($data);
     }
 
     private function preprocessProcess(array $data): Result
     {
         if (empty($data['payload']['items'])) {
-            return new Err('処理には items が必要です');
+            return Err::of('処理には items が必要です');
         }
 
         $data['payload']['processed_count'] = count($data['payload']['items']);
 
-        return new Ok($data);
+        return Ok::of($data);
     }
 
     /**
@@ -478,11 +478,11 @@ class WorkflowProcessor
                 'payload' => $data['payload'],
             ];
 
-            return new Ok($result);
+            return Ok::of($result);
         }
         $errorType = rand(1, 100) <= 10 ? 'fatal' : 'recoverable';
 
-        return new Err("$errorType error in {$data['action']} processing");
+        return Err::of("$errorType error in {$data['action']} processing");
     }
 
     /**
@@ -496,12 +496,12 @@ class WorkflowProcessor
 
             // 後処理バリデーション
             if (empty($result['result'])) {
-                return new Err('後処理: 処理結果が空です');
+                return Err::of('後処理: 処理結果が空です');
             }
 
-            return new Ok($result);
+            return Ok::of($result);
         } catch (Throwable $e) {
-            return new Err('後処理エラー: ' . $e->getMessage());
+            return Err::of('後処理エラー: ' . $e->getMessage());
         }
     }
 
@@ -515,15 +515,15 @@ class WorkflowProcessor
             $saveSuccess = rand(1, 100) <= 90;
 
             if (!$saveSuccess) {
-                return new Err('データベース保存に失敗しました');
+                return Err::of('データベース保存に失敗しました');
             }
 
             $result['saved'] = true;
             $result['save_id'] = 'save_' . uniqid();
 
-            return new Ok($result);
+            return Ok::of($result);
         } catch (Throwable $e) {
-            return new Err('保存エラー: ' . $e->getMessage());
+            return Err::of('保存エラー: ' . $e->getMessage());
         }
     }
 
@@ -547,7 +547,7 @@ class WorkflowProcessor
 
             $result['notification_sent'] = $notificationSuccess;
 
-            return new Ok($result);
+            return Ok::of($result);
         } catch (Throwable $e) {
             // 通知エラーは警告レベル
             $this->errorCollector->addError(
@@ -557,7 +557,7 @@ class WorkflowProcessor
 
             $result['notification_sent'] = false;
 
-            return new Ok($result);
+            return Ok::of($result);
         }
     }
 
@@ -597,7 +597,7 @@ class CircuitBreaker
             if ($this->shouldAttemptReset()) {
                 $this->state = 'half-open';
             } else {
-                return new Err('サーキットブレーカーが開いています');
+                return Err::of('サーキットブレーカーが開いています');
             }
         }
 
@@ -610,7 +610,7 @@ class CircuitBreaker
 
             $this->onSuccess();
 
-            return $result instanceof Result ? $result : new Ok($result);
+            return $result instanceof Result ? $result : Ok::of($result);
         } catch (Throwable $e) {
             return $this->onFailure($e->getMessage());
         }
@@ -641,7 +641,7 @@ class CircuitBreaker
             $this->state = 'open';
         }
 
-        return new Err($error);
+        return Err::of($error);
     }
 
     private function shouldAttemptReset(): bool
@@ -670,11 +670,11 @@ if ($_SERVER['SCRIPT_NAME'] === __FILE__) {
 
     $processor = function ($item, $index) {
         if ($item['value'] < 0) {
-            return new Err("負の値は処理できません: {$item['value']}");
+            return Err::of("負の値は処理できません: {$item['value']}");
         }
 
         // 処理をシミュレート
-        return new Ok([
+        return Ok::of([
             'id' => $item['id'],
             'processed_name' => strtoupper($item['name']),
             'processed_value' => $item['value'] * 2,
@@ -739,10 +739,10 @@ if ($_SERVER['SCRIPT_NAME'] === __FILE__) {
 
         // 最初の2回は失敗、3回目で成功
         if ($attempts < 3) {
-            return new Err("一時的なエラー (試行 $attempts)");
+            return Err::of("一時的なエラー (試行 $attempts)");
         }
 
-        return new Ok("成功 (試行 $attempts)");
+        return Ok::of("成功 (試行 $attempts)");
     };
 
     $retryResult = $executor->execute($unreliableOperation);

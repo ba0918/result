@@ -43,11 +43,11 @@ use ba0918\Result\{Ok, Err, Some, None};
 function learningExample(): void
 {
     // Result型の基本
-    $result = new Ok(42);
+    $result = Ok::of(42);
     echo $result->unwrap(); // 42
     
     // Option型の基本
-    $option = new Some("Hello");
+    $option = Some::of("Hello");
     echo $option->unwrapOr("Default"); // Hello
 }
 ```
@@ -87,7 +87,7 @@ class NewFeatureService
     public function findNewEntity(int $id): Option
     {
         $entity = $this->repository->findById($id);
-        return $entity ? new Some($entity) : None::instance();
+        return $entity ? Some::of($entity) : None::instance();
     }
 }
 ```
@@ -105,9 +105,9 @@ class ResultHelper
     {
         try {
             $result = $fn(...$args);
-            return new Ok($result);
+            return Ok::of($result);
         } catch (Exception $e) {
-            return new Err($e->getMessage());
+            return Err::of($e->getMessage());
         }
     }
     
@@ -116,7 +116,7 @@ class ResultHelper
      */
     public static function fromNullable($value): Option
     {
-        return $value === null ? None::instance() : new Some($value);
+        return $value === null ? None::instance() : Some::of($value);
     }
 }
 
@@ -144,7 +144,7 @@ class UserServiceLegacy
     public function findUserSafe(int $id): Option
     {
         $user = $this->findUser($id);
-        return $user === null ? None::instance() : new Some($user);
+        return $user === null ? None::instance() : Some::of($user);
     }
 }
 
@@ -155,7 +155,7 @@ class UserServiceModern
     public function findUser(int $id): Option
     {
         $user = $this->database->find($id);
-        return $user === null ? None::instance() : new Some($user);
+        return $user === null ? None::instance() : Some::of($user);
     }
     
     // 後方互換性のためのレガシーメソッド
@@ -198,20 +198,20 @@ class ConfigServiceModern
     public function loadConfig(string $path): Result
     {
         if (!file_exists($path)) {
-            return new Err("設定ファイルが見つかりません: $path");
+            return Err::of("設定ファイルが見つかりません: $path");
         }
         
         $content = file_get_contents($path);
         if ($content === false) {
-            return new Err("設定ファイルの読み込みに失敗しました: $path");
+            return Err::of("設定ファイルの読み込みに失敗しました: $path");
         }
         
         $config = json_decode($content, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return new Err("設定ファイルのJSON形式が不正です: " . json_last_error_msg());
+            return Err::of("設定ファイルのJSON形式が不正です: " . json_last_error_msg());
         }
         
-        return new Ok($config);
+        return Ok::of($config);
     }
     
     // 後方互換性を維持
@@ -288,7 +288,7 @@ class UserRepository
         $stmt->execute([$email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        return $user ? new Some($user) : None::instance();
+        return $user ? Some::of($user) : None::instance();
     }
     
     public function getUserProfile(int $userId): Option
@@ -301,7 +301,7 @@ class UserRepository
     {
         // プロフィールデータ取得の実装
         $profile = /* データベースから取得 */;
-        return $profile ? new Some($profile) : None::instance();
+        return $profile ? Some::of($profile) : None::instance();
     }
 }
 
@@ -383,14 +383,14 @@ class PaymentService
     private function validatePaymentData(array $data): Result
     {
         if (empty($data['amount'])) {
-            return new Err('支払金額が指定されていません');
+            return Err::of('支払金額が指定されていません');
         }
         
         if ($data['amount'] <= 0) {
-            return new Err('支払金額は正の値である必要があります');
+            return Err::of('支払金額は正の値である必要があります');
         }
         
-        return new Ok($data);
+        return Ok::of($data);
     }
     
     private function callPaymentAPI(array $data): Result
@@ -406,24 +406,24 @@ class PaymentService
         curl_close($ch);
         
         if ($response === false) {
-            return new Err('決済APIの呼び出しに失敗しました');
+            return Err::of('決済APIの呼び出しに失敗しました');
         }
         
         if ($httpCode !== 200) {
-            return new Err("決済処理に失敗しました (HTTPステータス: $httpCode)");
+            return Err::of("決済処理に失敗しました (HTTPステータス: $httpCode)");
         }
         
-        return new Ok($response);
+        return Ok::of($response);
     }
     
     private function parseResponse(string $response): Result
     {
         $result = json_decode($response, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return new Err('決済APIのレスポンス形式が不正です');
+            return Err::of('決済APIのレスポンス形式が不正です');
         }
         
-        return new Ok($result);
+        return Ok::of($result);
     }
 }
 
@@ -451,7 +451,7 @@ class MixedUserService
     public function findUserSafe(int $id): Option
     {
         $user = $this->findUserLegacy($id);
-        return $user === null ? None::instance() : new Some($user);
+        return $user === null ? None::instance() : Some::of($user);
     }
     
     // 既存メソッド（レガシー）- 段階的に削除予定
@@ -496,18 +496,18 @@ class SafeFileOperations
     {
         try {
             $content = $this->fileOps->read($path);
-            return new Ok($content);
+            return Ok::of($content);
         } catch (FileNotFoundException $e) {
-            return new Err("ファイルが見つかりません: $path");
+            return Err::of("ファイルが見つかりません: $path");
         } catch (IOException $e) {
-            return new Err("ファイル読み込みエラー: " . $e->getMessage());
+            return Err::of("ファイル読み込みエラー: " . $e->getMessage());
         }
     }
     
     public function findFile(string $pattern): Option
     {
         $files = $this->fileOps->glob($pattern);
-        return empty($files) ? None::instance() : new Some($files[0]);
+        return empty($files) ? None::instance() : Some::of($files[0]);
     }
 }
 ```
@@ -526,12 +526,12 @@ class ResultApiClient
             $response = $this->client->get($endpoint);
             
             if ($response->getStatusCode() >= 400) {
-                return new Err("APIエラー: " . $response->getStatusCode());
+                return Err::of("APIエラー: " . $response->getStatusCode());
             }
             
-            return new Ok($response->getBody());
+            return Ok::of($response->getBody());
         } catch (ApiException $e) {
-            return new Err("API呼び出しエラー: " . $e->getMessage());
+            return Err::of("API呼び出しエラー: " . $e->getMessage());
         }
     }
 }
@@ -561,16 +561,16 @@ class UserRepositoryTransition implements UserRepositoryLegacy, UserRepositoryMo
     public function findById(int $id): Option
     {
         $user = $this->database->find($id);
-        return $user ? new Some($user) : None::instance();
+        return $user ? Some::of($user) : None::instance();
     }
     
     public function save(array $user): Result
     {
         try {
             $saved = $this->database->save($user);
-            return new Ok($saved);
+            return Ok::of($saved);
         } catch (DatabaseException $e) {
-            return new Err("保存エラー: " . $e->getMessage());
+            return Err::of("保存エラー: " . $e->getMessage());
         }
     }
     
@@ -596,13 +596,13 @@ class UserRepositoryTransition implements UserRepositoryLegacy, UserRepositoryMo
 // ❌ 悪い例: 不要なオブジェクト生成
 function inefficientConversion($value): Option
 {
-    return new Some($value); // 常にSomeを作成
+    return Some::of($value); // 常にSomeを作成
 }
 
 // ✅ 良い例: 適切な判定
 function efficientConversion($value): Option
 {
-    return $value === null ? None::instance() : new Some($value);
+    return $value === null ? None::instance() : Some::of($value);
 }
 
 // ✅ キャッシュの活用
@@ -630,7 +630,7 @@ class BadService
     
     public function process(): Result
     {
-        $this->result = new Ok($this); // 循環参照
+        $this->result = Ok::of($this); // 循環参照
         return $this->result;
     }
 }
@@ -640,7 +640,7 @@ class GoodService
 {
     public function process(array $data): Result
     {
-        return new Ok($this->processData($data)); // データのみを返す
+        return Ok::of($this->processData($data)); // データのみを返す
     }
 }
 ```
@@ -725,10 +725,10 @@ function process(): Result
     $value = getValue();
     
     if ($value === null) {
-        return new Err("値が取得できませんでした");
+        return Err::of("値が取得できませんでした");
     }
     
-    return new Ok($value);
+    return Ok::of($value);
 }
 ```
 
@@ -739,23 +739,23 @@ function process(): Result
 function validate($data): Result
 {
     if (!isValid($data)) {
-        return new Err("Invalid"); // 情報不足
+        return Err::of("Invalid"); // 情報不足
     }
-    return new Ok($data);
+    return Ok::of($data);
 }
 
 // 解決策: 具体的なエラーメッセージ
 function validate($data): Result
 {
     if (empty($data['email'])) {
-        return new Err("メールアドレスが入力されていません");
+        return Err::of("メールアドレスが入力されていません");
     }
     
     if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-        return new Err("メールアドレスの形式が正しくありません");
+        return Err::of("メールアドレスの形式が正しくありません");
     }
     
-    return new Ok($data);
+    return Ok::of($data);
 }
 ```
 
