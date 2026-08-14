@@ -94,7 +94,7 @@ class InspectTest extends TestCase
     {
         $inspectedValues = [];
 
-        $result = new Ok(10)
+        $result = (new Ok(10))
             ->map(fn ($x) => $x * 2)
             ->inspect(function ($value) use (&$inspectedValues): void {
                 $inspectedValues[] = $value;
@@ -138,11 +138,11 @@ class InspectTest extends TestCase
     {
         $log = [];
 
-        new Ok('test value')->inspect(function ($value) use (&$log): void {
+        (new Ok('test value'))->inspect(function ($value) use (&$log): void {
             $log[] = "Inspected value: $value";
         });
 
-        new Err('test error')->inspectErr(function ($error) use (&$log): void {
+        (new Err('test error'))->inspectErr(function ($error) use (&$log): void {
             $log[] = "Inspected error: $error";
         });
 
