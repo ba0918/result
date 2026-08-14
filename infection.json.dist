@@ -8,6 +8,8 @@
     "phpUnit": {
         "configDir": "."
     },
+    "minMsi": 100,
+    "minCoveredMsi": 100,
     "logs": {
         "text": "infection.log"
     },

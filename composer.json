@@ -27,6 +27,7 @@
         "phpstan": "phpstan analyse",
         "cs-fix": "php-cs-fixer fix",
         "cs-check": "php-cs-fixer fix --dry-run --diff",
+        "infection": "infection --no-interaction",
         "check": [
             "@cs-check",
             "@phpstan",

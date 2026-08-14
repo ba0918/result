@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version: ['8.4']
+        php-version: ['8.3', '8.4']
     
     steps:
       - name: Checkout code
@@ -43,6 +43,9 @@ jobs:
       
       - name: Run all quality checks
         run: composer check
+      
+      - name: Run infection (mutation testing)
+        run: composer exec infection -- --no-interaction --min-msi=100
       
       - name: Upload coverage reports
         if: success()
