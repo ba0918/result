@@ -37,3 +37,8 @@ phpstan.neon
 
 # AI向け作業ログ・ドキュメント（ローカル専用）
 .ai-docs/
+
+# Agent artifact store（ローカル専用: artifacts/runtime/tmp、configは追跡対象）
+.agents/artifacts/
+.agents/runtime/
+.agents/tmp/
