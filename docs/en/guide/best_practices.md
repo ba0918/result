@@ -12,106 +12,157 @@ Practical guidelines and operational best practices for effectively utilizing Re
 
 ## 🔍 Decision Criteria for Appropriate Usage
 
+The deciding question for every failure is:
+
+> Does the caller want to handle this failure as a normal branch of its flow?
+
+If yes, express it with `Result` / `Option`. If no, let it escape as an
+`Exception`. The rest of this section is about applying this question.
+
+| Situation | Expression |
+|---|---|
+| Normal "no value" where the reason does not matter | `Option<T>` |
+| Expected failure that the caller should branch on (validation, business rules) | `Result<T, E>` |
+| Invariant violation, programming mistake | `Exception` |
+| Infrastructure failure (file, DB, network) that this layer cannot recover from | `Exception` |
+| Failure that an upper layer wants to retry or fall back on | Convert to `Result` at the boundary |
+
 ### When to Use Result Type
 
-#### ✅ Recommended Scenarios
+#### ✅ Failures that belong in Result
+
+These are failures the caller is expected to branch on. The caller has
+something meaningful to do for each variant, so enumerating them in the type
+pays off.
 
 ```php
-// 1. File operations
-function readConfigFile(string $path): Result
+// 1. Validation - the caller branches per field
+/** @return Result<array, InvalidField[]> */
+function validateForm(array $input): Result
 {
-    if (!file_exists($path)) {
-        return Err::of("File does not exist: $path");
-    }
-    
-    $content = file_get_contents($path);
-    if ($content === false) {
-        return Err::of("Failed to read file");
-    }
-    
-    return Ok::of($content);
+    // returns Err with a list of invalid fields
 }
 
-// 2. External API calls
-function callExternalAPI(string $endpoint): Result
+// 2. Business rule violations - the caller handles each variant
+/** @return Result<User, UserAlreadyExists|InvalidPassword> */
+function addUser(...): Result
 {
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $endpoint);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-    
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    
-    if ($response === false) {
-        $error = curl_error($ch);
-        curl_close($ch);
-        return Err::of("API call error: $error");
+    if ($this->userExists($user)) {
+        return Err::of(new UserAlreadyExists($user));
     }
-    
-    curl_close($ch);
-    
-    if ($httpCode >= 400) {
-        return Err::of("HTTP error: $httpCode");
-    }
-    
-    return Ok::of($response);
+    ...
 }
 
-// 3. Validation processing
-function validateEmail(string $email): Result
-{
-    if (empty($email)) {
-        return Err::of("Email address is empty");
-    }
-    
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        return Err::of("Email address format is invalid");
-    }
-    
-    return Ok::of($email);
-}
+// 3. A set of expected failures the caller must distinguish
+/** @return Result<Order, InsufficientBalance|OrderCancelled> */
+function placeOrder(...): Result
+```
 
-// 4. Data transformation processing
-function parseJSON(string $json): Result
-{
-    $data = json_decode($json, true);
-    
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        return Err::of("JSON parsing error: " . json_last_error_msg());
-    }
-    
-    return Ok::of($data);
+The caller then has a real branch for each error variant:
+
+```php
+$result = addUser($user, $password);
+
+if ($result->isErr()) {
+    return match (true) {
+        $result->unwrapErr() instanceof UserAlreadyExists => 'exists',
+        $result->unwrapErr() instanceof InvalidPassword   => 'invalid',
+    };
 }
 ```
 
-#### ❌ Not Recommended Scenarios
+#### ❌ Failures that should stay as exceptions
+
+Do **not** put every failure into `Result`. Two common cases look natural at
+first but hurt the caller:
 
 ```php
-// Simple calculations (exceptions are more appropriate)
-function add(int $a, int $b): Result
+// ❌ Bad: infrastructure failure wrapped in Err - the caller cannot do anything
+function readConfigFile(string $path): Result
 {
-    return Ok::of($a + $b); // This is unnecessary
+    $content = file_get_contents($path); // Failure here is not a branch
+    if ($content === false) {
+        return Err::of('Failed to read file: ' . $path);
+    }
+    return Ok::of($content);
 }
 
-// Program errors (exceptions are more appropriate)
+// The caller ends up like this - there is no meaningful "else":
+$config = readConfigFile($path)->unwrapOr([]);
+// A missing file and a permission error are both silently ignored.
+```
+
+```php
+// ❌ Bad: programming mistakes expressed as Err
 function getConfig(): Result
 {
     if (!class_exists('Config')) {
-        return Err::of("Config class does not exist"); // This should be an exception
+        return Err::of('Config class does not exist'); // This is a bug, not a branch
     }
     return Ok::of(new Config());
 }
 ```
 
+If the failure has no meaningful branch on the caller side, leave it as an
+exception:
+
+```php
+// ✅ Good: infrastructure failure stays an exception
+function readConfigFile(string $path): array
+{
+    // FileNotFoundException / PermissionDeniedException propagate as exceptions
+    return parse_ini_file($path, true);
+}
+```
+
+#### Converting at the boundary (when exceptions become Result)
+
+"Infrastructure failures are exceptions" is a default, not an absolute rule.
+A layer whose job is retrying or offering alternatives may convert failures
+into `Result` at its boundary:
+
+```text
+PDOException
+    ↓ meaning is attached at the repository boundary
+InfrastructureException
+    ↓ converted at the use case boundary when recovery is possible
+Result<User, ServiceUnavailable>
+```
+
+```php
+/**
+ * This layer can offer a fallback, so the failure becomes a branch.
+ *
+ * @throws InfrastructureException
+ */
+public function fetchUser(int $id): Result
+{
+    try {
+        return Ok::of($this->repository->find($id));
+    } catch (UserNotFound $e) {
+        return Err::of($e);            // Expected absence → Result
+    }
+    // InfrastructureException propagates - the caller has no fallback here
+}
+```
+
+The same failure can switch representation depending on the layer. Decide per
+boundary where the branch becomes meaningful, not globally.
+
 ### When to Use Option Type
+
+`None` means a **normal absence** — the "not found" case that the caller
+expects as a possibility. Never collapse abnormal failures into `None`: a
+database outage and an absent user are different situations and the caller
+must be able to tell them apart.
 
 #### ✅ Recommended Scenarios
 
 ```php
-// 1. Database queries
+// 1. Database queries - absence is a normal branch, outages are exceptions
 function findUserById(int $id): Option
 {
+    // DatabaseException propagates; only "no row" becomes None
     $user = $this->database->selectOne('users', ['id' => $id]);
     
     if ($user === null) {
@@ -290,6 +341,130 @@ $permission = getUser($id)
     );
 ```
 
+#### Keeping chains readable: split by responsibility
+
+PHP has no `?` operator like Rust, so every `andThen` in a chain is written
+as a nested callback. The reader must track the current `Ok` type, the next
+type, captured variables, short-circuit conditions, and side effects at the
+same time. The chain length is therefore a readability cost you pay upfront.
+
+The rule that keeps chains readable:
+
+> One chain = one responsibility. When the responsibility changes, extract
+> a named method.
+
+Compare the two versions of the same flow (validate → check existence →
+update → audit):
+
+```php
+// ❌ Hard to read: every step looks identical
+public function add(Username $user, string $password): Result
+{
+    return $this->ensureHtpasswdAuth()
+        ->andThen(fn() => $this->validatePassword($password))
+        ->andThen(fn() => $this->readUsernames($path))
+        ->andThen(fn(array $names) => $this->lock->capture($path)
+            ->andThen(function (Fingerprint $fingerprint) use ($names, $user) {
+                if (in_array($user->value, $names, true)) {
+                    return Err::of(new UserAlreadyExists($user));
+                }
+                return Ok::of($fingerprint);
+            }))
+        ->andThen(fn(Fingerprint $f) => $this->lock->assertCurrent($path, $f))
+        ->andThen(fn() => $this->snapshots()->capture($path, $now))
+        ->andThen(fn(Snapshot $snapshot) => $this->executeAdd($path, $user, $password, $snapshot))
+        ->andThen(fn() => $this->audit->record($actor, 'user.add', $path, 'ok'))
+        ->orElse(fn(mixed $error) => $this->recordErrorAndReturn($actor, $error));
+}
+
+// ✅ Readable: the public method states the business flow at one glance
+public function add(Username $user, string $password): Result
+{
+    $path = $this->config->htpasswdPath;
+
+    return $this->validateAddRequest($password)
+        ->andThen(fn() => $this->prepareAdd($path, $user, $now))
+        ->andThen(fn(Snapshot $snapshot) => $this->executeAdd($path, $user, $password, $snapshot))
+        ->andThen(fn() => $this->recordAddSuccess($actor, $path, $user, $now))
+        ->orElse(fn(mixed $error) => $this->recordErrorAndReturn($actor, $error));
+}
+
+private function validateAddRequest(string $password): Result
+{
+    return $this->ensureHtpasswdAuth()
+        ->andThen(fn() => $this->validatePassword($password));
+}
+
+private function executeAdd(string $path, Username $user, string $password, Snapshot $snapshot): Result
+{
+    return $this->runHtpasswdAdd($path, $user, $password)
+        ->andThen(fn() => $this->lock->capture($path))
+        ->andThen(fn(Fingerprint $after) => $this->snapshots()->noteExpectedState($snapshot, $after));
+}
+```
+
+Practical guidelines:
+
+- **One chain, one responsibility.** Validation, I/O, and audit logging are
+  different responsibilities. Do not stack them in a single chain — split
+  the chain where the responsibility changes.
+- **Around 4 `andThen` steps per method is the comfortable limit** for a
+  reader. More steps usually mean the method does several jobs.
+- **Never nest an `andThen` inside another `andThen`.** Extract the nested
+  logic into a named private method.
+- **Imperative code is fine inside the implementation.** The boundary is
+  where `Result` matters; the body may use plain `if` and early returns
+  (see [Combining Result with imperative code](#combining-result-with-imperative-code)).
+
+Keep in mind that `Result` does **not** provide atomicity for side effects.
+If a later step (e.g. audit logging) fails after an earlier step already
+committed (e.g. the user was added), returning `Err` makes the caller retry
+and hit "already exists". Design such sequences so that either the failure
+cannot be recovered by retrying, or the side effects are handled transactionally.
+
+### Combining Result with imperative code
+
+The library does not force you to express everything as chains. The
+`Result` contract matters at the **boundary** of a method — what the caller
+receives. Inside the method, plain PHP reads better for sequences that are
+naturally imperative:
+
+```php
+/**
+ * @return Result<null, UserAlreadyExists|InvalidPassword>
+ *
+ * @throws InfrastructureException
+ */
+public function add(Username $user, string $password, string $actor, int $now): Result
+{
+    $validation = $this->validatePassword($password);
+    if ($validation->isErr()) {
+        return $validation;
+    }
+
+    if ($this->userExists($path, $user)) {
+        return Err::of(new UserAlreadyExists($user));
+    }
+
+    // Infrastructure failures escape as exceptions
+    $this->addUserAtomically($path, $user, $password);
+    $this->audit->record($actor, 'user.add', $path, 'ok', $user->value, $now);
+
+    return Ok::of(null);
+}
+```
+
+This is the pragmatic middle ground:
+
+- **Boundary**: return `Result` when the caller should branch on the failure
+- **Body**: use plain `if` / early returns / exceptions for everything else
+- **Conversion point**: catch expected failures and turn them into `Err`
+  where the branch becomes meaningful (see
+  [Converting at the boundary](#converting-at-the-boundary-when-exceptions-become-result))
+
+Chains shine for short transformations and for composing a few
+already-tested methods. They are not the only way to use this library.
+
 ## 📝 Error Message Design Principles
 
 ### 1. Specific and Actionable Messages
@@ -328,29 +503,25 @@ function validatePassword(string $password): Result
 
 ```php
 // ✅ Good example
-function processFile(string $filePath): Result
+function parseJson(string $json): Result
 {
-    if (!file_exists($filePath)) {
-        return Err::of("File not found: $filePath");
+    $data = json_decode($json, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        return Err::of("Failed to parse JSON: " . json_last_error_msg() . " (input: " . substr($json, 0, 80) . ")");
     }
     
-    $content = file_get_contents($filePath);
-    if ($content === false) {
-        return Err::of("Failed to read file: $filePath (please check permissions)");
-    }
-    
-    return Ok::of($content);
+    return Ok::of($data);
 }
 
 // ❌ Bad example
-function processFile(string $filePath): Result
+function parseJson(string $json): Result
 {
-    $content = file_get_contents($filePath);
-    if ($content === false) {
+    $data = json_decode($json, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
         return Err::of("Error"); // Insufficient information
     }
     
-    return Ok::of($content);
+    return Ok::of($data);
 }
 ```
 
@@ -650,10 +821,10 @@ function safeChain(int $id): string
 }
 ```
 
-### 2. Excessive nesting
+### 2. Overlong chains and nested andThen
 
 ```php
-// ❌ Bad example
+// ❌ Bad example - nested andThen: the reader loses track of types and captures
 function complexNesting(array $data): Result
 {
     return validateData($data)->andThen(fn($d1) =>
@@ -667,7 +838,7 @@ function complexNesting(array $data): Result
     );
 }
 
-// ✅ Good example
+// ✅ Good example - flat chain, but only while the responsibility is one
 function clearPipeline(array $data): Result
 {
     return $this->validateStep($data)
@@ -675,6 +846,37 @@ function clearPipeline(array $data): Result
         ->andThen(fn($d) => $this->processStep($d))
         ->andThen(fn($d) => $this->saveStep($d))
         ->andThen(fn($d) => $this->notifyStep($d));
+    // All five steps are the same responsibility (pipeline processing).
+    // This is near the comfortable limit - one more step means split.
+}
+
+// ❌ Bad example - one chain, many responsibilities
+function registerUser(array $data): Result
+{
+    return $this->validateInput($data)              // validation
+        ->andThen(fn($d) => $this->saveToDatabase($d))  // I/O
+        ->andThen(fn() => $this->sendWelcomeMail())     // notification
+        ->andThen(fn() => $this->audit->record('registered'))
+        ->andThen(fn() => $this->notifyAdmins());       // another notification
+}
+
+// ✅ Good example - split where the responsibility changes
+function registerUser(array $data): Result
+{
+    return $this->validateAndCreate($data)
+        ->andThen(fn(User $user) => $this->announce($user));
+}
+
+private function validateAndCreate(array $data): Result
+{
+    return $this->validateInput($data)
+        ->andThen(fn($d) => $this->saveToDatabase($d));
+}
+
+private function announce(User $user): Result
+{
+    return $this->sendWelcomeMail($user)
+        ->andThen(fn() => $this->audit->record('registered', $user));
 }
 ```
 

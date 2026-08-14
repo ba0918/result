@@ -193,17 +193,24 @@ class ConfigServiceLegacy
 }
 
 // After: Result type implementation
+// Only the failures the caller branches on move to Result.
+// File absence and read failures are infrastructure failures - they stay
+// exceptions. Invalid JSON is a format problem the caller may want to handle.
 class ConfigServiceModern
 {
+    /**
+     * @throws RuntimeException  Config file not found / read failure
+     * @return Result<array, string>  Invalid JSON becomes Err
+     */
     public function loadConfig(string $path): Result
     {
         if (!file_exists($path)) {
-            return Err::of("Configuration file not found: $path");
+            throw new RuntimeException("Config file not found: $path");
         }
         
         $content = file_get_contents($path);
         if ($content === false) {
-            return Err::of("Failed to read configuration file: $path");
+            throw new RuntimeException("Failed to read config file: $path");
         }
         
         $config = json_decode($content, true);
@@ -393,6 +400,13 @@ class PaymentService
         return Ok::of($data);
     }
     
+    /**
+     * Network failures stay exceptions - the caller has no meaningful
+     * branch for "API unreachable". An HTTP error response, on the other
+     * hand, is a business outcome the caller branches on, so it becomes Err.
+     *
+     * @throws RuntimeException  Payment API unreachable
+     */
     private function callPaymentAPI(array $data): Result
     {
         $ch = curl_init();
@@ -406,11 +420,11 @@ class PaymentService
         curl_close($ch);
         
         if ($response === false) {
-            return Err::of('Payment API call failed');
+            throw new RuntimeException('Payment API unreachable');
         }
         
-        if ($httpCode !== 200) {
-            return Err::of("Payment processing failed (HTTP status: $httpCode)");
+        if ($httpCode >= 400) {
+            return Err::of("Payment declined (HTTP status: $httpCode)");
         }
         
         return Ok::of($response);
@@ -483,6 +497,9 @@ class MixedUserService
 
 ```php
 // Wrap existing libraries
+// Exceptions are converted to Result at this boundary because the caller
+// wants to branch on these failures (e.g. fall back to a default config).
+// A failure the caller has no branch for should stay an exception instead.
 class SafeFileOperations
 {
     private FileOperations $fileOps;

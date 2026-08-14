@@ -265,26 +265,28 @@ if ($userWithSettings->isSome()) {
 ```php
 use ba0918\Result\{Ok, Err, Result};
 
+/**
+ * @throws RuntimeException  設定ファイルが見つからない/読み込み失敗
+ * @return Result<array, string>  JSON形式の不正や必須項目不足がErrになる
+ */
 function loadConfiguration(string $configPath): Result
 {
-    // ファイル存在確認
+    // インフラ障害（ファイルの不在・読み込み不能）は例外のまま
     if (!file_exists($configPath)) {
-        return Err::of("設定ファイルが見つかりません: $configPath");
+        throw new RuntimeException("設定ファイルが見つかりません: $configPath");
     }
     
-    // ファイル読み込み
     $content = file_get_contents($configPath);
     if ($content === false) {
-        return Err::of("設定ファイルの読み込みに失敗しました: $configPath");
+        throw new RuntimeException("設定ファイルの読み込みに失敗しました: $configPath");
     }
     
-    // JSON解析
+    // 呼び出し側が分岐したいデータの問題はErrにする
     $config = json_decode($content, true);
     if (json_last_error() !== JSON_ERROR_NONE) {
         return Err::of("設定ファイルのJSON形式が不正です: " . json_last_error_msg());
     }
     
-    // 必須項目の確認
     $required = ['app_name', 'database'];
     foreach ($required as $key) {
         if (!isset($config[$key])) {
@@ -304,9 +306,13 @@ function getAppConfig(): array
         'database' => ['host' => 'localhost']
     ];
     
-    return loadConfiguration('config.json')
-        ->map(fn($config) => array_merge($defaultConfig, $config))
-        ->unwrapOr($defaultConfig);
+    try {
+        return loadConfiguration('config.json')
+            ->map(fn($config) => array_merge($defaultConfig, $config))
+            ->unwrap(); // Errの分岐を処理した後なのでOkが保証される
+    } catch (RuntimeException $e) {
+        return $defaultConfig;
+    }
 }
 ```
 

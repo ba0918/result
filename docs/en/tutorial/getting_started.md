@@ -287,20 +287,28 @@ if ($result->isOk()) {
 
 ## 🔄 Practical Examples
 
-### Safe file reading
+### File reading with a clear failure boundary
+
+Only the failures the caller can branch on go into `Result`. A missing file
+or a read failure is an infrastructure problem — it stays an exception.
+Invalid JSON is a format problem you may want to handle, so it becomes `Err`.
 
 ```php
 use ba0918\Result\{Ok, Err, Result};
 
+/**
+ * @throws RuntimeException  File does not exist / read failure
+ * @return Result<array, string>  Invalid JSON becomes Err
+ */
 function readConfigFile(string $path): Result
 {
     if (!file_exists($path)) {
-        return Err::of("File does not exist: $path");
+        throw new RuntimeException("File does not exist: $path");
     }
     
     $content = file_get_contents($path);
     if ($content === false) {
-        return Err::of("Failed to read file: $path");
+        throw new RuntimeException("Failed to read file: $path");
     }
     
     $data = json_decode($content, true);
@@ -311,12 +319,16 @@ function readConfigFile(string $path): Result
     return Ok::of($data);
 }
 
-// Usage example
-$config = readConfigFile('config.json')
-    ->map(fn($data) => array_merge(['debug' => false], $data))
-    ->unwrapOr(['debug' => false, 'app_name' => 'DefaultApp']);
-
-echo "App name: " . $config['app_name'];
+// Usage example - the exception is infrastructure, the Err is data
+try {
+    $config = readConfigFile('config.json');
+    $settings = $config
+        ->map(fn($data) => array_merge(['debug' => false], $data))
+        ->unwrap(); // Ok is guaranteed after Err was handled
+    echo "App name: " . $settings['app_name'];
+} catch (RuntimeException $e) {
+    echo "Failed to load config: " . $e->getMessage();
+}
 ```
 
 ### Database search example

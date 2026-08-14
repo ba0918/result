@@ -12,106 +12,153 @@
 
 ## 🔍 適切な使用場面の判断基準
 
+あらゆる失敗に対して、まず次の問いを立てます。
+
+> その失敗を、呼び出し側は「通常の分岐」として処理したいだろうか？
+
+「はい」なら `Result` / `Option` で表現し、「いいえ」なら `Exception` として
+抜け出させます。以降の節は、この問いの適用方法です。
+
+| 状況 | 表現 |
+|---|---|
+| 正常な「値なし」で、理由が不要 | `Option<T>` |
+| 想定内の失敗で、呼び出し側に分岐させたい（バリデーション・業務ルール） | `Result<T, E>` |
+| 不変条件違反・プログラミングミス | `Exception` |
+| この層では回復不能なインフラ障害（ファイル・DB・ネットワーク） | `Exception` |
+| 上位層でリトライや代替処理を行う障害 | 境界で `Result` に変換 |
+
 ### Result型を使うべき場面
 
-#### ✅ 推奨される場面
+#### ✅ Resultに載せるべき失敗
+
+呼び出し側が分岐することを期待されている失敗です。型のバリアントごとに
+呼び出し側が「やるべきこと」を持っているので、型で列挙する価値があります。
 
 ```php
-// 1. ファイル操作
-function readConfigFile(string $path): Result
+// 1. バリデーション - 呼び出し側が項目ごとに分岐する
+/** @return Result<array, InvalidField[]> */
+function validateForm(array $input): Result
 {
-    if (!file_exists($path)) {
-        return Err::of("ファイルが存在しません: $path");
-    }
-    
-    $content = file_get_contents($path);
-    if ($content === false) {
-        return Err::of("ファイルの読み込みに失敗しました");
-    }
-    
-    return Ok::of($content);
+    // 不正フィールドのリストをErrで返す
 }
 
-// 2. 外部API呼び出し
-function callExternalAPI(string $endpoint): Result
+// 2. 業務ルール違反 - 呼び出し側が種類ごとに処理する
+/** @return Result<User, UserAlreadyExists|InvalidPassword> */
+function addUser(...): Result
 {
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $endpoint);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-    
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    
-    if ($response === false) {
-        $error = curl_error($ch);
-        curl_close($ch);
-        return Err::of("API呼び出しエラー: $error");
+    if ($this->userExists($user)) {
+        return Err::of(new UserAlreadyExists($user));
     }
-    
-    curl_close($ch);
-    
-    if ($httpCode >= 400) {
-        return Err::of("HTTPエラー: $httpCode");
-    }
-    
-    return Ok::of($response);
+    ...
 }
 
-// 3. バリデーション処理
-function validateEmail(string $email): Result
-{
-    if (empty($email)) {
-        return Err::of("メールアドレスが空です");
-    }
-    
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        return Err::of("メールアドレスの形式が正しくありません");
-    }
-    
-    return Ok::of($email);
-}
+// 3. 呼び出し側が区別する必要のある想定内の失敗群
+/** @return Result<Order, InsufficientBalance|OrderCancelled> */
+function placeOrder(...): Result
+```
 
-// 4. データ変換処理
-function parseJSON(string $json): Result
-{
-    $data = json_decode($json, true);
-    
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        return Err::of("JSON解析エラー: " . json_last_error_msg());
-    }
-    
-    return Ok::of($data);
+呼び出し側には、エラーバリアントごとに実際の分岐ができます。
+
+```php
+$result = addUser($user, $password);
+
+if ($result->isErr()) {
+    return match (true) {
+        $result->unwrapErr() instanceof UserAlreadyExists => 'exists',
+        $result->unwrapErr() instanceof InvalidPassword   => 'invalid',
+    };
 }
 ```
 
-#### ❌ 推奨されない場面
+#### ❌ 例外のまま残すべき失敗
+
+すべての失敗を `Result` に載せてはいけません。次の 2 つは一見自然に見えますが、
+呼び出し側を困らせます。
 
 ```php
-// 単純な計算（例外の方が適切）
-function add(int $a, int $b): Result
+// ❌ ダメな例: インフラ障害をErrで包む - 呼び出し側は何もできない
+function readConfigFile(string $path): Result
 {
-    return Ok::of($a + $b); // これは不要
+    $content = file_get_contents($path); // ここでの失敗は「分岐」ではない
+    if ($content === false) {
+        return Err::of('ファイルの読み込みに失敗しました: ' . $path);
+    }
+    return Ok::of($content);
 }
 
-// プログラムエラー（例外の方が適切）
+// 呼び出し側は結局こうなる - 意味のあるelseがない:
+$config = readConfigFile($path)->unwrapOr([]);
+// ファイルの不在も権限エラーも、同じように黙って握りつぶされる。
+```
+
+```php
+// ❌ ダメな例: プログラミングミスをErrで表現
 function getConfig(): Result
 {
     if (!class_exists('Config')) {
-        return Err::of("Configクラスが存在しません"); // これは例外であるべき
+        return Err::of('Configクラスが存在しません'); // これはバグであって分岐ではない
     }
     return Ok::of(new Config());
 }
 ```
 
+呼び出し側に意味のある分岐がない失敗は、例外のままにします。
+
+```php
+// ✅ 良い例: インフラ障害は例外のまま
+function readConfigFile(string $path): array
+{
+    // FileNotFoundException / PermissionDeniedException が例外として伝播する
+    return parse_ini_file($path, true);
+}
+```
+
+#### 境界での変換（例外がResultになる地点）
+
+「インフラ障害は例外」はデフォルトであって絶対ではありません。リトライや
+代替処理を担当する層は、その境界で失敗を `Result` に変換する意味があります。
+
+```text
+PDOException
+    ↓ Repository境界で意味付け
+InfrastructureException
+    ↓ UseCase境界で回復可能なら変換
+Result<User, ServiceUnavailable>
+```
+
+```php
+/**
+ * この層はフォールバックを提供できるので、失敗が「分岐」になる。
+ *
+ * @throws InfrastructureException
+ */
+public function fetchUser(int $id): Result
+{
+    try {
+        return Ok::of($this->repository->find($id));
+    } catch (UserNotFound $e) {
+        return Err::of($e);            // 想定内の不在 → Result
+    }
+    // InfrastructureException は伝播する - この層にはフォールバックがない
+}
+```
+
+同じ失敗でも層によって表現が変わります。グローバルに決めるのではなく、
+「どこで分岐が意味を持つか」を境界ごとに判断します。
+
 ### Option型を使うべき場面
+
+`None` は**正常な不在**だけを意味します。呼び出し側が可能性として想定している
+「見つからない」ケースです。異常系の失敗を `None` に潰してはいけません。
+DBの障害とユーザーの不在は別の状況であり、呼び出し側は区別できなければいけません。
 
 #### ✅ 推奨される場面
 
 ```php
-// 1. データベース検索
+// 1. データベース検索 - 不在は正常な分岐、障害は例外
 function findUserById(int $id): Option
 {
+    // DatabaseException は伝播する。「レコードが無い」だけが None になる
     $user = $this->database->selectOne('users', ['id' => $id]);
     
     if ($user === null) {
@@ -290,6 +337,124 @@ $permission = getUser($id)
     );
 ```
 
+#### チェーンを読みやすく保つ: 責務で分ける
+
+PHPにはRustの `?` 演算子に相当する構文がないため、チェーンの `andThen` は
+すべてコールバックの入れ子として書かれます。読む人は「現在の `Ok` の型・
+次の型・クロージャのキャプチャ変数・エラー時の短絡・副作用の発生有無」を
+同時に追跡する必要があります。つまりチェーンの長さは、前払いで払う可読性の
+コストです。
+
+チェーンを読みやすく保つルールはこれです。
+
+> 1つのチェーン = 1つの責務。責務が変わるところで名前付きメソッドへ抽出する。
+
+同じフロー（検証 → 存在確認 → 更新 → 監査）を2つの書き方で比べます。
+
+```php
+// ❌ 読みにくい: すべてのステップが同じに見える
+public function add(Username $user, string $password): Result
+{
+    return $this->ensureHtpasswdAuth()
+        ->andThen(fn() => $this->validatePassword($password))
+        ->andThen(fn() => $this->readUsernames($path))
+        ->andThen(fn(array $names) => $this->lock->capture($path)
+            ->andThen(function (Fingerprint $fingerprint) use ($names, $user) {
+                if (in_array($user->value, $names, true)) {
+                    return Err::of(new UserAlreadyExists($user));
+                }
+                return Ok::of($fingerprint);
+            }))
+        ->andThen(fn(Fingerprint $f) => $this->lock->assertCurrent($path, $f))
+        ->andThen(fn() => $this->snapshots()->capture($path, $now))
+        ->andThen(fn(Snapshot $snapshot) => $this->executeAdd($path, $user, $password, $snapshot))
+        ->andThen(fn() => $this->audit->record($actor, 'user.add', $path, 'ok'))
+        ->orElse(fn(mixed $error) => $this->recordErrorAndReturn($actor, $error));
+}
+
+// ✅ 読みやすい: 公開メソッドは業務フローを一目で示す
+public function add(Username $user, string $password): Result
+{
+    $path = $this->config->htpasswdPath;
+
+    return $this->validateAddRequest($password)
+        ->andThen(fn() => $this->prepareAdd($path, $user, $now))
+        ->andThen(fn(Snapshot $snapshot) => $this->executeAdd($path, $user, $password, $snapshot))
+        ->andThen(fn() => $this->recordAddSuccess($actor, $path, $user, $now))
+        ->orElse(fn(mixed $error) => $this->recordErrorAndReturn($actor, $error));
+}
+
+private function validateAddRequest(string $password): Result
+{
+    return $this->ensureHtpasswdAuth()
+        ->andThen(fn() => $this->validatePassword($password));
+}
+
+private function executeAdd(string $path, Username $user, string $password, Snapshot $snapshot): Result
+{
+    return $this->runHtpasswdAdd($path, $user, $password)
+        ->andThen(fn() => $this->lock->capture($path))
+        ->andThen(fn(Fingerprint $after) => $this->snapshots()->noteExpectedState($snapshot, $after));
+}
+```
+
+実践的な指針:
+
+- **1つのチェーンに1つの責務。** バリデーション・I/O・監査記録は別の責務です。
+  1本のチェーンに積み重ねず、責務が変わる箇所でチェーンを分割します。
+- **読者が楽なのは `andThen` 4段程度までが目安。** それ以上は、そのメソッドが
+  複数の仕事をしているサインです。
+- **`andThen` の中に `andThen` を入れ子にしない。** 入れ子にしたロジックは
+  名前付きprivateメソッドへ抽出します。
+- **内部実装は命令的に書いて良い。** 重要なのは境界です。本文は素直な `if` と
+  早期returnで構いません（[Resultと命令的コードの併用](#resultと命令的コードの併用) を参照）。
+
+ なお、`Result` は副作用の**原子性を保証しません**。後続ステップ（例: 監査記録）が
+ 失敗したときに、先行ステップ（例: ユーザー追加）がすでに確定していた場合、
+ `Err` を返すと呼び出し側の再試行が「既に存在します」に当たります。再試行で
+ 回復できない構成にするか、副作用をトランザクション的に扱う設計をしてください。
+
+### Resultと命令的コードの併用
+
+このライブラリは、すべてをチェーンで表現することを強制しません。`Result` の
+契約が重要なのはメソッドの**境界**（呼び出し側が受け取るもの）です。本文は、
+自然に命令的になるシーケンスでは素直なPHPの方が読みやすくなります。
+
+```php
+/**
+ * @return Result<null, UserAlreadyExists|InvalidPassword>
+ *
+ * @throws InfrastructureException
+ */
+public function add(Username $user, string $password, string $actor, int $now): Result
+{
+    $validation = $this->validatePassword($password);
+    if ($validation->isErr()) {
+        return $validation;
+    }
+
+    if ($this->userExists($path, $user)) {
+        return Err::of(new UserAlreadyExists($user));
+    }
+
+    // インフラ障害は例外として脱出する
+    $this->addUserAtomically($path, $user, $password);
+    $this->audit->record($actor, 'user.add', $path, 'ok', $user->value, $now);
+
+    return Ok::of(null);
+}
+```
+
+これは現実的な中間地点です。
+
+- **境界**: 呼び出し側がその失敗で分岐すべきなら `Result` を返す
+- **本文**: それ以外は素直な `if` / 早期return / 例外で書く
+- **変換点**: 分岐が意味を持つ境界で、想定内の失敗を捕捉して `Err` にする
+  （[境界での変換](#境界での変換例外がresultになる地点) を参照）
+
+チェーンは、短い変換処理や、テスト済みメソッドを数個合成する場面で真価を発揮します。
+このライブラリの唯一の使い方ではありません。
+
 ## 📝 エラーメッセージの設計指針
 
 ### 1. 具体的で実行可能なメッセージ
@@ -328,29 +493,25 @@ function validatePassword(string $password): Result
 
 ```php
 // ✅ 良い例
-function processFile(string $filePath): Result
+function parseJson(string $json): Result
 {
-    if (!file_exists($filePath)) {
-        return Err::of("ファイルが見つかりません: $filePath");
+    $data = json_decode($json, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        return Err::of("JSONの解析に失敗しました: " . json_last_error_msg() . " (入力: " . substr($json, 0, 80) . ")");
     }
     
-    $content = file_get_contents($filePath);
-    if ($content === false) {
-        return Err::of("ファイルの読み込みに失敗しました: $filePath (権限を確認してください)");
-    }
-    
-    return Ok::of($content);
+    return Ok::of($data);
 }
 
 // ❌ 悪い例
-function processFile(string $filePath): Result
+function parseJson(string $json): Result
 {
-    $content = file_get_contents($filePath);
-    if ($content === false) {
+    $data = json_decode($json, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
         return Err::of("エラー"); // 情報不足
     }
     
-    return Ok::of($content);
+    return Ok::of($data);
 }
 ```
 
@@ -650,10 +811,10 @@ function safeChain(int $id): string
 }
 ```
 
-### 2. 過度な入れ子
+### 2. 過度なチェーンとandThenの入れ子
 
 ```php
-// ❌ 悪い例
+// ❌ 悪い例 - andThenの入れ子: 型とキャプチャを追跡できなくなる
 function complexNesting(array $data): Result
 {
     return validateData($data)->andThen(fn($d1) =>
@@ -667,7 +828,7 @@ function complexNesting(array $data): Result
     );
 }
 
-// ✅ 良い例
+// ✅ 良い例 - フラットなチェーン。ただし責務が1つである間だけ
 function clearPipeline(array $data): Result
 {
     return $this->validateStep($data)
@@ -675,6 +836,37 @@ function clearPipeline(array $data): Result
         ->andThen(fn($d) => $this->processStep($d))
         ->andThen(fn($d) => $this->saveStep($d))
         ->andThen(fn($d) => $this->notifyStep($d));
+    // 5ステップは同じ責務（パイプライン処理）。
+    // これが快適な限界に近い - あと1ステップ増えたら分割する
+}
+
+// ❌ 悪い例 - 1本のチェーンに複数の責務
+function registerUser(array $data): Result
+{
+    return $this->validateInput($data)              // 検証
+        ->andThen(fn($d) => $this->saveToDatabase($d))  // I/O
+        ->andThen(fn() => $this->sendWelcomeMail())     // 通知
+        ->andThen(fn() => $this->audit->record('registered'))
+        ->andThen(fn() => $this->notifyAdmins());       // また通知
+}
+
+// ✅ 良い例 - 責務が変わるところで分割
+function registerUser(array $data): Result
+{
+    return $this->validateAndCreate($data)
+        ->andThen(fn(User $user) => $this->announce($user));
+}
+
+private function validateAndCreate(array $data): Result
+{
+    return $this->validateInput($data)
+        ->andThen(fn($d) => $this->saveToDatabase($d));
+}
+
+private function announce(User $user): Result
+{
+    return $this->sendWelcomeMail($user)
+        ->andThen(fn() => $this->audit->record('registered', $user));
 }
 ```
 

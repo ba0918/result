@@ -193,17 +193,24 @@ class ConfigServiceLegacy
 }
 
 // After: Result型の実装
+// Resultに載せるのは「呼び出し側が分岐する失敗」だけ。
+// ファイルの不在や読み込み失敗はインフラ障害なので例外のまま。
+// JSON形式の不正は、呼び出し側が対処したいかもしれないのでResultに載せる。
 class ConfigServiceModern
 {
+    /**
+     * @throws RuntimeException  設定ファイルが見つからない/読み込み失敗
+     * @return Result<array, string>  JSON形式の不正がErrになる
+     */
     public function loadConfig(string $path): Result
     {
         if (!file_exists($path)) {
-            return Err::of("設定ファイルが見つかりません: $path");
+            throw new RuntimeException("設定ファイルが見つかりません: $path");
         }
         
         $content = file_get_contents($path);
         if ($content === false) {
-            return Err::of("設定ファイルの読み込みに失敗しました: $path");
+            throw new RuntimeException("設定ファイルの読み込みに失敗しました: $path");
         }
         
         $config = json_decode($content, true);
@@ -393,6 +400,13 @@ class PaymentService
         return Ok::of($data);
     }
     
+    /**
+     * ネットワーク障害は例外のまま - 呼び出し側に「APIに到達できない」への
+     * 意味のある分岐がないため。一方、HTTPエラーレスポンスは呼び出し側が
+     * 分岐する業務的な結果なのでErrにする。
+     *
+     * @throws RuntimeException  決済APIに到達できない
+     */
     private function callPaymentAPI(array $data): Result
     {
         $ch = curl_init();
@@ -406,11 +420,11 @@ class PaymentService
         curl_close($ch);
         
         if ($response === false) {
-            return Err::of('決済APIの呼び出しに失敗しました');
+            throw new RuntimeException('決済APIに到達できません');
         }
         
-        if ($httpCode !== 200) {
-            return Err::of("決済処理に失敗しました (HTTPステータス: $httpCode)");
+        if ($httpCode >= 400) {
+            return Err::of("決済が拒否されました (HTTPステータス: $httpCode)");
         }
         
         return Ok::of($response);
@@ -483,6 +497,9 @@ class MixedUserService
 
 ```php
 // 既存のライブラリをラップ
+// この境界で例外をResultに変換するのは、呼び出し側がこれらの失敗で
+// 分岐したい（例: デフォルト設定にフォールバック）ため。
+// 呼び出し側に分岐がない失敗は、例外のままにする。
 class SafeFileOperations
 {
     private FileOperations $fileOps;

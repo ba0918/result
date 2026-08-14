@@ -287,20 +287,28 @@ if ($result->isOk()) {
 
 ## 🔄 実践的な例
 
-### ファイル読み込みの安全な処理
+### 失敗の境界を明確にしたファイル読み込み
+
+`Result` に載せるのは、呼び出し側が分岐できる失敗だけです。ファイルの不在や
+読み込み失敗はインフラ障害なので例外のまま。JSON形式の不正は、対処したい
+かもしれない問題なので `Err` にします。
 
 ```php
 use ba0918\Result\{Ok, Err, Result};
 
+/**
+ * @throws RuntimeException  ファイルが存在しない/読み込み失敗
+ * @return Result<array, string>  JSON形式の不正がErrになる
+ */
 function readConfigFile(string $path): Result
 {
     if (!file_exists($path)) {
-        return Err::of("ファイルが存在しません: $path");
+        throw new RuntimeException("ファイルが存在しません: $path");
     }
     
     $content = file_get_contents($path);
     if ($content === false) {
-        return Err::of("ファイルの読み込みに失敗しました: $path");
+        throw new RuntimeException("ファイルの読み込みに失敗しました: $path");
     }
     
     $data = json_decode($content, true);
@@ -311,12 +319,16 @@ function readConfigFile(string $path): Result
     return Ok::of($data);
 }
 
-// 使用例
-$config = readConfigFile('config.json')
-    ->map(fn($data) => array_merge(['debug' => false], $data))
-    ->unwrapOr(['debug' => false, 'app_name' => 'DefaultApp']);
-
-echo "アプリ名: " . $config['app_name'];
+// 使用例 - 例外はインフラ障害、Errはデータの問題
+try {
+    $config = readConfigFile('config.json');
+    $settings = $config
+        ->map(fn($data) => array_merge(['debug' => false], $data))
+        ->unwrap(); // Errの分岐を処理した後なのでOkが保証される
+    echo "アプリ名: " . $settings['app_name'];
+} catch (RuntimeException $e) {
+    echo "設定の読み込みに失敗しました: " . $e->getMessage();
+}
 ```
 
 ### データベース検索の例
