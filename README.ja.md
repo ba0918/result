@@ -1,6 +1,6 @@
 # PHP Result/Option型ライブラリ
 
-![PHP Version](https://img.shields.io/badge/php-%5E8.4-blue.svg)
+![PHP Version](https://img.shields.io/badge/php-%5E8.3-blue.svg)
 ![PHPStan](https://img.shields.io/badge/PHPStan-Level%20MAX-brightgreen.svg)
 ![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)
 ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)
@@ -155,7 +155,7 @@ $option->xor($other)                         // 排他的OR
 
 ## 要件
 
-- PHP 8.4+
+- PHP 8.3+
 - Composer
 
 ## 開発

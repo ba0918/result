@@ -11,7 +11,7 @@ A tutorial designed for developers with no functional programming experience to 
 
 ## 📚 Prerequisites
 
-- Basic PHP 8.4+ syntax
+- Basic PHP 8.3+ syntax
 - Understanding of classes and interfaces
 - Familiarity with anonymous functions (closures)
 

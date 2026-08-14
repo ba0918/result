@@ -12,7 +12,7 @@ Practical migration strategies and best practices for gradually introducing Resu
 
 ## 📋 Prerequisites
 
-- PHP 8.4+ environment
+- PHP 8.3+ environment
 - Package management with Composer
 - Existing project codebase
 
