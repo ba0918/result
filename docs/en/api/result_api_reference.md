@@ -52,7 +52,7 @@ $errorResult = Err::of("error");
 var_dump($errorResult->isOk()); // false
 ```
 
-**Related methods:** [isErr()](#iserr-bool), [isOkAnd()](#isokand)
+**Related methods:** [isErr()](#iserr-bool), [isOkAnd()](#isokandcallable-predicate-bool)
 
 ---
 
@@ -77,7 +77,7 @@ if ($result->isErr()) {
 }
 ```
 
-**Related methods:** [isOk()](#isok-bool), [isErrAnd()](#iserrand)
+**Related methods:** [isOk()](#isok-bool), [isErrAnd()](#iserrandcallable-predicate-bool)
 
 ---
 
@@ -113,7 +113,7 @@ $anyCheck = $errorResult->isOkAnd(fn($x) => true); // false (because it's Err)
 
 **Shorthand method:** Enables more concise conditional checks
 
-**Related methods:** [isOk()](#isok-bool), [contains()](#contains)
+**Related methods:** [isOk()](#isok-bool), [contains()](#containsmixed-value-bool)
 
 ---
 
@@ -146,7 +146,7 @@ $successResult = Ok::of(42);
 $anyErrorCheck = $successResult->isErrAnd(fn($err) => true); // false (because it's Ok)
 ```
 
-**Related methods:** [isErr()](#iserr-bool), [containsErr()](#containserr)
+**Related methods:** [isErr()](#iserr-bool), [containsErr()](#containserrmixed-error-bool)
 
 ## Transformation Methods
 
@@ -191,7 +191,7 @@ try {
 }
 ```
 
-**Related methods:** [mapErr()](#maperr), [mapOr()](#mapor), [mapOrElse()](#maporelse), [andThen()](#andthen)
+**Related methods:** [mapErr()](#maperrcallable-fn-result), [mapOr()](#maporcallable-fn-mixed-default-mixed), [mapOrElse()](#maporelsecallable-fn-callable-defaultfn-mixed), [andThen()](#andthencallable-fn-result)
 
 ---
 
@@ -236,7 +236,7 @@ $result = $this->databaseOperation()
     ]);
 ```
 
-**Related methods:** [map()](#map), [inspectErr()](#inspecterr)
+**Related methods:** [map()](#mapcallable-fn-result), [inspectErr()](#inspecterrcallable-fn-result)
 
 ---
 
@@ -281,7 +281,7 @@ $value = $result->map(fn($x) => $x * 2)->unwrapOr(0);
 $value = $result->mapOr(fn($x) => $x * 2, 0); // More efficient
 ```
 
-**Related methods:** [map()](#map), [mapOrElse()](#maporelse), [unwrapOr()](#unwrapor)
+**Related methods:** [map()](#mapcallable-fn-result), [mapOrElse()](#maporelsecallable-fn-callable-defaultfn-mixed), [unwrapOr()](#unwrapormixed-default-mixed)
 
 ---
 
@@ -332,7 +332,7 @@ $result = $someOperation->mapOrElse(
 );
 ```
 
-**Related methods:** [mapOr()](#mapor), [unwrapOrElse()](#unwraporelse)
+**Related methods:** [mapOr()](#maporcallable-fn-mixed-default-mixed), [unwrapOrElse()](#unwraporelsecallable-fn-mixed)
 
 ---
 
@@ -379,7 +379,7 @@ $result = $this->getUser($id)
 
 **Relationship to flatMap:** `andThen` corresponds to `flatMap` in other languages
 
-**Related methods:** [map()](#map), [flatten()](#flatten)
+**Related methods:** [map()](#mapcallable-fn-result), [flatten()](#flatten-result)
 
 ## Value Extraction Methods
 
@@ -417,7 +417,7 @@ try {
 - To avoid unexpected exceptions, it's recommended to check with `isOk()` first or use `unwrapOr()`
 - Use carefully in production code
 
-**Related methods:** [unwrapOr()](#unwrapor), [unwrapOrElse()](#unwraporelse), [expect()](#expect)
+**Related methods:** [unwrapOr()](#unwrapormixed-default-mixed), [unwrapOrElse()](#unwraporelsecallable-fn-mixed), [expect()](#expectstring-message-mixed)
 
 ---
 
@@ -451,7 +451,7 @@ try {
 }
 ```
 
-**Related methods:** [unwrap()](#unwrap), [expectErr()](#expecterr)
+**Related methods:** [unwrap()](#unwrap-mixed), [expectErr()](#expecterrstring-message-mixed)
 
 ---
 
@@ -496,7 +496,7 @@ $username = $session->getUser()
     ->unwrapOr('Guest');
 ```
 
-**Related methods:** [unwrap()](#unwrap), [unwrapOrElse()](#unwraporelse), [mapOr()](#mapor)
+**Related methods:** [unwrap()](#unwrap-mixed), [unwrapOrElse()](#unwraporelsecallable-fn-mixed), [mapOr()](#maporcallable-fn-mixed-default-mixed)
 
 ---
 
@@ -536,7 +536,7 @@ $value = $errorResult->unwrapOrElse(fn($err) => strlen($err)); // 5
 $value = $result->unwrapOrElse(fn($err) => $this->generateExpensiveDefault($err));
 ```
 
-**Related methods:** [unwrapOr()](#unwrapor), [mapOrElse()](#maporelse)
+**Related methods:** [unwrapOr()](#unwrapormixed-default-mixed), [mapOrElse()](#maporelsecallable-fn-callable-defaultfn-mixed)
 
 ---
 
@@ -581,7 +581,7 @@ $user = $session->getUser()
     ->expect("Authenticated user required");
 ```
 
-**Related methods:** [unwrap()](#unwrap), [expectErr()](#expecterr)
+**Related methods:** [unwrap()](#unwrap-mixed), [expectErr()](#expecterrstring-message-mixed)
 
 ---
 
@@ -627,7 +627,7 @@ $error = $result->expectErr("Invalid operation should result in error");
 $this->assertEquals("invalid operation", $error);
 ```
 
-**Related methods:** [expect()](#expect), [unwrapErr()](#unwraperr)
+**Related methods:** [expect()](#expectstring-message-mixed), [unwrapErr()](#unwraperr-mixed)
 
 ## Inspection Methods
 
@@ -669,7 +669,7 @@ $result = $this->complexOperation()
     ->inspect(fn($data) => $this->logProcessingStep('step2', $data));
 ```
 
-**Related methods:** [inspectErr()](#inspecterr), [map()](#map)
+**Related methods:** [inspectErr()](#inspecterrcallable-fn-result), [map()](#mapcallable-fn-result)
 
 ---
 
@@ -710,7 +710,7 @@ $result = $this->criticalOperation()
     ->inspectErr(fn($err) => $this->logger->error('Critical failure', ['error' => $err]));
 ```
 
-**Related methods:** [inspect()](#inspect), [mapErr()](#maperr)
+**Related methods:** [inspect()](#inspectcallable-fn-result), [mapErr()](#maperrcallable-fn-result)
 
 ## Combination Methods
 
@@ -755,7 +755,7 @@ $result = $this->primarySource()
     ->or(Ok::of($this->defaultValue()));
 ```
 
-**Related methods:** [orElse()](#orelse), [and()](#and)
+**Related methods:** [orElse()](#orelsecallable-fn-result), [and()](#andresult-res-result)
 
 ---
 
@@ -800,7 +800,7 @@ $result = $this->fetchData()
     });
 ```
 
-**Related methods:** [or()](#or), [unwrapOrElse()](#unwraporelse)
+**Related methods:** [or()](#orresult-res-result), [unwrapOrElse()](#unwraporelsecallable-fn-mixed)
 
 ---
 
@@ -846,7 +846,7 @@ $result = $this->validateInput($data)
 
 **Difference from andThen:** `and` continues without using the value, `andThen` transforms using the value
 
-**Related methods:** [andThen()](#andthen), [or()](#or)
+**Related methods:** [andThen()](#andthencallable-fn-result), [or()](#orresult-res-result)
 
 ## Utility Methods
 
@@ -893,7 +893,7 @@ var_dump($objectResult->contains(new stdClass())); // false (different instances
 
 **PHP-specific feature:** Not available in Rust's standard Result type, convenient method for PHP
 
-**Related methods:** [containsErr()](#containserr), [isOkAnd()](#isokand)
+**Related methods:** [containsErr()](#containserrmixed-error-bool), [isOkAnd()](#isokandcallable-predicate-bool)
 
 ---
 
@@ -933,7 +933,7 @@ $result = Err::of(['type' => 'validation', 'field' => 'email']);
 var_dump($result->containsErr(['type' => 'validation', 'field' => 'email'])); // true
 ```
 
-**Related methods:** [contains()](#contains), [isErrAnd()](#iserrand)
+**Related methods:** [contains()](#containsmixed-value-bool), [isErrAnd()](#iserrandcallable-predicate-bool)
 
 ---
 
@@ -979,7 +979,7 @@ $fullyFlat = $oneLevel->flatten();  // Err("inner error")
 
 **Runtime type checking:** Requires runtime determination with instanceof
 
-**Related methods:** [andThen()](#andthen), [transpose()](#transpose)
+**Related methods:** [andThen()](#andthencallable-fn-result), [transpose()](#transpose-option)
 
 ## Type Conversion Methods
 
@@ -1032,7 +1032,7 @@ $transposed = array_map(fn($result) => $result->transpose(), $userResults);
 
 **Rust compatibility:** Same conversion rules as Rust's standard library
 
-**Related methods:** [ok()](#ok), [err()](#err), [Option::transpose()](/docs/api/option_api_reference.md#transpose)
+**Related methods:** [ok()](#ok-option), [err()](#err-option), [Option::transpose()](option_api_reference.md#transpose-result)
 
 ---
 
@@ -1071,7 +1071,7 @@ $values = array_filter(
 );
 ```
 
-**Related methods:** [err()](#err), [transpose()](#transpose)
+**Related methods:** [err()](#err-option), [transpose()](#transpose-option)
 
 ---
 
@@ -1110,7 +1110,7 @@ $errors = array_filter(
 );
 ```
 
-**Related methods:** [ok()](#ok), [unwrapErr()](#unwraperr)
+**Related methods:** [ok()](#ok-option), [unwrapErr()](#unwraperr-mixed)
 
 ## Implementation Classes
 
@@ -1157,14 +1157,14 @@ $error = Err::of(new Exception("exception object"));
 ### Performance Considerations
 - Overhead from object wrapping
 - Consider usage in high-frequency processing
-- See [Performance Guide](/docs/guide/performance_guide.md) for details
+- See [Performance Guide](../guide/performance_guide.md) for details
 
 ### Type Safety
 - PHPStan Level MAX compatible
 - Generic type annotations recommended
-- See [Type Error Troubleshooting](/docs/guide/debugging_guide.md#type-error-troubleshooting) for details
+- See [Type Error Troubleshooting](../guide/debugging_guide.md#type-error-troubleshooting) for details
 
 ### Error Handling
 - Use `unwrap()` methods carefully
 - `unwrapOr()` methods recommended
-- See [Best Practices](/docs/guide/best_practices.md) for details
+- See [Best Practices](../guide/best_practices.md) for details

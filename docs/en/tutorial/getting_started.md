@@ -418,8 +418,8 @@ $result = readFile('data.json')
 
 - **[Best Practices](../guide/best_practices.md)** - Practical guidelines for projects
 - **[API Reference](../api/result_api_reference.md)** - Detailed specifications for all methods
-- **[Example Collection](../../examples/)** - Copy & paste ready examples
+- **[Example Collection](../../../examples/)** - Copy & paste ready examples
 
 ---
 
-💡 **Understanding Check**: Try running the examples from this tutorial yourself. Executable samples are also available in [examples/](../../examples/).
+💡 **Understanding Check**: Try running the examples from this tutorial yourself. Executable samples are also available in [examples/](../../../examples/).

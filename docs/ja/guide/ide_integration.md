@@ -7,7 +7,7 @@
 1. [PhpStorm設定](#phpstorm設定)
 2. [VS Code設定](#vs-code設定)
 3. [PHPStan連携設定](#phpstan連携設定)
-4. [型ヒント・補完の最適化](#型ヒント・補完の最適化)
+4. [型ヒント・補完の最適化](#型ヒント補完の最適化)
 5. [デバッグ環境設定](#デバッグ環境設定)
 6. [Live Templates/Snippets](#live-templatessnippets)
 7. [プロジェクト設定テンプレート](#プロジェクト設定テンプレート)

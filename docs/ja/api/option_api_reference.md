@@ -53,7 +53,7 @@ $noneOption = None::instance();
 var_dump($noneOption->isSome()); // false
 ```
 
-**関連メソッド:** [isNone()](#isnone-bool), [isSomeAnd()](#issomeand)
+**関連メソッド:** [isNone()](#isnone-bool), [isSomeAnd()](#issomeandcallable-predicate-bool)
 
 ---
 
@@ -81,7 +81,7 @@ $someOption = Some::of("値");
 var_dump($someOption->isNone()); // false
 ```
 
-**関連メソッド:** [isSome()](#issome-bool), [contains()](#contains)
+**関連メソッド:** [isSome()](#issome-bool), [contains()](#containsmixed-value-bool)
 
 ---
 
@@ -124,7 +124,7 @@ $user = $session->getUser();
 $isAdmin = $user->isSomeAnd(fn($u) => $u->hasRole('admin'));
 ```
 
-**関連メソッド:** [isSome()](#issome-bool), [contains()](#contains), [filter()](#filter)
+**関連メソッド:** [isSome()](#issome-bool), [contains()](#containsmixed-value-bool), [filter()](#filtercallable-predicate-option)
 
 ## 変換メソッド
 
@@ -175,7 +175,7 @@ $result = Some::of("  hello world  ")
     ->map(fn($s) => str_replace(' ', '_', $s)); // Some("HELLO_WORLD")
 ```
 
-**関連メソッド:** [mapOr()](#mapor), [mapOrElse()](#maporelse), [andThen()](#andthen)
+**関連メソッド:** [mapOr()](#maporcallable-fn-mixed-default-mixed), [mapOrElse()](#maporelsecallable-fn-callable-defaultfn-mixed), [andThen()](#andthencallable-fn-option)
 
 ---
 
@@ -231,7 +231,7 @@ $value = $option->map(fn($x) => $x * 2)->unwrapOr(0);
 $value = $option->mapOr(fn($x) => $x * 2, 0); // より効率的
 ```
 
-**関連メソッド:** [map()](#map), [mapOrElse()](#maporelse), [unwrapOr()](#unwrapor)
+**関連メソッド:** [map()](#mapcallable-fn-option), [mapOrElse()](#maporelsecallable-fn-callable-defaultfn-mixed), [unwrapOr()](#unwrapormixed-default-mixed)
 
 ---
 
@@ -292,7 +292,7 @@ $message = $user->getLastLogin()
     );
 ```
 
-**関連メソッド:** [mapOr()](#mapor), [unwrapOrElse()](#unwraporelse), [orElse()](#orelse)
+**関連メソッド:** [mapOr()](#maporcallable-fn-mixed-default-mixed), [unwrapOrElse()](#unwraporelsecallable-fn-mixed), [orElse()](#orelsecallable-fn-option)
 
 ---
 
@@ -341,7 +341,7 @@ $result = $this->getUser($id)
 
 **flatMapとの関係:** `andThen`は他の言語の`flatMap`に相当
 
-**関連メソッド:** [map()](#map), [filter()](#filter), [flatten()](#flatten)
+**関連メソッド:** [map()](#mapcallable-fn-option), [filter()](#filtercallable-predicate-option), [flatten()](#flatten-option)
 
 ## 値取得メソッド
 
@@ -386,7 +386,7 @@ if ($option->isSome()) {
 }
 ```
 
-**関連メソッド:** [unwrapOr()](#unwrapor), [unwrapOrElse()](#unwraporelse), [expect()](#expect)
+**関連メソッド:** [unwrapOr()](#unwrapormixed-default-mixed), [unwrapOrElse()](#unwraporelsecallable-fn-mixed), [expect()](#expectstring-message-mixed)
 
 ---
 
@@ -432,7 +432,7 @@ $theme = $user->getPreference('theme')->unwrapOr('default');
 $timeout = $response->getTimeout()->unwrapOr(30);
 ```
 
-**関連メソッド:** [unwrap()](#unwrap), [unwrapOrElse()](#unwraporelse), [mapOr()](#mapor)
+**関連メソッド:** [unwrap()](#unwrap-mixed), [unwrapOrElse()](#unwraporelsecallable-fn-mixed), [mapOr()](#maporcallable-fn-mixed-default-mixed)
 
 ---
 
@@ -479,7 +479,7 @@ $sessionId = $session->getId()
     ->unwrapOrElse(fn() => $this->generateNewSessionId());
 ```
 
-**関連メソッド:** [unwrapOr()](#unwrapor), [mapOrElse()](#maporelse), [orElse()](#orelse)
+**関連メソッド:** [unwrapOr()](#unwrapormixed-default-mixed), [mapOrElse()](#maporelsecallable-fn-callable-defaultfn-mixed), [orElse()](#orelsecallable-fn-option)
 
 ---
 
@@ -527,7 +527,7 @@ $user = $session->getAuthenticatedUser()
     ->expect("認証済みユーザーが必要");
 ```
 
-**関連メソッド:** [unwrap()](#unwrap), [unwrapOr()](#unwrapor)
+**関連メソッド:** [unwrap()](#unwrap-mixed), [unwrapOr()](#unwrapormixed-default-mixed)
 
 ## 検査メソッド
 
@@ -581,7 +581,7 @@ $result = $data->getProcessedValue()
     });
 ```
 
-**関連メソッド:** [map()](#map), [filter()](#filter)
+**関連メソッド:** [map()](#mapcallable-fn-option), [filter()](#filtercallable-predicate-option)
 
 ## フィルタリングメソッド
 
@@ -639,7 +639,7 @@ $result = $data->getValue()
     ->filter(fn($val) => !str_contains($val, 'invalid'));
 ```
 
-**関連メソッド:** [isSomeAnd()](#issomeand), [map()](#map), [andThen()](#andthen)
+**関連メソッド:** [isSomeAnd()](#issomeandcallable-predicate-bool), [map()](#mapcallable-fn-option), [andThen()](#andthencallable-fn-option)
 
 ## 結合メソッド
 
@@ -691,7 +691,7 @@ $config = $userConfig
     ->or(Some::of($defaultConfig));
 ```
 
-**関連メソッド:** [orElse()](#orelse), [and()](#and), [unwrapOr()](#unwrapor)
+**関連メソッド:** [orElse()](#orelsecallable-fn-option), [and()](#andoption-opt-option), [unwrapOr()](#unwrapormixed-default-mixed)
 
 ---
 
@@ -742,7 +742,7 @@ $result = $primary->orElse(function() {
 });
 ```
 
-**関連メソッド:** [or()](#or), [unwrapOrElse()](#unwraporelse), [mapOrElse()](#maporelse)
+**関連メソッド:** [or()](#oroption-opt-option), [unwrapOrElse()](#unwraporelsecallable-fn-mixed), [mapOrElse()](#maporelsecallable-fn-callable-defaultfn-mixed)
 
 ---
 
@@ -787,7 +787,7 @@ $result = $this->validateRequired($input)
 
 **andThenとの違い:** `and`は値を使わない継続、`andThen`は値を使った変換
 
-**関連メソッド:** [andThen()](#andthen), [or()](#or), [filter()](#filter)
+**関連メソッド:** [andThen()](#andthencallable-fn-option), [or()](#oroption-opt-option), [filter()](#filtercallable-predicate-option)
 
 ## ユーティリティメソッド
 
@@ -843,7 +843,7 @@ $isDebugMode = $config->getMode()->contains('debug');
 
 **PHP独自機能:** Rustの標準Option型にはない、PHP向けの便利メソッド
 
-**関連メソッド:** [isSomeAnd()](#issomeand), [filter()](#filter)
+**関連メソッド:** [isSomeAnd()](#issomeandcallable-predicate-bool), [filter()](#filtercallable-predicate-option)
 
 ---
 
@@ -899,7 +899,7 @@ $user = Some::of(42)
     ->flatten(); // Some(User) または None
 ```
 
-**関連メソッド:** [andThen()](#andthen), [map()](#map)
+**関連メソッド:** [andThen()](#andthencallable-fn-option), [map()](#mapcallable-fn-option)
 
 ## 型間変換メソッド
 
@@ -952,7 +952,7 @@ $transposed = array_map(fn($opt) => $opt->transpose(), $results);
 
 **Rust互換性:** Rustの標準ライブラリと同じ変換ルール
 
-**関連メソッド:** [okOr()](#okor), [okOrElse()](#okorelse), [Result::transpose()](/docs/api/result_api_reference.md#transpose)
+**関連メソッド:** [okOr()](#okormixed-err-result), [okOrElse()](#okorelsecallable-fn-result), [Result::transpose()](result_api_reference.md#transpose-option)
 
 ---
 
@@ -1010,7 +1010,7 @@ $result = $data->getValue()
     ]);
 ```
 
-**関連メソッド:** [okOrElse()](#okorelse), [transpose()](#transpose), [unwrapOr()](#unwrapor)
+**関連メソッド:** [okOrElse()](#okorelsecallable-fn-result), [transpose()](#transpose-result), [unwrapOr()](#unwrapormixed-default-mixed)
 
 ---
 
@@ -1063,7 +1063,7 @@ $result = $primaryData
     ->okOrElse(fn() => $this->generateDetailedErrorReport());
 ```
 
-**関連メソッド:** [okOr()](#okor), [unwrapOrElse()](#unwraporelse), [orElse()](#orelse)
+**関連メソッド:** [okOr()](#okormixed-err-result), [unwrapOrElse()](#unwraporelsecallable-fn-mixed), [orElse()](#orelsecallable-fn-option)
 
 ## 高度な操作メソッド
 
@@ -1132,7 +1132,7 @@ if ($singleMode->isSome()) {
 }
 ```
 
-**関連メソッド:** [or()](#or), [and()](#and), [zip()](#zip)
+**関連メソッド:** [or()](#oroption-opt-option), [and()](#andoption-opt-option), [zip()](#zipoption-opt-option)
 
 ---
 
@@ -1213,7 +1213,7 @@ if ($zipped->isSome()) {
 }
 ```
 
-**関連メソッド:** [and()](#and), [xor()](#xor), [map()](#map)
+**関連メソッド:** [and()](#andoption-opt-option), [xor()](#xoroption-opt-option), [map()](#mapcallable-fn-option)
 
 ## 実装クラス
 
@@ -1267,17 +1267,17 @@ $none = None::instance(); // 常に同じインスタンス
 ### パフォーマンス考慮事項
 - オブジェクトラッピングによるオーバーヘッド
 - Noneのシングルトンパターンによる最適化
-- 詳細は[パフォーマンスガイド](/docs/guide/performance_guide.md)を参照
+- 詳細は[パフォーマンスガイド](../guide/performance_guide.md)を参照
 
 ### 型安全性
 - PHPStan Level MAX対応
 - ジェネリクス型アノテーション推奨
-- 詳細は[型エラーのトラブルシューティング](/docs/guide/debugging_guide.md#型エラーのトラブルシューティング)を参照
+- 詳細は[型エラーのトラブルシューティング](../guide/debugging_guide.md#型エラーのトラブルシューティング)を参照
 
 ### null安全性
 - null値の代替として使用
 - `unwrap()`系メソッドは慎重に使用
-- 詳細は[ベストプラクティス](/docs/guide/best_practices.md)を参照
+- 詳細は[ベストプラクティス](../guide/best_practices.md)を参照
 
 ### 実用的な設計パターン
 - Builder パターンでの optional fields

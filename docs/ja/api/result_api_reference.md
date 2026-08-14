@@ -52,7 +52,7 @@ $errorResult = Err::of("エラー");
 var_dump($errorResult->isOk()); // false
 ```
 
-**関連メソッド:** [isErr()](#iserr-bool), [isOkAnd()](#isokand)
+**関連メソッド:** [isErr()](#iserr-bool), [isOkAnd()](#isokandcallable-predicate-bool)
 
 ---
 
@@ -77,7 +77,7 @@ if ($result->isErr()) {
 }
 ```
 
-**関連メソッド:** [isOk()](#isok-bool), [isErrAnd()](#iserrand)
+**関連メソッド:** [isOk()](#isok-bool), [isErrAnd()](#iserrandcallable-predicate-bool)
 
 ---
 
@@ -113,7 +113,7 @@ $anyCheck = $errorResult->isOkAnd(fn($x) => true); // false (Errなので)
 
 **ショートハンドメソッド:** より簡潔な条件確認が可能
 
-**関連メソッド:** [isOk()](#isok-bool), [contains()](#contains)
+**関連メソッド:** [isOk()](#isok-bool), [contains()](#containsmixed-value-bool)
 
 ---
 
@@ -146,7 +146,7 @@ $successResult = Ok::of(42);
 $anyErrorCheck = $successResult->isErrAnd(fn($err) => true); // false (Okなので)
 ```
 
-**関連メソッド:** [isErr()](#iserr-bool), [containsErr()](#containserr)
+**関連メソッド:** [isErr()](#iserr-bool), [containsErr()](#containserrmixed-error-bool)
 
 ## 変換メソッド
 
@@ -191,7 +191,7 @@ try {
 }
 ```
 
-**関連メソッド:** [mapErr()](#maperr), [mapOr()](#mapor), [mapOrElse()](#maporelse), [andThen()](#andthen)
+**関連メソッド:** [mapErr()](#maperrcallable-fn-result), [mapOr()](#maporcallable-fn-mixed-default-mixed), [mapOrElse()](#maporelsecallable-fn-callable-defaultfn-mixed), [andThen()](#andthencallable-fn-result)
 
 ---
 
@@ -236,7 +236,7 @@ $result = $this->databaseOperation()
     ]);
 ```
 
-**関連メソッド:** [map()](#map), [inspectErr()](#inspecterr)
+**関連メソッド:** [map()](#mapcallable-fn-result), [inspectErr()](#inspecterrcallable-fn-result)
 
 ---
 
@@ -281,7 +281,7 @@ $value = $result->map(fn($x) => $x * 2)->unwrapOr(0);
 $value = $result->mapOr(fn($x) => $x * 2, 0); // より効率的
 ```
 
-**関連メソッド:** [map()](#map), [mapOrElse()](#maporelse), [unwrapOr()](#unwrapor)
+**関連メソッド:** [map()](#mapcallable-fn-result), [mapOrElse()](#maporelsecallable-fn-callable-defaultfn-mixed), [unwrapOr()](#unwrapormixed-default-mixed)
 
 ---
 
@@ -332,7 +332,7 @@ $result = $someOperation->mapOrElse(
 );
 ```
 
-**関連メソッド:** [mapOr()](#mapor), [unwrapOrElse()](#unwraporelse)
+**関連メソッド:** [mapOr()](#maporcallable-fn-mixed-default-mixed), [unwrapOrElse()](#unwraporelsecallable-fn-mixed)
 
 ---
 
@@ -379,7 +379,7 @@ $result = $this->getUser($id)
 
 **flatMapとの関係:** `andThen`は他の言語の`flatMap`に相当
 
-**関連メソッド:** [map()](#map), [flatten()](#flatten)
+**関連メソッド:** [map()](#mapcallable-fn-result), [flatten()](#flatten-result)
 
 ## 値取得メソッド
 
@@ -417,7 +417,7 @@ try {
 - 予期しない例外を避けるため、事前に`isOk()`でチェックするか、`unwrapOr()`を使用することを推奨
 - プロダクションコードでは慎重に使用
 
-**関連メソッド:** [unwrapOr()](#unwrapor), [unwrapOrElse()](#unwraporelse), [expect()](#expect)
+**関連メソッド:** [unwrapOr()](#unwrapormixed-default-mixed), [unwrapOrElse()](#unwraporelsecallable-fn-mixed), [expect()](#expectstring-message-mixed)
 
 ---
 
@@ -451,7 +451,7 @@ try {
 }
 ```
 
-**関連メソッド:** [unwrap()](#unwrap), [expectErr()](#expecterr)
+**関連メソッド:** [unwrap()](#unwrap-mixed), [expectErr()](#expecterrstring-message-mixed)
 
 ---
 
@@ -496,7 +496,7 @@ $username = $session->getUser()
     ->unwrapOr('Guest');
 ```
 
-**関連メソッド:** [unwrap()](#unwrap), [unwrapOrElse()](#unwraporelse), [mapOr()](#mapor)
+**関連メソッド:** [unwrap()](#unwrap-mixed), [unwrapOrElse()](#unwraporelsecallable-fn-mixed), [mapOr()](#maporcallable-fn-mixed-default-mixed)
 
 ---
 
@@ -536,7 +536,7 @@ $value = $errorResult->unwrapOrElse(fn($err) => strlen($err)); // 5
 $value = $result->unwrapOrElse(fn($err) => $this->generateExpensiveDefault($err));
 ```
 
-**関連メソッド:** [unwrapOr()](#unwrapor), [mapOrElse()](#maporelse)
+**関連メソッド:** [unwrapOr()](#unwrapormixed-default-mixed), [mapOrElse()](#maporelsecallable-fn-callable-defaultfn-mixed)
 
 ---
 
@@ -581,7 +581,7 @@ $user = $session->getUser()
     ->expect("認証済みユーザーが必要");
 ```
 
-**関連メソッド:** [unwrap()](#unwrap), [expectErr()](#expecterr)
+**関連メソッド:** [unwrap()](#unwrap-mixed), [expectErr()](#expecterrstring-message-mixed)
 
 ---
 
@@ -627,7 +627,7 @@ $error = $result->expectErr("無効な操作はエラーになるべき");
 $this->assertEquals("invalid operation", $error);
 ```
 
-**関連メソッド:** [expect()](#expect), [unwrapErr()](#unwraperr)
+**関連メソッド:** [expect()](#expectstring-message-mixed), [unwrapErr()](#unwraperr-mixed)
 
 ## 検査メソッド
 
@@ -669,7 +669,7 @@ $result = $this->complexOperation()
     ->inspect(fn($data) => $this->logProcessingStep('step2', $data));
 ```
 
-**関連メソッド:** [inspectErr()](#inspecterr), [map()](#map)
+**関連メソッド:** [inspectErr()](#inspecterrcallable-fn-result), [map()](#mapcallable-fn-result)
 
 ---
 
@@ -710,7 +710,7 @@ $result = $this->criticalOperation()
     ->inspectErr(fn($err) => $this->logger->error('Critical failure', ['error' => $err]));
 ```
 
-**関連メソッド:** [inspect()](#inspect), [mapErr()](#maperr)
+**関連メソッド:** [inspect()](#inspectcallable-fn-result), [mapErr()](#maperrcallable-fn-result)
 
 ## 結合メソッド
 
@@ -755,7 +755,7 @@ $result = $this->primarySource()
     ->or(Ok::of($this->defaultValue()));
 ```
 
-**関連メソッド:** [orElse()](#orelse), [and()](#and)
+**関連メソッド:** [orElse()](#orelsecallable-fn-result), [and()](#andresult-res-result)
 
 ---
 
@@ -800,7 +800,7 @@ $result = $this->fetchData()
     });
 ```
 
-**関連メソッド:** [or()](#or), [unwrapOrElse()](#unwraporelse)
+**関連メソッド:** [or()](#orresult-res-result), [unwrapOrElse()](#unwraporelsecallable-fn-mixed)
 
 ---
 
@@ -846,7 +846,7 @@ $result = $this->validateInput($data)
 
 **andThenとの違い:** `and`は値を使わない継続、`andThen`は値を使った変換
 
-**関連メソッド:** [andThen()](#andthen), [or()](#or)
+**関連メソッド:** [andThen()](#andthencallable-fn-result), [or()](#orresult-res-result)
 
 ## ユーティリティメソッド
 
@@ -893,7 +893,7 @@ var_dump($objectResult->contains(new stdClass())); // false (異なるインス�
 
 **PHP独自機能:** Rustの標準Result型にはない、PHP向けの便利メソッド
 
-**関連メソッド:** [containsErr()](#containserr), [isOkAnd()](#isokand)
+**関連メソッド:** [containsErr()](#containserrmixed-error-bool), [isOkAnd()](#isokandcallable-predicate-bool)
 
 ---
 
@@ -933,7 +933,7 @@ $result = Err::of(['type' => 'validation', 'field' => 'email']);
 var_dump($result->containsErr(['type' => 'validation', 'field' => 'email'])); // true
 ```
 
-**関連メソッド:** [contains()](#contains), [isErrAnd()](#iserrand)
+**関連メソッド:** [contains()](#containsmixed-value-bool), [isErrAnd()](#iserrandcallable-predicate-bool)
 
 ---
 
@@ -979,7 +979,7 @@ $fullyFlat = $oneLevel->flatten();  // Err("inner error")
 
 **実行時型チェック:** instanceofによる実行時判定が必要
 
-**関連メソッド:** [andThen()](#andthen), [transpose()](#transpose)
+**関連メソッド:** [andThen()](#andthencallable-fn-result), [transpose()](#transpose-option)
 
 ## 型間変換メソッド
 
@@ -1032,7 +1032,7 @@ $transposed = array_map(fn($result) => $result->transpose(), $userResults);
 
 **Rust互換性:** Rustの標準ライブラリと同じ変換ルール
 
-**関連メソッド:** [ok()](#ok), [err()](#err), [Option::transpose()](/docs/api/option_api_reference.md#transpose)
+**関連メソッド:** [ok()](#ok-option), [err()](#err-option), [Option::transpose()](option_api_reference.md#transpose-result)
 
 ---
 
@@ -1071,7 +1071,7 @@ $values = array_filter(
 );
 ```
 
-**関連メソッド:** [err()](#err), [transpose()](#transpose)
+**関連メソッド:** [err()](#err-option), [transpose()](#transpose-option)
 
 ---
 
@@ -1110,7 +1110,7 @@ $errors = array_filter(
 );
 ```
 
-**関連メソッド:** [ok()](#ok), [unwrapErr()](#unwraperr)
+**関連メソッド:** [ok()](#ok-option), [unwrapErr()](#unwraperr-mixed)
 
 ## 実装クラス
 
@@ -1157,14 +1157,14 @@ $error = Err::of(new Exception("例外オブジェクト"));
 ### パフォーマンス考慮事項
 - オブジェクトラッピングによるオーバーヘッド
 - 高頻度処理での使用は要検討
-- 詳細は[パフォーマンスガイド](/docs/guide/performance_guide.md)を参照
+- 詳細は[パフォーマンスガイド](../guide/performance_guide.md)を参照
 
 ### 型安全性
 - PHPStan Level MAX対応
 - ジェネリクス型アノテーション推奨
-- 詳細は[型エラーのトラブルシューティング](/docs/guide/debugging_guide.md#型エラーのトラブルシューティング)を参照
+- 詳細は[型エラーのトラブルシューティング](../guide/debugging_guide.md#型エラーのトラブルシューティング)を参照
 
 ### エラーハンドリング
 - `unwrap()`系メソッドは慎重に使用
 - `unwrapOr()`系メソッドを推奨
-- 詳細は[ベストプラクティス](/docs/guide/best_practices.md)を参照
+- 詳細は[ベストプラクティス](../guide/best_practices.md)を参照

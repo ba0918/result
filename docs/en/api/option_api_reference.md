@@ -53,7 +53,7 @@ $noneOption = None::instance();
 var_dump($noneOption->isSome()); // false
 ```
 
-**Related methods:** [isNone()](#isnone-bool), [isSomeAnd()](#issomeand)
+**Related methods:** [isNone()](#isnone-bool), [isSomeAnd()](#issomeandcallable-predicate-bool)
 
 ---
 
@@ -81,7 +81,7 @@ $someOption = Some::of("value");
 var_dump($someOption->isNone()); // false
 ```
 
-**Related methods:** [isSome()](#issome-bool), [contains()](#contains)
+**Related methods:** [isSome()](#issome-bool), [contains()](#containsmixed-value-bool)
 
 ---
 
@@ -124,7 +124,7 @@ $user = $session->getUser();
 $isAdmin = $user->isSomeAnd(fn($u) => $u->hasRole('admin'));
 ```
 
-**Related methods:** [isSome()](#issome-bool), [contains()](#contains), [filter()](#filter)
+**Related methods:** [isSome()](#issome-bool), [contains()](#containsmixed-value-bool), [filter()](#filtercallable-predicate-option)
 
 ## Transformation Methods
 
@@ -175,7 +175,7 @@ $result = Some::of("  hello world  ")
     ->map(fn($s) => str_replace(' ', '_', $s)); // Some("HELLO_WORLD")
 ```
 
-**Related methods:** [mapOr()](#mapor), [mapOrElse()](#maporelse), [andThen()](#andthen)
+**Related methods:** [mapOr()](#maporcallable-fn-mixed-default-mixed), [mapOrElse()](#maporelsecallable-fn-callable-defaultfn-mixed), [andThen()](#andthencallable-fn-option)
 
 ---
 
@@ -231,7 +231,7 @@ $value = $option->map(fn($x) => $x * 2)->unwrapOr(0);
 $value = $option->mapOr(fn($x) => $x * 2, 0); // More efficient
 ```
 
-**Related methods:** [map()](#map), [mapOrElse()](#maporelse), [unwrapOr()](#unwrapor)
+**Related methods:** [map()](#mapcallable-fn-option), [mapOrElse()](#maporelsecallable-fn-callable-defaultfn-mixed), [unwrapOr()](#unwrapormixed-default-mixed)
 
 ---
 
@@ -292,7 +292,7 @@ $message = $user->getLastLogin()
     );
 ```
 
-**Related methods:** [mapOr()](#mapor), [unwrapOrElse()](#unwraporelse), [orElse()](#orelse)
+**Related methods:** [mapOr()](#maporcallable-fn-mixed-default-mixed), [unwrapOrElse()](#unwraporelsecallable-fn-mixed), [orElse()](#orelsecallable-fn-option)
 
 ---
 
@@ -341,7 +341,7 @@ $result = $this->getUser($id)
 
 **Relationship to flatMap:** `andThen` corresponds to `flatMap` in other languages
 
-**Related methods:** [map()](#map), [filter()](#filter), [flatten()](#flatten)
+**Related methods:** [map()](#mapcallable-fn-option), [filter()](#filtercallable-predicate-option), [flatten()](#flatten-option)
 
 ## Value Extraction Methods
 
@@ -386,7 +386,7 @@ if ($option->isSome()) {
 }
 ```
 
-**Related methods:** [unwrapOr()](#unwrapor), [unwrapOrElse()](#unwraporelse), [expect()](#expect)
+**Related methods:** [unwrapOr()](#unwrapormixed-default-mixed), [unwrapOrElse()](#unwraporelsecallable-fn-mixed), [expect()](#expectstring-message-mixed)
 
 ---
 
@@ -432,7 +432,7 @@ $theme = $user->getPreference('theme')->unwrapOr('default');
 $timeout = $response->getTimeout()->unwrapOr(30);
 ```
 
-**Related methods:** [unwrap()](#unwrap), [unwrapOrElse()](#unwraporelse), [mapOr()](#mapor)
+**Related methods:** [unwrap()](#unwrap-mixed), [unwrapOrElse()](#unwraporelsecallable-fn-mixed), [mapOr()](#maporcallable-fn-mixed-default-mixed)
 
 ---
 
@@ -479,7 +479,7 @@ $sessionId = $session->getId()
     ->unwrapOrElse(fn() => $this->generateNewSessionId());
 ```
 
-**Related methods:** [unwrapOr()](#unwrapor), [mapOrElse()](#maporelse), [orElse()](#orelse)
+**Related methods:** [unwrapOr()](#unwrapormixed-default-mixed), [mapOrElse()](#maporelsecallable-fn-callable-defaultfn-mixed), [orElse()](#orelsecallable-fn-option)
 
 ---
 
@@ -527,7 +527,7 @@ $user = $session->getAuthenticatedUser()
     ->expect("Authenticated user required");
 ```
 
-**Related methods:** [unwrap()](#unwrap), [unwrapOr()](#unwrapor)
+**Related methods:** [unwrap()](#unwrap-mixed), [unwrapOr()](#unwrapormixed-default-mixed)
 
 ## Inspection Methods
 
@@ -581,7 +581,7 @@ $result = $data->getProcessedValue()
     });
 ```
 
-**Related methods:** [map()](#map), [filter()](#filter)
+**Related methods:** [map()](#mapcallable-fn-option), [filter()](#filtercallable-predicate-option)
 
 ## Filtering Methods
 
@@ -639,7 +639,7 @@ $result = $data->getValue()
     ->filter(fn($val) => !str_contains($val, 'invalid'));
 ```
 
-**Related methods:** [isSomeAnd()](#issomeand), [map()](#map), [andThen()](#andthen)
+**Related methods:** [isSomeAnd()](#issomeandcallable-predicate-bool), [map()](#mapcallable-fn-option), [andThen()](#andthencallable-fn-option)
 
 ## Combination Methods
 
@@ -691,7 +691,7 @@ $config = $userConfig
     ->or(Some::of($defaultConfig));
 ```
 
-**Related methods:** [orElse()](#orelse), [and()](#and), [unwrapOr()](#unwrapor)
+**Related methods:** [orElse()](#orelsecallable-fn-option), [and()](#andoption-opt-option), [unwrapOr()](#unwrapormixed-default-mixed)
 
 ---
 
@@ -742,7 +742,7 @@ $result = $primary->orElse(function() {
 });
 ```
 
-**Related methods:** [or()](#or), [unwrapOrElse()](#unwraporelse), [mapOrElse()](#maporelse)
+**Related methods:** [or()](#oroption-opt-option), [unwrapOrElse()](#unwraporelsecallable-fn-mixed), [mapOrElse()](#maporelsecallable-fn-callable-defaultfn-mixed)
 
 ---
 
@@ -787,7 +787,7 @@ $result = $this->validateRequired($input)
 
 **Difference from andThen:** `and` continues without using the value, `andThen` transforms using the value
 
-**Related methods:** [andThen()](#andthen), [or()](#or), [filter()](#filter)
+**Related methods:** [andThen()](#andthencallable-fn-option), [or()](#oroption-opt-option), [filter()](#filtercallable-predicate-option)
 
 ## Utility Methods
 
@@ -843,7 +843,7 @@ $isDebugMode = $config->getMode()->contains('debug');
 
 **PHP-specific feature:** Not available in Rust's standard Option type, convenient method for PHP
 
-**Related methods:** [isSomeAnd()](#issomeand), [filter()](#filter)
+**Related methods:** [isSomeAnd()](#issomeandcallable-predicate-bool), [filter()](#filtercallable-predicate-option)
 
 ---
 
@@ -899,7 +899,7 @@ $user = Some::of(42)
     ->flatten(); // Some(User) or None
 ```
 
-**Related methods:** [andThen()](#andthen), [map()](#map)
+**Related methods:** [andThen()](#andthencallable-fn-option), [map()](#mapcallable-fn-option)
 
 ## Type Conversion Methods
 
@@ -952,7 +952,7 @@ $transposed = array_map(fn($opt) => $opt->transpose(), $results);
 
 **Rust compatibility:** Same conversion rules as Rust's standard library
 
-**Related methods:** [okOr()](#okor), [okOrElse()](#okorelse), [Result::transpose()](/docs/api/result_api_reference.md#transpose)
+**Related methods:** [okOr()](#okormixed-err-result), [okOrElse()](#okorelsecallable-fn-result), [Result::transpose()](result_api_reference.md#transpose-option)
 
 ---
 
@@ -1010,7 +1010,7 @@ $result = $data->getValue()
     ]);
 ```
 
-**Related methods:** [okOrElse()](#okorelse), [transpose()](#transpose), [unwrapOr()](#unwrapor)
+**Related methods:** [okOrElse()](#okorelsecallable-fn-result), [transpose()](#transpose-result), [unwrapOr()](#unwrapormixed-default-mixed)
 
 ---
 
@@ -1063,7 +1063,7 @@ $result = $primaryData
     ->okOrElse(fn() => $this->generateDetailedErrorReport());
 ```
 
-**Related methods:** [okOr()](#okor), [unwrapOrElse()](#unwraporelse), [orElse()](#orelse)
+**Related methods:** [okOr()](#okormixed-err-result), [unwrapOrElse()](#unwraporelsecallable-fn-mixed), [orElse()](#orelsecallable-fn-option)
 
 ## Advanced Operation Methods
 
@@ -1132,7 +1132,7 @@ if ($singleMode->isSome()) {
 }
 ```
 
-**Related methods:** [or()](#or), [and()](#and), [zip()](#zip)
+**Related methods:** [or()](#oroption-opt-option), [and()](#andoption-opt-option), [zip()](#zipoption-opt-option)
 
 ---
 
@@ -1213,7 +1213,7 @@ if ($zipped->isSome()) {
 }
 ```
 
-**Related methods:** [and()](#and), [xor()](#xor), [map()](#map)
+**Related methods:** [and()](#andoption-opt-option), [xor()](#xoroption-opt-option), [map()](#mapcallable-fn-option)
 
 ## Implementation Classes
 
@@ -1267,17 +1267,17 @@ $none = None::instance(); // Always the same instance
 ### Performance Considerations
 - Overhead from object wrapping
 - Optimization with None's singleton pattern
-- See [Performance Guide](/docs/guide/performance_guide.md) for details
+- See [Performance Guide](../guide/performance_guide.md) for details
 
 ### Type Safety
 - PHPStan Level MAX compatible
 - Generic type annotations recommended
-- See [Type Error Troubleshooting](/docs/guide/debugging_guide.md#type-error-troubleshooting) for details
+- See [Type Error Troubleshooting](../guide/debugging_guide.md#type-error-troubleshooting) for details
 
 ### Null Safety
 - Use as alternative to null values
 - Use `unwrap()` methods carefully
-- See [Best Practices](/docs/guide/best_practices.md) for details
+- See [Best Practices](../guide/best_practices.md) for details
 
 ### Practical Design Patterns
 - Optional fields in Builder pattern
