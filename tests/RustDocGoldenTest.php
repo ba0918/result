@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ba0918\Result\Tests;
 
 use ba0918\Result\Err;
+use ba0918\Result\Exception\UnwrapException;
 use ba0918\Result\None;
 use ba0918\Result\Ok;
 use ba0918\Result\Option;
@@ -39,6 +40,38 @@ final class RustDocGoldenTest extends TestCase
         $x = Err::of('Some error message');
         $this->assertFalse($x->isOk());
         $this->assertTrue($x->isErr());
+    }
+
+    public function testResultOk(): void
+    {
+        // Rust: let x: Result<u32, &str> = Ok(2);
+        //       assert_eq!(x.ok(), Some(2));
+        $x = Ok::of(2);
+        $option = $x->ok();
+
+        $this->assertTrue($option->isSome());
+        $this->assertSame(2, $option->unwrap());
+
+        // Rust: let x: Result<u32, &str> = Err("Nothing here");
+        //       assert_eq!(x.ok(), None);
+        $x = Err::of('Nothing here');
+        $this->assertTrue($x->ok()->isNone());
+    }
+
+    public function testResultErr(): void
+    {
+        // Rust: let x: Result<u32, &str> = Ok(2);
+        //       assert_eq!(x.err(), None);
+        $x = Ok::of(2);
+        $this->assertTrue($x->err()->isNone());
+
+        // Rust: let x: Result<u32, &str> = Err("Nothing here");
+        //       assert_eq!(x.err(), Some("Nothing here"));
+        $x = Err::of('Nothing here');
+        $option = $x->err();
+
+        $this->assertTrue($option->isSome());
+        $this->assertSame('Nothing here', $option->unwrap());
     }
 
     public function testResultMap(): void
@@ -307,6 +340,37 @@ final class RustDocGoldenTest extends TestCase
         $this->assertFalse($x->contains(2));
     }
 
+    public function testResultContainsErr(): void
+    {
+        // Rust: let x: Result<u32, &str> = Ok(2);
+        //       assert_eq!(x.contains_err(&"Some error message"), false);
+        $x = Ok::of(2);
+        $this->assertFalse($x->containsErr('Some error message'));
+
+        // Rust: let x: Result<u32, &str> = Err("Some error message");
+        //       assert_eq!(x.contains_err(&"Some error message"), true);
+        $x = Err::of('Some error message');
+        $this->assertTrue($x->containsErr('Some error message'));
+    }
+
+    public function testResultTranspose(): void
+    {
+        // Rust: #[derive(Debug, Eq, PartialEq)]
+        //       struct SomeErr;
+        //       let x: Result<Option<i32>, SomeErr> = Ok(Some(5));
+        //       let y: Option<Result<i32, SomeErr>> = Some(Ok(5));
+        //       assert_eq!(x.transpose(), y);
+        // Note: SomeErr is used only for type annotation; PHP expresses it via PHPDoc
+        $x = Ok::of(Some::of(5));
+        $option = $x->transpose();
+
+        $this->assertTrue($option->isSome());
+        /** @var Result<mixed, mixed> $result */
+        $result = $option->unwrap();
+        $this->assertTrue($result->isOk());
+        $this->assertSame(5, $result->unwrap());
+    }
+
     public function testResultInspectAndInspectErr(): void
     {
         // Rust: let x = Ok(2); x.inspect(|x| println!("got: {x}"));
@@ -346,6 +410,35 @@ final class RustDocGoldenTest extends TestCase
         $x = None::instance();
         $this->assertFalse($x->isSome());
         $this->assertTrue($x->isNone());
+    }
+
+    public function testOptionIsSomeAnd(): void
+    {
+        // Rust: let x: Option<u32> = Some(2);
+        //       assert_eq!(x.is_some_and(|x| x > 1), true);
+        $x = Some::of(2);
+        $this->assertTrue($x->isSomeAnd(function ($x) {
+            assert(is_int($x));
+
+            return $x > 1;
+        }));
+
+        // Rust: let x: Option<u32> = Some(0);
+        //       assert_eq!(x.is_some_and(|x| x > 1), false);
+        $x = Some::of(0);
+        $this->assertFalse($x->isSomeAnd(function ($x) {
+            assert(is_int($x));
+
+            return $x > 1;
+        }));
+
+        // Rust: let x: Option<u32> = None;
+        //       assert_eq!(x.is_some_and(|x| x > 1), false);
+        $x = None::instance();
+        $this->assertFalse($x->isSomeAnd(function ($x) {
+            // @phpstan-ignore greater.invalid
+            return $x > 1;
+        }));
     }
 
     public function testOptionMap(): void
@@ -478,6 +571,38 @@ final class RustDocGoldenTest extends TestCase
             return $n % 2 === 0;
         });
         $this->assertTrue($result->isNone());
+    }
+
+    public function testOptionUnwrap(): void
+    {
+        // Rust: let x = Some("air");
+        //       assert_eq!(x.unwrap(), "air");
+        $x = Some::of('air');
+        $this->assertSame('air', $x->unwrap());
+
+        // Rust: let x: Option<&str> = None;
+        //       assert_eq!(x.unwrap(), "air"); // fails
+        // Note: PHP throws UnwrapException instead of panicking
+        $x = None::instance();
+        $this->expectException(UnwrapException::class);
+        $this->expectExceptionMessage('None value');
+        $x->unwrap();
+    }
+
+    public function testOptionExpect(): void
+    {
+        // Rust: let x = Some("value");
+        //       assert_eq!(x.expect("fruits are healthy"), "value");
+        $x = Some::of('value');
+        $this->assertSame('value', $x->expect('fruits are healthy'));
+
+        // Rust: let x: Option<&str> = None;
+        //       x.expect("fruits are healthy"); // panics with `fruits are healthy`
+        // Note: PHP throws UnwrapException instead of panicking
+        $x = None::instance();
+        $this->expectException(UnwrapException::class);
+        $this->expectExceptionMessage('fruits are healthy');
+        $x->expect('fruits are healthy');
     }
 
     public function testOptionUnwrapOrAndUnwrapOrElse(): void
@@ -633,6 +758,24 @@ final class RustDocGoldenTest extends TestCase
         $result = $x->okOrElse(fn (): int => 0);
         $this->assertTrue($result->isErr());
         $this->assertSame(0, $result->unwrapErr());
+    }
+
+    public function testOptionTranspose(): void
+    {
+        // Rust: #[derive(Debug, Eq, PartialEq)]
+        //       struct SomeErr;
+        //       let x: Option<Result<i32, SomeErr>> = Some(Ok(5));
+        //       let y: Result<Option<i32>, SomeErr> = Ok(Some(5));
+        //       assert_eq!(x.transpose(), y);
+        // Note: SomeErr is used only for type annotation; PHP expresses it via PHPDoc
+        $x = Some::of(Ok::of(5));
+        $result = $x->transpose();
+
+        $this->assertTrue($result->isOk());
+        /** @var Option<mixed> $option */
+        $option = $result->unwrap();
+        $this->assertTrue($option->isSome());
+        $this->assertSame(5, $option->unwrap());
     }
 
     public function testOptionFlatten(): void
