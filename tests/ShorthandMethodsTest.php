@@ -319,7 +319,7 @@ final class ShorthandMethodsTest extends TestCase
 
     public function testShorthandMethodsChaining(): void
     {
-        // Combined example: Result -> Option -> judgment
+        // Combined example: Result -> Option -> evaluation
         $result = Ok::of(Some::of(42));
 
         $hasValidValue = $result->isOkAnd(function ($opt) {

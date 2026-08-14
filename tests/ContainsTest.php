@@ -65,7 +65,7 @@ class ContainsTest extends TestCase
         $this->assertFalse($err->containsErr('404'));
     }
 
-    // Cross tests
+    // Cross-type tests
 
     public function testOkContainsErrAlwaysFalse(): void
     {
