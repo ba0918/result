@@ -1,8 +1,8 @@
 {
-    "name": "mizumi/result",
+    "name": "ba0918/result",
     "autoload": {
         "psr-4": {
-            "Mizumi\\Result\\": "src/"
+            "ba0918\\Result\\": "src/"
         }
     },
     "require-dev": {

@@ -24,7 +24,7 @@
 
 ```bash
 # 1. ライブラリのインストール
-composer require mizumi/result
+composer require ba0918/result
 
 # 2. オートローダーの確認
 composer dump-autoload
@@ -37,7 +37,7 @@ composer dump-autoload
 <?php
 require_once 'vendor/autoload.php';
 
-use Mizumi\Result\{Ok, Err, Some, None};
+use ba0918\Result\{Ok, Err, Some, None};
 
 // 基本的な使用例でチーム学習
 function learningExample(): void

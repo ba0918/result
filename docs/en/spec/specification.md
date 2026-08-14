@@ -9,7 +9,7 @@ This library is a PHP implementation of Rust's Result and Option types. The Resu
 ### Class Structure
 
 ```
-Mizumi\Result\
+ba0918\Result\
 ├── Result.php                     # Result type base interface
 ├── Ok.php                        # Class representing success values
 ├── Err.php                       # Class representing error values
@@ -250,8 +250,8 @@ Immutable singleton class representing an Option without a value.
 
 **Result type:**
 ```php
-use Mizumi\Result\Ok;
-use Mizumi\Result\Err;
+use ba0918\Result\Ok;
+use ba0918\Result\Err;
 
 // Success case
 $result = new Ok(42);
@@ -264,8 +264,8 @@ echo $result->unwrapOr(0); // 0
 
 **Option type:**
 ```php
-use Mizumi\Result\Some;
-use Mizumi\Result\None;
+use ba0918\Result\Some;
+use ba0918\Result\None;
 
 // With value case
 $option = Some::of("Hello World");
@@ -453,7 +453,7 @@ $secondFlatten = $firstFlatten->flatten();
 echo $secondFlatten->unwrap(); // "Deep value"
 
 // Practical example: Flattening validation results
-function validateAndParse(string $input): \Mizumi\Result\Result {
+function validateAndParse(string $input): \ba0918\Result\Result {
     if (empty($input)) {
         return new Ok(new Err("Input is empty"));
     }
@@ -507,7 +507,7 @@ if ($data->contains([1, 2, 3])) {
 ### transpose() and Option-Result Mutual Conversion
 
 ```php
-use Mizumi\Result\{Ok, Err, Some, None};
+use ba0918\Result\{Ok, Err, Some, None};
 
 // Option<Result> → Result<Option> conversion
 $optionResult = Some::of(Ok::of("Success data"));
@@ -560,7 +560,7 @@ echo $result; // "User123" or "Guest"
 ### Result Type New Conversion Method Usage Examples
 
 ```php
-use Mizumi\Result\{Ok, Err};
+use ba0918\Result\{Ok, Err};
 
 // ok() method: Get success value as Option
 $success = Ok::of("Data");
@@ -616,7 +616,7 @@ $analysis = analyzeApiResult($errorResult);
 ### Option Type New Combination Method Usage Examples
 
 ```php
-use Mizumi\Result\{Some, None};
+use ba0918\Result\{Some, None};
 
 // xor() method: Exclusive OR operation
 $user = Some::of("Alice");

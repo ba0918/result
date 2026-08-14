@@ -65,7 +65,7 @@ class UserService
 #### After (Using Result Type)
 
 ```php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 // Using Result type - safe and clear
 class UserService
@@ -156,7 +156,7 @@ class ProductRepository
 #### After (Using Option Type)
 
 ```php
-use Mizumi\Result\{Some, None, Option};
+use ba0918\Result\{Some, None, Option};
 
 // Using Option type - null safe
 class ProductRepository
@@ -201,7 +201,7 @@ class ProductRepository
 ### Pattern 1: Data transformation chains
 
 ```php
-use Mizumi\Result\{Ok, Err, Some, None};
+use ba0918\Result\{Ok, Err, Some, None};
 
 // String normalization and validation
 function processUsername(string $input): Result
@@ -263,7 +263,7 @@ if ($userWithSettings->isSome()) {
 ### Pattern 1: Configuration file loading
 
 ```php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 function loadConfiguration(string $configPath): Result
 {
@@ -313,7 +313,7 @@ function getAppConfig(): array
 ### Pattern 2: Validation processing
 
 ```php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 class UserValidator
 {
@@ -390,7 +390,7 @@ if ($result->isOk()) {
 ### Pattern 1: Safe value retrieval from associative arrays
 
 ```php
-use Mizumi\Result\{Some, None, Option};
+use ba0918\Result\{Some, None, Option};
 
 function safeGet(array $array, string $key): Option
 {
@@ -436,7 +436,7 @@ echo "Theme: $theme"; // "Theme: dark"
 ### Pattern 2: Safe processing of database results
 
 ```php
-use Mizumi\Result\{Some, None, Option};
+use ba0918\Result\{Some, None, Option};
 
 class UserRepository
 {
@@ -483,7 +483,7 @@ class UserRepository
 ### Case 1: Form Processing
 
 ```php
-use Mizumi\Result\{Ok, Err, Some, None, Result, Option};
+use ba0918\Result\{Ok, Err, Some, None, Result, Option};
 
 class ContactFormProcessor
 {
@@ -556,7 +556,7 @@ echo $result->unwrapOr('Processing failed');
 ### Case 2: External API Integration
 
 ```php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 class WeatherService
 {

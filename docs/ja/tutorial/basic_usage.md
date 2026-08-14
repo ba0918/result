@@ -65,7 +65,7 @@ class UserService
 #### After（Result型使用）
 
 ```php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 // Result型使用 - 安全で明確
 class UserService
@@ -156,7 +156,7 @@ class ProductRepository
 #### After（Option型使用）
 
 ```php
-use Mizumi\Result\{Some, None, Option};
+use ba0918\Result\{Some, None, Option};
 
 // Option型使用 - null安全
 class ProductRepository
@@ -201,7 +201,7 @@ class ProductRepository
 ### パターン1: データ変換の連鎖
 
 ```php
-use Mizumi\Result\{Ok, Err, Some, None};
+use ba0918\Result\{Ok, Err, Some, None};
 
 // 文字列の正規化と検証
 function processUsername(string $input): Result
@@ -263,7 +263,7 @@ if ($userWithSettings->isSome()) {
 ### パターン1: 設定ファイルの読み込み
 
 ```php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 function loadConfiguration(string $configPath): Result
 {
@@ -313,7 +313,7 @@ function getAppConfig(): array
 ### パターン2: バリデーション処理
 
 ```php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 class UserValidator
 {
@@ -390,7 +390,7 @@ if ($result->isOk()) {
 ### パターン1: 連想配列からの安全な値取得
 
 ```php
-use Mizumi\Result\{Some, None, Option};
+use ba0918\Result\{Some, None, Option};
 
 function safeGet(array $array, string $key): Option
 {
@@ -436,7 +436,7 @@ echo "テーマ: $theme"; // "テーマ: dark"
 ### パターン2: データベース結果の安全な処理
 
 ```php
-use Mizumi\Result\{Some, None, Option};
+use ba0918\Result\{Some, None, Option};
 
 class UserRepository
 {
@@ -483,7 +483,7 @@ class UserRepository
 ### ケース1: フォーム処理
 
 ```php
-use Mizumi\Result\{Ok, Err, Some, None, Result, Option};
+use ba0918\Result\{Ok, Err, Some, None, Result, Option};
 
 class ContactFormProcessor
 {
@@ -556,7 +556,7 @@ echo $result->unwrapOr('処理に失敗しました');
 ### ケース2: 外部API連携
 
 ```php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 class WeatherService
 {

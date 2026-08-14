@@ -38,17 +38,17 @@ composer install
 このライブラリはRustのResult型とOption型を模倣したPHP実装です：
 
 **Result型（成功/失敗の表現）**
-- `Mizumi\Result\Result` - 成功/失敗を表現するためのインターフェース（Generics対応）
-- `Mizumi\Result\Ok` - 成功値を格納するimmutableクラス
-- `Mizumi\Result\Err` - エラー値を格納するimmutableクラス
+- `ba0918\Result\Result` - 成功/失敗を表現するためのインターフェース（Generics対応）
+- `ba0918\Result\Ok` - 成功値を格納するimmutableクラス
+- `ba0918\Result\Err` - エラー値を格納するimmutableクラス
 
 **Option型（値の有無の表現）**
-- `Mizumi\Result\Option` - 値の有無を表現するためのインターフェース（Generics対応）
-- `Mizumi\Result\Some` - 値を持つimmutableクラス
-- `Mizumi\Result\None` - 値を持たないimmutableクラス（シングルトン）
+- `ba0918\Result\Option` - 値の有無を表現するためのインターフェース（Generics対応）
+- `ba0918\Result\Some` - 値を持つimmutableクラス
+- `ba0918\Result\None` - 値を持たないimmutableクラス（シングルトン）
 
 **共通**
-- `Mizumi\Result\Exception\UnwrapException` - unwrap系メソッドの失敗時にスローされる例外
+- `ba0918\Result\Exception\UnwrapException` - unwrap系メソッドの失敗時にスローされる例外
 
 ## 技術スタック
 

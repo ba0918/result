@@ -9,7 +9,7 @@
 ### クラス構成
 
 ```
-Mizumi\Result\
+ba0918\Result\
 ├── Result.php                     # Result型基底インターフェース
 ├── Ok.php                        # 成功値を表現するクラス
 ├── Err.php                       # エラー値を表現するクラス
@@ -246,8 +246,8 @@ interface Option
 
 **Result型:**
 ```php
-use Mizumi\Result\Ok;
-use Mizumi\Result\Err;
+use ba0918\Result\Ok;
+use ba0918\Result\Err;
 
 // 成功ケース
 $result = new Ok(42);
@@ -260,8 +260,8 @@ echo $result->unwrapOr(0); // 0
 
 **Option型:**
 ```php
-use Mizumi\Result\Some;
-use Mizumi\Result\None;
+use ba0918\Result\Some;
+use ba0918\Result\None;
 
 // 値を持つケース
 $option = Some::of("Hello World");
@@ -449,7 +449,7 @@ $secondFlatten = $firstFlatten->flatten();
 echo $secondFlatten->unwrap(); // "深い値"
 
 // 実用例：バリデーション結果の平坦化
-function validateAndParse(string $input): \Mizumi\Result\Result {
+function validateAndParse(string $input): \ba0918\Result\Result {
     if (empty($input)) {
         return new Ok(new Err("入力が空です"));
     }
@@ -503,7 +503,7 @@ if ($data->contains([1, 2, 3])) {
 ### transpose()とOption-Result相互変換
 
 ```php
-use Mizumi\Result\{Ok, Err, Some, None};
+use ba0918\Result\{Ok, Err, Some, None};
 
 // Option<Result> → Result<Option> への変換
 $optionResult = Some::of(Ok::of("成功データ"));
@@ -556,7 +556,7 @@ echo $result; // "User123" or "ゲスト"
 ### Result型の新変換メソッドの使用例
 
 ```php
-use Mizumi\Result\{Ok, Err};
+use ba0918\Result\{Ok, Err};
 
 // ok()メソッド: 成功値をOptionとして取得
 $success = Ok::of("データ");
@@ -612,7 +612,7 @@ $analysis = analyzeApiResult($errorResult);
 ### Option型の新結合メソッドの使用例
 
 ```php
-use Mizumi\Result\{Some, None};
+use ba0918\Result\{Some, None};
 
 // xor()メソッド: 排他的OR操作
 $user = Some::of("Alice");

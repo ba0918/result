@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-use Mizumi\Result\{Err, None, Ok, Option, Result, Some};
+use ba0918\Result\{Err, None, Ok, Option, Result, Some};
 
 /**
  * 設定値の型定義

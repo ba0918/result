@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-use Mizumi\Result\{Err, Ok, Result};
+use ba0918\Result\{Err, Ok, Result};
 
 /**
  * エラーレベル定義

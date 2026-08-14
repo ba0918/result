@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Mizumi\Result\Err;
-use Mizumi\Result\None;
-use Mizumi\Result\Ok;
-use Mizumi\Result\Option;
-use Mizumi\Result\Result;
-use Mizumi\Result\Some;
+use ba0918\Result\Err;
+use ba0918\Result\None;
+use ba0918\Result\Ok;
+use ba0918\Result\Option;
+use ba0918\Result\Result;
+use ba0918\Result\Some;
 
 /**
  * Basic safe division

@@ -52,7 +52,7 @@ $result = divide(10, 0); // Exception: Cannot divide by zero
 ### Solution with Result and Option Types
 
 ```php
-use Mizumi\Result\{Ok, Err, Some, None, Result, Option};
+use ba0918\Result\{Ok, Err, Some, None, Result, Option};
 
 // Result type - explicitly handle success/failure
 function safeDivide(float $a, float $b): Result
@@ -99,7 +99,7 @@ Result type has two states representing "success" or "failure":
 
 ```php
 <?php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 // 1. Create a function that returns Result type
 function validateAge(int $age): Result
@@ -177,7 +177,7 @@ Option type has two states representing "has value" or "no value":
 
 ```php
 <?php
-use Mizumi\Result\{Some, None, Option};
+use ba0918\Result\{Some, None, Option};
 
 // 1. Create a function that returns Option type
 function getConfig(string $key): Option
@@ -290,7 +290,7 @@ if ($result->isOk()) {
 ### Safe file reading
 
 ```php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 function readConfigFile(string $path): Result
 {
@@ -322,7 +322,7 @@ echo "App name: " . $config['app_name'];
 ### Database search example
 
 ```php
-use Mizumi\Result\{Some, None, Option};
+use ba0918\Result\{Some, None, Option};
 
 function findUserById(int $id): Option
 {

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Mizumi\Result\Tests;
+namespace ba0918\Result\Tests;
 
-use Mizumi\Result\Exception\UnwrapException;
-use Mizumi\Result\None;
-use Mizumi\Result\Some;
+use ba0918\Result\Exception\UnwrapException;
+use ba0918\Result\None;
+use ba0918\Result\Some;
 use PHPUnit\Framework\TestCase;
 
 /**

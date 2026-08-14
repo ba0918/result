@@ -22,7 +22,7 @@ This guide explains configuration methods and optimization techniques for effici
 // composer.json
 {
     "require": {
-        "mizumi/result": "^1.0"
+        "ba0918/result": "^1.0"
     },
     "autoload": {
         "psr-4": {
@@ -69,30 +69,30 @@ parameters:
 namespace PHPSTORM_META {
     
     // Improve Option type inference
-    override(\Mizumi\Result\Option::map(0), map([
+    override(\ba0918\Result\Option::map(0), map([
         '' => '@',
     ]));
     
-    override(\Mizumi\Result\Option::andThen(0), map([
+    override(\ba0918\Result\Option::andThen(0), map([
         '' => '@',
     ]));
     
     // Improve Result type inference
-    override(\Mizumi\Result\Result::map(0), map([
+    override(\ba0918\Result\Result::map(0), map([
         '' => '@',
     ]));
     
-    override(\Mizumi\Result\Result::andThen(0), map([
+    override(\ba0918\Result\Result::andThen(0), map([
         '' => '@',
     ]));
     
     // Return type inference for unwrap()
-    override(\Mizumi\Result\Some::unwrap(), type(0));
-    override(\Mizumi\Result\Ok::unwrap(), type(0));
+    override(\ba0918\Result\Some::unwrap(), type(0));
+    override(\ba0918\Result\Ok::unwrap(), type(0));
     
     // Factory method type inference
-    override(\Mizumi\Result\Some::of(0), type(0));
-    override(\Mizumi\Result\Ok::of(0), type(0));
+    override(\ba0918\Result\Some::of(0), type(0));
+    override(\ba0918\Result\Ok::of(0), type(0));
 }
 ```
 
@@ -412,7 +412,7 @@ parameters:
 // stubs/result-option.stub
 <?php
 
-namespace Mizumi\Result {
+namespace ba0918\Result {
     
     /**
      * @template-covariant T

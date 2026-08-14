@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Mizumi\Result\Exception;
+namespace ba0918\Result\Exception;
 
 use Exception;
 
@@ -41,7 +41,7 @@ use Exception;
  * }
  * ```
  *
- * @package Mizumi\Result\Exception
+ * @package ba0918\Result\Exception
  */
 final class UnwrapException extends Exception
 {

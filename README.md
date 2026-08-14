@@ -29,7 +29,7 @@ A PHP implementation of Rust's Result and Option types for robust error handling
 ## Installation
 
 ```bash
-composer require mizumi/result
+composer require ba0918/result
 ```
 
 ## Quick Start
@@ -38,7 +38,7 @@ composer require mizumi/result
 
 ```php
 <?php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 // Division function (handles division by zero as error)
 function safeDivide(float $a, float $b): Result
@@ -70,7 +70,7 @@ echo $output; // 10
 
 ```php
 <?php
-use Mizumi\Result\{Some, None, Option};
+use ba0918\Result\{Some, None, Option};
 
 // Safely retrieve value from array
 function findUser(int $id): Option

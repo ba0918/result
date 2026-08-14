@@ -22,7 +22,7 @@
 ネストしたResult型やOption型を一段階平坦化するメソッドです。
 
 ```php
-use Mizumi\Result\{Ok, Err, Some, None, Result, Option};
+use ba0918\Result\{Ok, Err, Some, None, Result, Option};
 
 // Result<Result<T, E>, E> → Result<T, E>
 function complexOperation(int $value): Result
@@ -113,7 +113,7 @@ $result3 = handleOptionalValidation("");       // Err("空の入力です")
 ### パターン3: 複合的なエラーハンドリング
 
 ```php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 class DataProcessor
 {
@@ -234,7 +234,7 @@ if ($result->isOk()) {
 ### パターン1: エラーの分類と回復
 
 ```php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 enum ErrorType: string
 {
@@ -322,7 +322,7 @@ class RobustService
 ### パターン2: エラーの変換と集約
 
 ```php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 class ValidationResult
 {
@@ -430,7 +430,7 @@ class FormValidator
 ### パターン1: 複数のOptionの組み合わせ
 
 ```php
-use Mizumi\Result\{Some, None, Option};
+use ba0918\Result\{Some, None, Option};
 
 class UserProfileBuilder
 {
@@ -489,7 +489,7 @@ class UserProfileBuilder
 ### パターン2: フィルタリングと条件分岐
 
 ```php
-use Mizumi\Result\{Some, None, Option};
+use ba0918\Result\{Some, None, Option};
 
 class ProductFilter
 {
@@ -545,7 +545,7 @@ class ProductFilter
 ### 1. 遅延評価の活用
 
 ```php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 class OptimizedProcessor
 {
@@ -599,7 +599,7 @@ class OptimizedProcessor
 ### 2. メモリ効率の最適化
 
 ```php
-use Mizumi\Result\{Some, None, Option};
+use ba0918\Result\{Some, None, Option};
 
 class MemoryEfficientProcessor
 {
@@ -703,7 +703,7 @@ function goodTyping(Option $input): Option
 ### 完全なワークフロー実装
 
 ```php
-use Mizumi\Result\{Ok, Err, Some, None, Result, Option};
+use ba0918\Result\{Ok, Err, Some, None, Result, Option};
 
 class OrderProcessingWorkflow
 {

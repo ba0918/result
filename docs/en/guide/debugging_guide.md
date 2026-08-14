@@ -342,18 +342,18 @@ public function processWithContext(array $data): Result
 namespace PHPSTORM_META {
     
     // Improve Option type inference
-    override(\Mizumi\Result\Option::map(0), map([
+    override(\ba0918\Result\Option::map(0), map([
         '' => '@',
     ]));
     
     // Improve Result type inference
-    override(\Mizumi\Result\Result::map(0), map([
+    override(\ba0918\Result\Result::map(0), map([
         '' => '@',
     ]));
     
     // Return type inference for unwrap()
-    override(\Mizumi\Result\Some::unwrap(), type(0));
-    override(\Mizumi\Result\Ok::unwrap(), type(0));
+    override(\ba0918\Result\Some::unwrap(), type(0));
+    override(\ba0918\Result\Ok::unwrap(), type(0));
 }
 ```
 

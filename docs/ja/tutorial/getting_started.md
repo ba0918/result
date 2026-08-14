@@ -52,7 +52,7 @@ $result = divide(10, 0); // Exception: ゼロで割ることはできません
 ### Result型・Option型による解決
 
 ```php
-use Mizumi\Result\{Ok, Err, Some, None, Result, Option};
+use ba0918\Result\{Ok, Err, Some, None, Result, Option};
 
 // Result型 - 成功/失敗を明示的に扱う
 function safeDivide(float $a, float $b): Result
@@ -99,7 +99,7 @@ Result型は「成功」または「失敗」の2つの状態を持つ型です�
 
 ```php
 <?php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 // 1. Result型を返す関数の作成
 function validateAge(int $age): Result
@@ -177,7 +177,7 @@ Option型は「値がある」または「値がない」の2つの状態を持�
 
 ```php
 <?php
-use Mizumi\Result\{Some, None, Option};
+use ba0918\Result\{Some, None, Option};
 
 // 1. Option型を返す関数の作成
 function getConfig(string $key): Option
@@ -290,7 +290,7 @@ if ($result->isOk()) {
 ### ファイル読み込みの安全な処理
 
 ```php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 function readConfigFile(string $path): Result
 {
@@ -322,7 +322,7 @@ echo "アプリ名: " . $config['app_name'];
 ### データベース検索の例
 
 ```php
-use Mizumi\Result\{Some, None, Option};
+use ba0918\Result\{Some, None, Option};
 
 function findUserById(int $id): Option
 {

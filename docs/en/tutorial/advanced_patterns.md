@@ -22,7 +22,7 @@ This tutorial explains advanced patterns and techniques for effectively using al
 This method flattens nested Result and Option types by one level.
 
 ```php
-use Mizumi\Result\{Ok, Err, Some, None, Result, Option};
+use ba0918\Result\{Ok, Err, Some, None, Result, Option};
 
 // Result<Result<T, E>, E> → Result<T, E>
 function complexOperation(int $value): Result
@@ -113,7 +113,7 @@ $result3 = handleOptionalValidation("");       // Err("Empty input")
 ### Pattern 3: Combined Error Handling
 
 ```php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 class DataProcessor
 {
@@ -234,7 +234,7 @@ if ($result->isOk()) {
 ### Pattern 1: Error Classification and Recovery
 
 ```php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 enum ErrorType: string
 {
@@ -322,7 +322,7 @@ class RobustService
 ### Pattern 2: Error Transformation and Aggregation
 
 ```php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 class ValidationResult
 {
@@ -430,7 +430,7 @@ class FormValidator
 ### Pattern 1: Combining Multiple Options
 
 ```php
-use Mizumi\Result\{Some, None, Option};
+use ba0918\Result\{Some, None, Option};
 
 class UserProfileBuilder
 {
@@ -489,7 +489,7 @@ class UserProfileBuilder
 ### Pattern 2: Filtering and Conditional Branching
 
 ```php
-use Mizumi\Result\{Some, None, Option};
+use ba0918\Result\{Some, None, Option};
 
 class ProductFilter
 {
@@ -545,7 +545,7 @@ class ProductFilter
 ### 1. Leveraging Lazy Evaluation
 
 ```php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 class OptimizedProcessor
 {
@@ -599,7 +599,7 @@ class OptimizedProcessor
 ### 2. Memory Efficiency Optimization
 
 ```php
-use Mizumi\Result\{Some, None, Option};
+use ba0918\Result\{Some, None, Option};
 
 class MemoryEfficientProcessor
 {
@@ -703,7 +703,7 @@ function goodTyping(Option $input): Option
 ### Complete Workflow Implementation
 
 ```php
-use Mizumi\Result\{Ok, Err, Some, None, Result, Option};
+use ba0918\Result\{Ok, Err, Some, None, Result, Option};
 
 class OrderProcessingWorkflow
 {

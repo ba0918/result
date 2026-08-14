@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Mizumi\Result;
+namespace ba0918\Result;
 
-use Mizumi\Result\Exception\UnwrapException;
+use ba0918\Result\Exception\UnwrapException;
 
 /**
  * Type for representing presence/absence of a value

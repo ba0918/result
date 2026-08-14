@@ -24,7 +24,7 @@ Practical migration strategies and best practices for gradually introducing Resu
 
 ```bash
 # 1. Install the library
-composer require mizumi/result
+composer require ba0918/result
 
 # 2. Verify autoloader
 composer dump-autoload
@@ -37,7 +37,7 @@ composer dump-autoload
 <?php
 require_once 'vendor/autoload.php';
 
-use Mizumi\Result\{Ok, Err, Some, None};
+use ba0918\Result\{Ok, Err, Some, None};
 
 // Basic usage examples for team learning
 function learningExample(): void

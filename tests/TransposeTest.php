@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Mizumi\Result\Tests;
+namespace ba0918\Result\Tests;
 
+use ba0918\Result\Err;
+use ba0918\Result\None;
+use ba0918\Result\Ok;
+use ba0918\Result\Option;
+use ba0918\Result\Result;
+use ba0918\Result\Some;
 use Exception;
-use Mizumi\Result\Err;
-use Mizumi\Result\None;
-use Mizumi\Result\Ok;
-use Mizumi\Result\Option;
-use Mizumi\Result\Result;
-use Mizumi\Result\Some;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 

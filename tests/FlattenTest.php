@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Mizumi\Result\Err;
-use Mizumi\Result\Ok;
+use ba0918\Result\Err;
+use ba0918\Result\Ok;
 use PHPUnit\Framework\TestCase;
 
 class FlattenTest extends TestCase
@@ -197,7 +197,7 @@ class FlattenTest extends TestCase
         $outer = new Ok($inner);
         $flattened = $outer->flatten();
 
-        $this->assertInstanceOf(\Mizumi\Result\Result::class, $flattened);
+        $this->assertInstanceOf(\ba0918\Result\Result::class, $flattened);
     }
 
     public function testErrFlattenReturnTypeIsResult(): void
@@ -205,7 +205,7 @@ class FlattenTest extends TestCase
         $err = new Err('error');
         $flattened = $err->flatten();
 
-        $this->assertInstanceOf(\Mizumi\Result\Result::class, $flattened);
+        $this->assertInstanceOf(\ba0918\Result\Result::class, $flattened);
     }
 
     // メソッドチェーンテスト
@@ -246,7 +246,7 @@ class FlattenTest extends TestCase
     public function testFlattenInValidationScenario(): void
     {
         // バリデーション結果がネストしている場合
-        $validationResult = function ($input): \Mizumi\Result\Result {
+        $validationResult = function ($input): \ba0918\Result\Result {
             if ($input > 0) {
                 return new Ok(new Ok($input));
             }

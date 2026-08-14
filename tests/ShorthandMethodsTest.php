@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Mizumi\Result\Tests;
+namespace ba0918\Result\Tests;
 
-use Mizumi\Result\Err;
-use Mizumi\Result\None;
-use Mizumi\Result\Ok;
-use Mizumi\Result\Some;
+use ba0918\Result\Err;
+use ba0918\Result\None;
+use ba0918\Result\Ok;
+use ba0918\Result\Some;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -323,7 +323,7 @@ final class ShorthandMethodsTest extends TestCase
         $result = Ok::of(Some::of(42));
 
         $hasValidValue = $result->isOkAnd(function ($opt) {
-            assert($opt instanceof \Mizumi\Result\Option);
+            assert($opt instanceof \ba0918\Result\Option);
 
             return $opt->isSome() && $opt->isSomeAnd(function ($x) {
                 assert(is_int($x));

@@ -29,7 +29,7 @@ RustのResult型とOption型をPHPで実装した、エラーハンドリング�
 ## インストール
 
 ```bash
-composer require mizumi/result
+composer require ba0918/result
 ```
 
 ## クイックスタート
@@ -38,7 +38,7 @@ composer require mizumi/result
 
 ```php
 <?php
-use Mizumi\Result\{Ok, Err, Result};
+use ba0918\Result\{Ok, Err, Result};
 
 // 割り算関数（ゼロ除算をエラーとして処理）
 function safeDivide(float $a, float $b): Result
@@ -70,7 +70,7 @@ echo $output; // 10
 
 ```php
 <?php
-use Mizumi\Result\{Some, None, Option};
+use ba0918\Result\{Some, None, Option};
 
 // 配列から値を安全に取得
 function findUser(int $id): Option

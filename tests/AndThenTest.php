@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Mizumi\Result\Err;
-use Mizumi\Result\Ok;
-use Mizumi\Result\Result;
+use ba0918\Result\Err;
+use ba0918\Result\Ok;
+use ba0918\Result\Result;
 use PHPUnit\Framework\TestCase;
 
 /**

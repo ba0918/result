@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Mizumi\Result\Err;
-use Mizumi\Result\Ok;
+use ba0918\Result\Err;
+use ba0918\Result\Ok;
 use PHPUnit\Framework\TestCase;
 
 class AndMethodTest extends TestCase
