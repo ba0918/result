@@ -1,5 +1,15 @@
 {
     "name": "ba0918/result",
+    "description": "Rust-inspired Result and Option types for PHP, with immutable design and full type safety",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "ba0918"
+        }
+    ],
+    "require": {
+        "php": "^8.3"
+    },
     "autoload": {
         "psr-4": {
             "ba0918\\Result\\": "src/"
