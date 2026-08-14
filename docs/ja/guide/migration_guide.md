@@ -436,6 +436,12 @@ class PaymentService
             return Err::of("決済が拒否されました (HTTPステータス: $httpCode)");
         }
         
+        if ($httpCode < 200 || $httpCode >= 300) {
+            // Redirects and other unexpected statuses are not a successful
+            // payment response (follow_location is not enabled here)
+            throw new RuntimeException("予期しない決済APIのステータス (HTTPステータス: $httpCode)");
+        }
+        
         return Ok::of($response);
     }
     

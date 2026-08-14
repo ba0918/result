@@ -323,7 +323,7 @@ function readConfigFile(string $path): Result
 try {
     // Err (invalid JSON) is converted to the same exception so both share one handler
     $settings = readConfigFile('config.json')
-        ->map(fn($data) => array_merge(['debug' => false], $data))
+        ->map(fn($data) => array_merge(['debug' => false, 'app_name' => 'DefaultApp'], $data))
         ->unwrapOrElse(fn($error) => throw new RuntimeException($error));
     echo "App name: " . $settings['app_name'];
 } catch (RuntimeException $e) {

@@ -436,6 +436,12 @@ class PaymentService
             return Err::of("Payment declined (HTTP status: $httpCode)");
         }
         
+        if ($httpCode < 200 || $httpCode >= 300) {
+            // Redirects and other unexpected statuses are not a successful
+            // payment response (follow_location is not enabled here)
+            throw new RuntimeException("Unexpected payment API status (HTTP status: $httpCode)");
+        }
+        
         return Ok::of($response);
     }
     

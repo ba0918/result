@@ -503,7 +503,7 @@ class ProductFilter
     public function findDiscountedProduct(int $productId): Option
     {
         return $this->findProduct($productId)
-            ->andThen(fn($product) => {
+            ->andThen(function ($product) {
                 if ($product['discount'] > 0) {
                     $discountedPrice = $product['price'] * (1 - $product['discount'] / 100);
                     return Some::of(array_merge($product, ['final_price' => $discountedPrice]));
@@ -709,19 +709,31 @@ class OrderProcessingWorkflow
 {
     public function processOrder(array $orderData): Result
     {
-        return $this->validateOrder($orderData)
-            ->andThen(fn($order) => $this->checkInventory($order))
-            ->andThen(fn($order) => $this->calculatePricing($order))
-            ->andThen(fn($order) => $this->processPayment($order))
-            ->andThen(fn($order) => $this->reserveItems($order))
-            ->andThen(fn($order) => $this->generateInvoice($order))
-            ->andThen(fn($invoice) => $this->sendNotifications($invoice))
+        return $this->prepareOrder($orderData)
+            ->andThen(fn($order) => $this->finalizeOrder($order))
             ->map(fn($result) => [
                 'order_id' => $result['order_id'],
                 'invoice_id' => $result['invoice_id'],
                 'status' => 'completed',
                 'message' => '注文が正常に処理されました'
             ]);
+    }
+    
+    // Responsibility: validate the order and compute what is needed to execute it
+    private function prepareOrder(array $data): Result
+    {
+        return $this->validateOrder($data)
+            ->andThen(fn($order) => $this->checkInventory($order))
+            ->andThen(fn($order) => $this->calculatePricing($order));
+    }
+    
+    // Responsibility: execute the payment and produce the completion artifacts
+    private function finalizeOrder(array $order): Result
+    {
+        return $this->processPayment($order)
+            ->andThen(fn($order) => $this->reserveItems($order))
+            ->andThen(fn($order) => $this->generateInvoice($order))
+            ->andThen(fn($invoice) => $this->sendNotifications($invoice));
     }
     
     private function validateOrder(array $data): Result

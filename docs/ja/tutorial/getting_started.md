@@ -323,7 +323,7 @@ function readConfigFile(string $path): Result
 try {
     // Err（JSON形式の不正）は同じ例外に変換し、両方を1つのハンドラで扱う
     $settings = readConfigFile('config.json')
-        ->map(fn($data) => array_merge(['debug' => false], $data))
+        ->map(fn($data) => array_merge(['debug' => false, 'app_name' => 'DefaultApp'], $data))
         ->unwrapOrElse(fn($error) => throw new RuntimeException($error));
     echo "アプリ名: " . $settings['app_name'];
 } catch (RuntimeException $e) {
