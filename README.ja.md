@@ -5,24 +5,34 @@
 ![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)
 ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)
 
-🌐 **日本語** | **[English](README.md)**
+[English](README.md)
 
 RustのResult型とOption型をPHPで実装した、エラーハンドリングとnull安全性のためのライブラリです。
 
-## 🚀 なぜこのライブラリを使うのか？
+## 特徴
 
 - **型安全なエラーハンドリング** - 例外やnullの代わりに明示的な成功/失敗を表現
 - **関数型プログラミング** - メソッドチェーンによる宣言的なコード記述
-- **Rust互換** - Rustエコシステムの知見を活用可能（97%の仕様適合率）
+- **Rust互換** - Rust標準ライブラリとの97%の仕様適合率
 - **高品質** - PHPStan Level MAX、100%テストカバレッジ
 
-## 📦 インストール
+## 目次
+
+1. [インストール](#インストール)
+2. [クイックスタート](#クイックスタート)
+3. [ドキュメント](#ドキュメント)
+4. [主な機能](#主な機能)
+5. [要件](#要件)
+6. [開発](#開発)
+7. [ライセンス](#ライセンス)
+
+## インストール
 
 ```bash
 composer require mizumi/result
 ```
 
-## ⚡ 5分でクイックスタート
+## クイックスタート
 
 ### Result型 - エラーハンドリング
 
@@ -81,30 +91,42 @@ $user = findUser(1)
 echo $user; // ALICE
 ```
 
-## 📚 ドキュメント
+## ドキュメント
 
-### 📖 学習リソース
-- **[初心者向けチュートリアル](docs/tutorial/getting_started.md)** - 30分で基本概念を理解
-- **[基本的な使用方法](docs/tutorial/basic_usage.md)** - 実用的なパターンと実例
-- **[高度なパターン](docs/tutorial/advanced_patterns.md)** - 上級者向けテクニック
+### チュートリアル
 
-### 📋 実用ガイド
-- **[ベストプラクティス](docs/guide/best_practices.md)** - プロジェクトでの実用的ガイドライン
-- **[移行ガイド](docs/guide/migration_guide.md)** - 既存コードからの段階的移行
-- **[パフォーマンスガイド](docs/guide/performance_guide.md)** - 最適化とベンチマーク
+- **[初心者向けチュートリアル](docs/ja/tutorial/getting_started.md)** - 30分で基本概念を理解
+- **[基本的な使用方法](docs/ja/tutorial/basic_usage.md)** - 実用的なパターンと実例
+- **[高度なパターン](docs/ja/tutorial/advanced_patterns.md)** - 上級者向けテクニック
 
-### 🔧 リファレンス
-- **[Result API](docs/api/result_api_reference.md)** - Result型の全メソッド詳細
-- **[Option API](docs/api/option_api_reference.md)** - Option型の全メソッド詳細
-- **[仕様書](docs/spec/specification.md)** - 技術仕様の完全版
+### ガイド
 
-### 🆚 比較・統合
-- **[Rust比較](docs/comparison/rust_comparison.md)** - Rust標準ライブラリとの対応
-- **[他ライブラリ比較](docs/comparison/other_libraries.md)** - 技術選定の参考資料
+- **[ベストプラクティス](docs/ja/guide/best_practices.md)** - プロジェクトでの実用的ガイドライン
+- **[デバッグガイド](docs/ja/guide/debugging_guide.md)** - トラブルシューティングとデバッグ手法
+- **[移行ガイド](docs/ja/guide/migration_guide.md)** - 既存コードからの段階的移行
+- **[パフォーマンスガイド](docs/ja/guide/performance_guide.md)** - 最適化とベンチマーク
+- **[IDE統合](docs/ja/guide/ide_integration.md)** - IDE設定とツール連携
 
-## 🔥 主な機能
+### リファレンス
+
+- **[Result APIリファレンス](docs/ja/api/result_api_reference.md)** - Result型の全メソッド詳細
+- **[Option APIリファレンス](docs/ja/api/option_api_reference.md)** - Option型の全メソッド詳細
+- **[仕様書](docs/ja/spec/specification.md)** - 技術仕様の完全版
+- **[コーディングガイドライン](docs/ja/spec/coding_guideline.md)** - コントリビューター向け
+
+### 比較
+
+- **[Rust比較](docs/ja/comparison/rust_comparison.md)** - Rust標準ライブラリとの対応
+- **[他ライブラリ比較](docs/ja/comparison/other_libraries.md)** - 技術選定の参考資料
+
+### 実例
+
+- **[実用例集](examples/ja/)** - コピー&ペーストで使える例
+
+## 主な機能
 
 ### Result型メソッド
+
 ```php
 // 基本メソッド
 $result->isOk() / $result->isErr()           // 成功/失敗判定
@@ -118,6 +140,7 @@ $result->mapOr($fn, $default)                // デフォルト値付き変換
 ```
 
 ### Option型メソッド
+
 ```php
 // 基本メソッド
 $option->isSome() / $option->isNone()        // 値の有無判定
@@ -130,77 +153,30 @@ $option->zip($other)                         // 2つのOptionを結合
 $option->xor($other)                         // 排他的OR
 ```
 
-## 🎯 実世界での使用例
+## 要件
 
-```php
-// API レスポンスの処理
-function callApi(string $url): Result
-{
-    $response = file_get_contents($url);
-    
-    if ($response === false) {
-        return new Err("API呼び出しに失敗しました");
-    }
-    
-    return new Ok(json_decode($response, true));
-}
+- PHP 8.4+
+- Composer
 
-$result = callApi('https://api.example.com/users')
-    ->andThen(fn($data) => isset($data['users']) ? 
-        new Ok($data['users']) : 
-        new Err("不正なレスポンス形式"))
-    ->map(fn($users) => array_filter($users, fn($user) => $user['active']))
-    ->unwrapOr([]);
-
-// 設定ファイルの読み込み
-function loadConfig(string $path): Option
-{
-    if (!file_exists($path)) {
-        return None::instance();
-    }
-    
-    $content = file_get_contents($path);
-    return new Some(json_decode($content, true));
-}
-
-$config = loadConfig('config.json')
-    ->map(fn($cfg) => array_merge($defaultConfig, $cfg))
-    ->unwrapOr($defaultConfig);
-```
-
-## ✅ 要件
-
-- **PHP 8.4+**
-- **Composer**
-
-## 🛠️ 開発
+## 開発
 
 ```bash
-# 依存関係インストール
+# 依存関係のインストール
 composer install
 
 # テスト実行
-composer exec phpunit
+composer test
 
 # 静的解析
-composer exec phpstan analyse
+composer phpstan
+
+# コードスタイルチェック
+composer cs-check
+
+# 全品質チェック
+composer check
 ```
 
-## 📈 品質指標
+## ライセンス
 
-- **テストカバレッジ**: 100%
-- **PHPStan**: Level MAX（最高レベル）
-- **テスト件数**: 231+
-- **Rust仕様適合率**: 97%+
-
-## 📄 ライセンス
-
-MIT License
-
-## 🤝 コントリビューション
-
-Issue、Pull Requestを歓迎します。開発に参加される場合は[コーディングガイドライン](docs/spec/coding_guideline.md)をご確認ください。
-
----
-
-**Get started**: [初心者向けチュートリアル](docs/tutorial/getting_started.md) | **Examples**: [実用例集](examples/) | **API**: [リファレンス](docs/api/)
+MIT

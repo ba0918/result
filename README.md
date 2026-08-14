@@ -5,24 +5,34 @@
 ![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)
 ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)
 
-🌐 **[日本語](README.ja.md)** | **English**
+[日本語](README.ja.md)
 
 A PHP implementation of Rust's Result and Option types for robust error handling and null safety.
 
-## 🚀 Why Use This Library?
+## Features
 
-- **Type-Safe Error Handling** - Express success/failure explicitly instead of exceptions or null
-- **Functional Programming** - Declarative code with method chaining
-- **Rust Compatible** - Leverage Rust ecosystem knowledge (97% specification compliance)
-- **High Quality** - PHPStan Level MAX, 100% test coverage
+- **Type-safe error handling** - express success/failure explicitly instead of using exceptions or null
+- **Functional programming** - declarative code through method chaining
+- **Rust compatible** - 97% specification compliance with the Rust standard library
+- **High quality** - PHPStan Level MAX, 100% test coverage
 
-## 📦 Installation
+## Table of Contents
+
+1. [Installation](#installation)
+2. [Quick Start](#quick-start)
+3. [Documentation](#documentation)
+4. [Key Features](#key-features)
+5. [Requirements](#requirements)
+6. [Development](#development)
+7. [License](#license)
+
+## Installation
 
 ```bash
 composer require mizumi/result
 ```
 
-## ⚡ 5-Minute Quick Start
+## Quick Start
 
 ### Result Type - Error Handling
 
@@ -81,30 +91,42 @@ $user = findUser(1)
 echo $user; // ALICE
 ```
 
-## 📚 Documentation
+## Documentation
 
-### 📖 Learning Resources
-- **[Getting Started Tutorial](docs/tutorial/getting_started.md)** - Understand core concepts in 30 minutes
-- **[Basic Usage](docs/tutorial/basic_usage.md)** - Practical patterns and examples
-- **[Advanced Patterns](docs/tutorial/advanced_patterns.md)** - Techniques for experienced developers
+### Tutorials
 
-### 📋 Practical Guides
-- **[Best Practices](docs/guide/best_practices.md)** - Practical guidelines for your projects
-- **[Migration Guide](docs/guide/migration_guide.md)** - Step-by-step migration from existing code
-- **[Performance Guide](docs/guide/performance_guide.md)** - Optimization and benchmarks
+- **[Getting Started Tutorial](docs/en/tutorial/getting_started.md)** - understand core concepts in 30 minutes
+- **[Basic Usage](docs/en/tutorial/basic_usage.md)** - practical patterns and examples
+- **[Advanced Patterns](docs/en/tutorial/advanced_patterns.md)** - techniques for experienced developers
 
-### 🔧 Reference
-- **[Result API](docs/api/result_api_reference.md)** - Complete Result type method reference
-- **[Option API](docs/api/option_api_reference.md)** - Complete Option type method reference
-- **[Specification](docs/spec/specification.md)** - Complete technical specification
+### Guides
 
-### 🆚 Comparison & Integration
-- **[Rust Comparison](docs/comparison/rust_comparison.md)** - Mapping to Rust standard library
-- **[Other Libraries Comparison](docs/comparison/other_libraries.md)** - Technical selection reference
+- **[Best Practices](docs/en/guide/best_practices.md)** - practical guidelines for your projects
+- **[Debugging Guide](docs/en/guide/debugging_guide.md)** - troubleshooting and debugging techniques
+- **[Migration Guide](docs/en/guide/migration_guide.md)** - step-by-step migration from existing code
+- **[Performance Guide](docs/en/guide/performance_guide.md)** - optimization and benchmarks
+- **[IDE Integration](docs/en/guide/ide_integration.md)** - IDE configuration and tooling
 
-## 🔥 Key Features
+### References
+
+- **[Result API Reference](docs/en/api/result_api_reference.md)** - complete Result type method reference
+- **[Option API Reference](docs/en/api/option_api_reference.md)** - complete Option type method reference
+- **[Specification](docs/en/spec/specification.md)** - complete technical specification
+- **[Coding Guidelines](docs/en/spec/coding_guideline.md)** - for contributors
+
+### Comparisons
+
+- **[Rust Comparison](docs/en/comparison/rust_comparison.md)** - mapping to the Rust standard library
+- **[Other Libraries Comparison](docs/en/comparison/other_libraries.md)** - technical selection reference
+
+### Examples
+
+- **[Example Collection](examples/en/)** - copy and paste ready examples
+
+## Key Features
 
 ### Result Type Methods
+
 ```php
 // Core methods
 $result->isOk() / $result->isErr()           // Success/failure checks
@@ -118,6 +140,7 @@ $result->mapOr($fn, $default)                // Transformation with default
 ```
 
 ### Option Type Methods
+
 ```php
 // Core methods
 $option->isSome() / $option->isNone()        // Value presence checks
@@ -130,77 +153,30 @@ $option->zip($other)                         // Combine two Options
 $option->xor($other)                         // Exclusive OR
 ```
 
-## 🎯 Real-World Examples
+## Requirements
 
-```php
-// API response handling
-function callApi(string $url): Result
-{
-    $response = file_get_contents($url);
-    
-    if ($response === false) {
-        return new Err("API call failed");
-    }
-    
-    return new Ok(json_decode($response, true));
-}
+- PHP 8.4+
+- Composer
 
-$result = callApi('https://api.example.com/users')
-    ->andThen(fn($data) => isset($data['users']) ? 
-        new Ok($data['users']) : 
-        new Err("Invalid response format"))
-    ->map(fn($users) => array_filter($users, fn($user) => $user['active']))
-    ->unwrapOr([]);
-
-// Configuration file loading
-function loadConfig(string $path): Option
-{
-    if (!file_exists($path)) {
-        return None::instance();
-    }
-    
-    $content = file_get_contents($path);
-    return new Some(json_decode($content, true));
-}
-
-$config = loadConfig('config.json')
-    ->map(fn($cfg) => array_merge($defaultConfig, $cfg))
-    ->unwrapOr($defaultConfig);
-```
-
-## ✅ Requirements
-
-- **PHP 8.4+**
-- **Composer**
-
-## 🛠️ Development
+## Development
 
 ```bash
 # Install dependencies
 composer install
 
 # Run tests
-composer exec phpunit
+composer test
 
 # Static analysis
-composer exec phpstan analyse
+composer phpstan
+
+# Code style check
+composer cs-check
+
+# All quality checks
+composer check
 ```
 
-## 📈 Quality Metrics
+## License
 
-- **Test Coverage**: 100%
-- **PHPStan**: Level MAX (highest level)
-- **Test Count**: 231+
-- **Rust Specification Compliance**: 97%+
-
-## 📄 License
-
-MIT License
-
-## 🤝 Contributing
-
-Issues and Pull Requests are welcome! Please check the [coding guidelines](docs/spec/coding_guideline.md) if you'd like to contribute to development.
-
----
-
-**Get started**: [Getting Started Tutorial](docs/tutorial/getting_started.md) | **Examples**: [Example Collection](examples/) | **API**: [Reference](docs/api/)
+MIT
