@@ -380,6 +380,9 @@ try {
 ```php
 class PaymentService
 {
+    /**
+     * @throws RuntimeException  決済APIに到達できない/サーバ障害
+     */
     public function processPayment(array $paymentData): Result
     {
         return $this->validatePaymentData($paymentData)
@@ -421,6 +424,12 @@ class PaymentService
         
         if ($response === false) {
             throw new RuntimeException('決済APIに到達できません');
+        }
+        
+        if ($httpCode >= 500) {
+            // Server outages are infrastructure failures - the caller needs
+            // retry or outage handling, not a business decision
+            throw new RuntimeException("決済APIのサーバエラー (HTTPステータス: $httpCode)");
         }
         
         if ($httpCode >= 400) {

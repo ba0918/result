@@ -142,18 +142,21 @@ Result<User, ServiceUnavailable>
 class UserService
 {
     /**
-     * この層はフォールバックを提供できるので、失敗が「分岐」になる。
+     * This layer offers a fallback (e.g. cached data), so recoverable
+     * infrastructure failures become branches here.
      *
-     * @throws InfrastructureException
+     * @return Result<User, UserNotFound|ServiceUnavailable>
      */
     public function fetchUser(int $id): Result
     {
         try {
             return Ok::of($this->repository->find($id));
         } catch (UserNotFound $e) {
-            return Err::of($e);            // 想定内の不在 → Result
+            return Err::of($e);                          // Expected absence → Result
+        } catch (InfrastructureException $e) {
+            // Recoverable at this layer (a fallback exists) → branch
+            return Err::of(new ServiceUnavailable($e->getMessage()));
         }
-        // InfrastructureException は伝播する - この層にはフォールバックがない
     }
 }
 ```
@@ -520,12 +523,13 @@ function validatePassword(string $password): Result
 ### 2. コンテキスト情報の提供
 
 ```php
-// ✅ 良い例
-function parseJson(string $json): Result
+// ✅ 良い例 - デコーダエラーとソース識別子。生の入力を含めない
+function parseJson(string $json, string $source = 'input'): Result
 {
     $data = json_decode($json, true);
     if (json_last_error() !== JSON_ERROR_NONE) {
-        return Err::of("JSONの解析に失敗しました: " . json_last_error_msg() . " (入力: " . substr($json, 0, 80) . ")");
+        // 生の入力を含めてはいけない: 認証情報や個人情報が入りうる
+        return Err::of("Failed to parse JSON in $source: " . json_last_error_msg());
     }
     
     return Ok::of($data);

@@ -145,18 +145,21 @@ Result<User, ServiceUnavailable>
 class UserService
 {
     /**
-     * This layer can offer a fallback, so the failure becomes a branch.
+     * This layer offers a fallback (e.g. cached data), so recoverable
+     * infrastructure failures become branches here.
      *
-     * @throws InfrastructureException
+     * @return Result<User, UserNotFound|ServiceUnavailable>
      */
     public function fetchUser(int $id): Result
     {
         try {
             return Ok::of($this->repository->find($id));
         } catch (UserNotFound $e) {
-            return Err::of($e);            // Expected absence → Result
+            return Err::of($e);                          // Expected absence → Result
+        } catch (InfrastructureException $e) {
+            // Recoverable at this layer (a fallback exists) → branch
+            return Err::of(new ServiceUnavailable($e->getMessage()));
         }
-        // InfrastructureException propagates - the caller has no fallback here
     }
 }
 ```
@@ -530,12 +533,13 @@ function validatePassword(string $password): Result
 ### 2. Providing Context Information
 
 ```php
-// ✅ Good example
-function parseJson(string $json): Result
+// ✅ Good example - decoder error plus a source identifier, no raw input
+function parseJson(string $json, string $source = 'input'): Result
 {
     $data = json_decode($json, true);
     if (json_last_error() !== JSON_ERROR_NONE) {
-        return Err::of("Failed to parse JSON: " . json_last_error_msg() . " (input: " . substr($json, 0, 80) . ")");
+        // Never embed raw input: it may contain credentials or personal data
+        return Err::of("Failed to parse JSON in $source: " . json_last_error_msg());
     }
     
     return Ok::of($data);

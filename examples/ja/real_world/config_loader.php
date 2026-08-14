@@ -131,11 +131,11 @@ interface ConfigLoader
 }
 
 /**
- * JSON設定ローダー
+ * JSON configuration loader
  *
- * インフラ障害（ファイルの不在・読み込み不能）はローダー内部では例外のまま
- * 扱い、load()の境界でErrに変換する。「設定を読み込めなかった」ことを
- * 呼び出し側が分岐したいため。
+ * Infrastructure failures (missing file, unreadable file) stay exceptions
+ * inside the loader and are converted to Err at the load() boundary, because
+ * the caller wants to branch on "config could not be loaded".
  */
 class JsonConfigLoader implements ConfigLoader
 {
@@ -144,7 +144,7 @@ class JsonConfigLoader implements ConfigLoader
         try {
             $content = $this->readFile($path);
         } catch (RuntimeException $e) {
-            // 境界での変換: インフラ障害が呼び出し側の分岐になる
+            // Boundary conversion: infra failure becomes a branch for the caller
             return Err::of($e->getMessage());
         }
 
@@ -157,7 +157,7 @@ class JsonConfigLoader implements ConfigLoader
     }
 
     /**
-     * @throws RuntimeException 設定ファイルが見つからない/読み込めない
+     * @throws RuntimeException Config file missing / unreadable
      */
     private function readFile(string $path): string
     {
@@ -204,7 +204,7 @@ class PhpConfigLoader implements ConfigLoader
         try {
             return $this->loadPhpFile($path);
         } catch (Throwable $e) {
-            // includeの失敗は、呼び出し側が分岐したいデータの問題
+            // A broken include is a data problem the caller may want to branch on
             return Err::of('PHP設定ファイルの読み込みエラー: ' . $e->getMessage());
         }
     }
@@ -215,7 +215,7 @@ class PhpConfigLoader implements ConfigLoader
     }
 
     /**
-     * @throws RuntimeException 設定ファイルが見つからない/読み込めない
+     * @throws RuntimeException Config file missing / unreadable
      */
     private function loadPhpFile(string $path): Result
     {
@@ -247,7 +247,7 @@ class EnvConfigLoader implements ConfigLoader
         try {
             $content = $this->readFile($path);
         } catch (RuntimeException $e) {
-            // 境界での変換: インフラ障害が呼び出し側の分岐になる
+            // Boundary conversion: infra failure becomes a branch for the caller
             return Err::of($e->getMessage());
         }
 
@@ -260,7 +260,7 @@ class EnvConfigLoader implements ConfigLoader
     }
 
     /**
-     * @throws RuntimeException 環境変数ファイルが見つからない/読み込めない
+     * @throws RuntimeException Env file missing / unreadable
      */
     private function readFile(string $path): string
     {

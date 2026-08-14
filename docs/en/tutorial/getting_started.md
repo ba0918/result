@@ -312,8 +312,8 @@ function readConfigFile(string $path): Result
     }
     
     $data = json_decode($content, true);
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        return Err::of("JSON parse error: " . json_last_error_msg());
+    if (!is_array($data)) {
+        return Err::of('Invalid JSON: expected an object or array');
     }
     
     return Ok::of($data);

@@ -380,6 +380,9 @@ try {
 ```php
 class PaymentService
 {
+    /**
+     * @throws RuntimeException  Payment API unreachable / server outage
+     */
     public function processPayment(array $paymentData): Result
     {
         return $this->validatePaymentData($paymentData)
@@ -421,6 +424,12 @@ class PaymentService
         
         if ($response === false) {
             throw new RuntimeException('Payment API unreachable');
+        }
+        
+        if ($httpCode >= 500) {
+            // Server outages are infrastructure failures - the caller needs
+            // retry or outage handling, not a business decision
+            throw new RuntimeException("Payment API server error (HTTP status: $httpCode)");
         }
         
         if ($httpCode >= 400) {

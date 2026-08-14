@@ -118,7 +118,7 @@ class ApiClient
         return $this->validateEndpoint($endpoint)
             ->andThen(fn ($ep) => $this->buildUrl($ep))
             ->andThen(function (string $url) use ($method, $data, $headers) {
-                // JSON変換の失敗は、呼び出し側が分岐できるデータの問題
+                // JSON encoding failure is a data problem the caller can branch on
                 if ($data !== null && in_array($method, ['POST', 'PUT', 'PATCH'])) {
                     $jsonData = json_encode($data);
                     if (json_last_error() !== JSON_ERROR_NONE) {
@@ -127,7 +127,7 @@ class ApiClient
                     $data = $jsonData;
                 }
 
-                // ネットワーク障害は例外として脱出する
+                // Network failures escape as exceptions
                 $response = $this->executeRequest($method, $url, $data, $headers);
 
                 return $this->parseResponse($response);
@@ -278,7 +278,9 @@ class AuthenticatedApiClient extends ApiClient
     }
 
     /**
-     * APIキーの検証
+     * Validate API key
+     *
+     * @throws RuntimeException Network failure (DNS, timeout, connection)
      */
     public function validateApiKey(): Result
     {
@@ -495,8 +497,8 @@ if (PHP_SAPI === 'cli' && isset($argv[0]) && realpath($argv[0]) === __FILE__) {
 
     echo "\n=== Error Handling Example ===\n";
 
-    // ネットワーク障害は例外 - 「ホストに到達できない」への分岐は呼び出し側に
-    // ないため、Errにせず例外として伝播させる。
+    // Network failures are exceptions - the caller has no branch for
+    // "host unreachable", so they propagate instead of becoming Err.
     try {
         $invalidClient = new ApiClient('https://invalid-domain-that-does-not-exist.com');
         $invalidClient->get('/test');

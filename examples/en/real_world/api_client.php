@@ -277,6 +277,8 @@ class AuthenticatedApiClient extends ApiClient
 
     /**
      * Validate API key
+     *
+     * @throws RuntimeException Network failure (DNS, timeout, connection)
      */
     public function validateApiKey(): Result
     {
