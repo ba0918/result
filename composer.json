@@ -19,7 +19,7 @@
         "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^12.2",
         "friendsofphp/php-cs-fixer": "^3.82",
-        "infection/infection": "*"
+        "infection/infection": "^0.34"
     },
     "scripts": {
         "test": "phpunit",
