@@ -280,6 +280,24 @@ composer install
 - **品質保証**: 英語文書でもPHPコード例のPHPStan検証継続
 - **コミュニティ**: 国際貢献者受け入れ体制の段階的構築
 
+### ドキュメントリンク修正とREADME整理 (2026-08-14 実装)
+
+#### **背景**
+- 国際化対応時の `docs/en/`・`docs/ja/` ディレクトリ移動で、READMEとdocsにリンク切れが大量発生（パス50件、アンカー225件）
+- READMEが絵文字多用の装飾過剰な状態だった
+
+#### **対応内容**
+- **README.md / README.ja.md**: 絵文字装飾を全除去し、目次付きの標準的な構成に整理。リンクを `docs/en/`・`docs/ja/` 配下に修正し、開発コマンドを `composer test` / `composer phpstan` / `composer check` に統一
+- **APIリファレンス4ファイル**: `/docs/...` の絶対パスリンクを相対パスに修正。`#mapor` 等の短縮アンカーをGitHubのフルスラグ形式（例: `#maporcallable-fn-mixed-default-mixed`）に統一
+- **getting_started.md (en/ja)**: `examples/` への相対パスを1階層修正
+- **docs/en/tutorial/advanced_patterns.md を新規作成**: 国際化時に翻訳漏れしていたen版をja版から作成（コードブロック内の文字列・コメント含め翻訳）
+
+#### **知見・注意点**
+- **GitHubアンカー規則**: 見出し `### mapOr(callable $fn, mixed $default): mixed` のアンカーは `maporcallable-fn-mixed-default-mixed`（句読点除去後、空白のみがハイフン化される）。`#mapor` 形式ではジャンプしない
+- **日本語アンカー**: `・` 等の記号は除去される（例: `型ヒント・補完の最適化` → `型ヒント補完の最適化`）が、日本語文字自体はアンカーに残る
+- **リンク検証**: リポジトリ内の全マークダウンを対象に、パス・アンカー両方のリンクチェッカーで0件を確認
+- **多言語リンクの注意**: `docs/en/` と `docs/ja/` で相対パスの深さが共通だが、`/docs/...` の絶対パスはGitHub上で壊れるため使用しない
+
 ### プロジェクトメモリの更新検討について
 
 TODOを完了したタイミングで、更新内容などからプロジェクトメモリの更新検討を行ってください
