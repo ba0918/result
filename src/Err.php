@@ -24,9 +24,11 @@ final class Err implements Result
     }
 
     /**
-     * @param E $error
+     * @template U
      *
-     * @return self<E>
+     * @param U $error
+     *
+     * @return self<U>
      */
     public static function of(mixed $error): self
     {
@@ -66,7 +68,7 @@ final class Err implements Result
     #[Override]
     public function mapErr(callable $fn): Result
     {
-        return new Err($fn($this->error));
+        return Err::of($fn($this->error));
     }
 
     #[Override]
@@ -182,6 +184,7 @@ final class Err implements Result
     public function transpose(): Option
     {
         // Err(error) → Some(Err(error))
+        /** @phpstan-ignore return.type */
         return Some::of($this);
     }
 
@@ -194,7 +197,6 @@ final class Err implements Result
     #[Override]
     public function err(): Option
     {
-        /** @phpstan-ignore return.type */
         return Some::of($this->error);
     }
 

@@ -23,9 +23,11 @@ final class Some implements Option
     }
 
     /**
-     * @param T $value
+     * @template U
      *
-     * @return self<T>
+     * @param U $value
+     *
+     * @return self<U>
      */
     public static function of(mixed $value): self
     {
@@ -79,7 +81,7 @@ final class Some implements Option
     #[Override]
     public function map(callable $fn): Option
     {
-        return new Some($fn($this->value));
+        return Some::of($fn($this->value));
     }
 
     /**
@@ -281,6 +283,7 @@ final class Some implements Option
         if ($this->value instanceof Result) {
             if ($this->value->isOk()) {
                 // Some(Ok(value)) → Ok(Some(value))
+                /** @phpstan-ignore return.type */
                 return Ok::of(Some::of($this->value->unwrap()));
             }
 
@@ -289,6 +292,7 @@ final class Some implements Option
         }
 
         // Some(non-Result) → Ok(Some(value))
+        /** @phpstan-ignore return.type */
         return Ok::of($this);
     }
 
@@ -356,7 +360,6 @@ final class Some implements Option
     #[Override]
     public function zip(Option $opt): Option
     {
-        /** @phpstan-ignore return.type,argument.type */
         return $opt->isSome() ? Some::of([$this->value, $opt->unwrap()]) : None::instance();
     }
 }

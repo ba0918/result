@@ -24,9 +24,11 @@ final class Ok implements Result
     }
 
     /**
-     * @param T $value
+     * @template U
      *
-     * @return self<T>
+     * @param U $value
+     *
+     * @return self<U>
      */
     public static function of(mixed $value): self
     {
@@ -60,7 +62,7 @@ final class Ok implements Result
     #[Override]
     public function map(callable $fn): Result
     {
-        return new Ok($fn($this->value));
+        return Ok::of($fn($this->value));
     }
 
     #[Override]
@@ -185,6 +187,7 @@ final class Ok implements Result
         if ($this->value instanceof Option) {
             if ($this->value->isSome()) {
                 // Ok(Some(value)) → Some(Ok(value))
+                /** @phpstan-ignore return.type */
                 return Some::of(Ok::of($this->value->unwrap()));
             }
 
@@ -193,13 +196,13 @@ final class Ok implements Result
         }
 
         // Ok(non-Option) → Some(Ok(value))
+        /** @phpstan-ignore return.type */
         return Some::of($this);
     }
 
     #[Override]
     public function ok(): Option
     {
-        /** @phpstan-ignore return.type */
         return Some::of($this->value);
     }
 
