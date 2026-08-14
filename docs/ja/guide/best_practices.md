@@ -35,29 +35,32 @@
 呼び出し側が「やるべきこと」を持っているので、型で列挙する価値があります。
 
 ```php
-// 1. バリデーション - 呼び出し側が項目ごとに分岐する
+// 1. Validation - the caller branches per field
 /** @return Result<array, InvalidField[]> */
 function validateForm(array $input): Result
 {
-    // 不正フィールドのリストをErrで返す
+    // returns Err with a list of invalid fields
 }
 
-// 2. 業務ルール違反 - 呼び出し側が種類ごとに処理する
-/** @return Result<User, UserAlreadyExists|InvalidPassword> */
-function addUser(Username $user, string $password): Result
+// 2. Business rule violations - the caller handles each variant
+final class UserService
 {
-    if ($this->userExists($user)) {
-        return Err::of(new UserAlreadyExists($user));
-    }
+    /** @return Result<User, UserAlreadyExists|InvalidPassword> */
+    public function addUser(Username $user, string $password): Result
+    {
+        if ($this->userExists($user)) {
+            return Err::of(new UserAlreadyExists($user));
+        }
 
-    // ... 残りのバリデーションと登録処理
+        // ... remaining validation and registration logic
+    }
 }
 
-// 3. 呼び出し側が区別する必要のある想定内の失敗群
+// 3. A set of expected failures the caller must distinguish
 /** @return Result<Order, InsufficientBalance|OrderCancelled> */
 function placeOrder(Order $order): Result
 {
-    // ... 注文処理ロジック
+    // ... order placement logic
 }
 ```
 
@@ -80,27 +83,27 @@ if ($result->isErr()) {
 呼び出し側を困らせます。
 
 ```php
-// ❌ ダメな例: インフラ障害をErrで包む - 呼び出し側は何もできない
+// ❌ Bad: infrastructure failure wrapped in Err - the caller cannot do anything
 function readConfigFile(string $path): Result
 {
-    $content = file_get_contents($path); // ここでの失敗は「分岐」ではない
+    $content = file_get_contents($path); // Failure here is not a branch
     if ($content === false) {
         return Err::of('ファイルの読み込みに失敗しました: ' . $path);
     }
     return Ok::of($content);
 }
 
-// 呼び出し側は結局こうなる - 意味のあるelseがない:
+// The caller ends up like this - there is no meaningful "else":
 $config = readConfigFile($path)->unwrapOr([]);
-// ファイルの不在も権限エラーも、同じように黙って握りつぶされる。
+// A missing file and a permission error are both silently ignored.
 ```
 
 ```php
-// ❌ ダメな例: プログラミングミスをErrで表現
+// ❌ Bad: programming mistakes expressed as Err
 function getConfig(): Result
 {
     if (!class_exists('Config')) {
-        return Err::of('Configクラスが存在しません'); // これはバグであって分岐ではない
+        return Err::of('Configクラスが存在しません'); // This is a bug, not a branch
     }
     return Ok::of(new Config());
 }
@@ -109,7 +112,7 @@ function getConfig(): Result
 呼び出し側に意味のある分岐がない失敗は、例外のままにします。
 
 ```php
-// ✅ 良い例: インフラ障害は例外のまま
+// ✅ Good: infrastructure failure stays an exception
 function readConfigFile(string $path): array
 {
     if (!file_exists($path)) {
@@ -370,7 +373,7 @@ PHPにはRustの `?` 演算子に相当する構文がないため、チェー�
 同じフロー（検証 → 存在確認 → 更新 → 監査）を2つの書き方で比べます。
 
 ```php
-// ❌ 読みにくい: すべてのステップが同じに見える
+// ❌ Hard to read: every step looks identical
 final class UnreadableAdd
 {
     public function add(Username $user, string $password, string $actor, int $now): Result
@@ -395,7 +398,7 @@ final class UnreadableAdd
     }
 }
 
-// ✅ 読みやすい: 公開メソッドは業務フローを一目で示す
+// ✅ Readable: the public method states the business flow at one glance
 final class ReadableAdd
 {
     public function add(Username $user, string $password, string $actor, int $now): Result
@@ -467,7 +470,7 @@ final class UserManager
             return Err::of(new UserAlreadyExists($user));
         }
 
-        // インフラ障害は例外として脱出する
+        // Infrastructure failures escape as exceptions
         $this->addUserAtomically($path, $user, $password);
         $this->audit->record($actor, 'user.add', $path, 'ok', $user->value, $now);
 
@@ -860,7 +863,7 @@ function complexNesting(array $data): Result
     );
 }
 
-// ✅ 良い例 - フラットなチェーン。ただし責務が1つである間だけ
+// ✅ Good example - flat chain, but only while the responsibility is one
 final class PipelineExample
 {
     public function clearPipeline(array $data): Result
@@ -870,25 +873,25 @@ final class PipelineExample
             ->andThen(fn($d) => $this->processStep($d))
             ->andThen(fn($d) => $this->saveStep($d))
             ->andThen(fn($d) => $this->notifyStep($d));
-        // 5ステップは同じ責務（パイプライン処理）。
-        // これが快適な限界に近い - あと1ステップ増えたら分割する
+        // All five steps are the same responsibility (pipeline processing).
+        // This is near the comfortable limit - one more step means split.
     }
 }
 
-// ❌ 悪い例 - 1本のチェーンに複数の責務
+// ❌ Bad example - one chain, many responsibilities
 final class BadRegister
 {
     public function registerUser(array $data): Result
     {
-        return $this->validateInput($data)              // 検証
+        return $this->validateInput($data)              // validation
             ->andThen(fn($d) => $this->saveToDatabase($d))  // I/O
-            ->andThen(fn() => $this->sendWelcomeMail())     // 通知
+            ->andThen(fn() => $this->sendWelcomeMail())     // notification
             ->andThen(fn() => $this->audit->record('registered'))
-            ->andThen(fn() => $this->notifyAdmins());       // また通知
+            ->andThen(fn() => $this->notifyAdmins());       // another notification
     }
 }
 
-// ✅ 良い例 - 責務が変わるところで分割
+// ✅ Good example - split where the responsibility changes
 final class GoodRegister
 {
     public function registerUser(array $data): Result
@@ -906,7 +909,8 @@ final class GoodRegister
     private function announce(User $user): Result
     {
         return $this->sendWelcomeMail($user)
-            ->andThen(fn() => $this->audit->record('registered', $user));
+            ->andThen(fn() => $this->audit->record('registered', $user))
+            ->andThen(fn() => $this->notifyAdmins($user));
     }
 }
 ```

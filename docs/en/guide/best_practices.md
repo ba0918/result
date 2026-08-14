@@ -44,14 +44,17 @@ function validateForm(array $input): Result
 }
 
 // 2. Business rule violations - the caller handles each variant
-/** @return Result<User, UserAlreadyExists|InvalidPassword> */
-function addUser(Username $user, string $password): Result
+final class UserService
 {
-    if ($this->userExists($user)) {
-        return Err::of(new UserAlreadyExists($user));
-    }
+    /** @return Result<User, UserAlreadyExists|InvalidPassword> */
+    public function addUser(Username $user, string $password): Result
+    {
+        if ($this->userExists($user)) {
+            return Err::of(new UserAlreadyExists($user));
+        }
 
-    // ... remaining validation and registration logic
+        // ... remaining validation and registration logic
+    }
 }
 
 // 3. A set of expected failures the caller must distinguish
@@ -916,7 +919,8 @@ final class GoodRegister
     private function announce(User $user): Result
     {
         return $this->sendWelcomeMail($user)
-            ->andThen(fn() => $this->audit->record('registered', $user));
+            ->andThen(fn() => $this->audit->record('registered', $user))
+            ->andThen(fn() => $this->notifyAdmins($user));
     }
 }
 ```
