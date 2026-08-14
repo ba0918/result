@@ -142,7 +142,7 @@ Result<User, ServiceUnavailable>
 ```
 
 ```php
-class UserService
+final class UserService
 {
     /**
      * This layer offers a fallback (e.g. cached data), so recoverable
@@ -376,7 +376,7 @@ update → audit):
 
 ```php
 // ❌ Hard to read: every step looks identical
-class UnreadableAdd
+final class UnreadableAdd
 {
     public function add(Username $user, string $password, string $actor, int $now): Result
     {
@@ -401,7 +401,7 @@ class UnreadableAdd
 }
 
 // ✅ Readable: the public method states the business flow at one glance
-class ReadableAdd
+final class ReadableAdd
 {
     public function add(Username $user, string $password, string $actor, int $now): Result
     {
@@ -456,7 +456,7 @@ receives. Inside the method, plain PHP reads better for sequences that are
 naturally imperative:
 
 ```php
-class UserManager
+final class UserManager
 {
     /**
      * @return Result<null, UserAlreadyExists|InvalidPassword>
@@ -871,7 +871,7 @@ function complexNesting(array $data): Result
 }
 
 // ✅ Good example - flat chain, but only while the responsibility is one
-class PipelineExample
+final class PipelineExample
 {
     public function clearPipeline(array $data): Result
     {
@@ -886,7 +886,7 @@ class PipelineExample
 }
 
 // ❌ Bad example - one chain, many responsibilities
-class BadRegister
+final class BadRegister
 {
     public function registerUser(array $data): Result
     {
@@ -899,7 +899,7 @@ class BadRegister
 }
 
 // ✅ Good example - split where the responsibility changes
-class GoodRegister
+final class GoodRegister
 {
     public function registerUser(array $data): Result
     {

@@ -139,7 +139,7 @@ Result<User, ServiceUnavailable>
 ```
 
 ```php
-class UserService
+final class UserService
 {
     /**
      * This layer offers a fallback (e.g. cached data), so recoverable
@@ -371,7 +371,7 @@ PHPにはRustの `?` 演算子に相当する構文がないため、チェー�
 
 ```php
 // ❌ 読みにくい: すべてのステップが同じに見える
-class UnreadableAdd
+final class UnreadableAdd
 {
     public function add(Username $user, string $password, string $actor, int $now): Result
     {
@@ -396,7 +396,7 @@ class UnreadableAdd
 }
 
 // ✅ 読みやすい: 公開メソッドは業務フローを一目で示す
-class ReadableAdd
+final class ReadableAdd
 {
     public function add(Username $user, string $password, string $actor, int $now): Result
     {
@@ -447,7 +447,7 @@ class ReadableAdd
 自然に命令的になるシーケンスでは素直なPHPの方が読みやすくなります。
 
 ```php
-class UserManager
+final class UserManager
 {
     /**
      * @return Result<null, UserAlreadyExists|InvalidPassword>
@@ -861,7 +861,7 @@ function complexNesting(array $data): Result
 }
 
 // ✅ 良い例 - フラットなチェーン。ただし責務が1つである間だけ
-class PipelineExample
+final class PipelineExample
 {
     public function clearPipeline(array $data): Result
     {
@@ -876,7 +876,7 @@ class PipelineExample
 }
 
 // ❌ 悪い例 - 1本のチェーンに複数の責務
-class BadRegister
+final class BadRegister
 {
     public function registerUser(array $data): Result
     {
@@ -889,7 +889,7 @@ class BadRegister
 }
 
 // ✅ 良い例 - 責務が変わるところで分割
-class GoodRegister
+final class GoodRegister
 {
     public function registerUser(array $data): Result
     {

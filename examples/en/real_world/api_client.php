@@ -171,6 +171,10 @@ class ApiClient
      */
     private function executeRequest(string $method, string $url, string|array|null $data, array $headers): array
     {
+        if (!function_exists('curl_init')) {
+            throw new RuntimeException('cURL extension is not available');
+        }
+
         $ch = curl_init();
 
         if ($ch === false) {
