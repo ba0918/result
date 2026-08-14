@@ -45,10 +45,15 @@ jobs:
         run: composer check
       
       - name: Run infection (mutation testing)
+        if: matrix.php-version == '8.4'
         run: composer infection -- --no-interaction --min-msi=100
       
+      - name: Generate coverage report
+        if: matrix.php-version == '8.4'
+        run: composer test-coverage
+      
       - name: Upload coverage reports
-        if: success()
+        if: success() && matrix.php-version == '8.4'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
