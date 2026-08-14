@@ -135,7 +135,7 @@ $result = $option->mapOr(fn($x) => $x * 2, 0);
 // ❌ Avoid unnecessary chains
 public function processData(?array $data): Result
 {
-    return Option::of($data)
+    return $data === null ? None::instance() : Some::of($data)
         ->map(fn($d) => $this->validate($d))
         ->map(fn($d) => $this->transform($d))
         ->map(fn($d) => $this->save($d))
@@ -195,7 +195,7 @@ public function findItems(array $conditions): array
 public function processItems(array $items): array
 {
     return array_map(function ($item) {
-        return Option::of($item)
+        return Some::of($item)
             ->filter(fn($i) => $i->isValid())
             ->map(fn($i) => $i->transform())
             ->unwrapOr(null);
@@ -217,9 +217,9 @@ public function processItems(array $items): array
 ```php
 // ❌ Excessive nesting - performance degradation
 $result = $option
-    ->map(fn($x) => Option::of($x->getValue()))
+    ->map(fn($x) => Some::of($x->getValue()))
     ->flatten()
-    ->map(fn($x) => Result::ok($x))
+    ->map(fn($x) => Ok::of($x))
     ->transpose()
     ->map(fn($x) => $x->process());
 
@@ -293,7 +293,7 @@ public function hotPath(array $data): ?array
 // Utilize shorthand methods
 public function mediumPath(array $data): Result
 {
-    return Option::of($data)
+    return Some::of($data)
         ->filter(fn($d) => !empty($d))
         ->mapOr(fn($d) => $this->processArray($d), Err::of('Empty data'));
 }

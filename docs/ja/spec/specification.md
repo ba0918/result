@@ -222,7 +222,7 @@ interface Option
 ## 設計原則
 
 ### 1. Immutability (不変性)
-- すべてのプロパティは`readonly`
+- すべてのインスタンスプロパティは`readonly`（Noneのシングルトン用staticプロパティはPHPの制約上readonly不可のため例外）
 - メソッド呼び出しは新しいインスタンスを返すか、既存のインスタンスをそのまま返す
 - 状態の変更は行わない
 
@@ -287,7 +287,7 @@ echo $option->unwrapOr("デフォルト値"); // "デフォルト値"
 ```php
 $result = new Ok(10)
     ->map(fn($x) => $x * 2)
-    ->inspect(fn($value) => echo "中間値: $value\n") // デバッグ出力
+    ->inspect(fn($value) => print("中間値: $value\n")) // デバッグ出力
     ->andThen(fn($x) => $x > 15 ? new Ok($x) : new Err("値が小さすぎます"))
     ->unwrapOr(0);
 ```
@@ -297,7 +297,7 @@ $result = new Ok(10)
 $result = Some::of("hello")
     ->map(fn($s) => strtoupper($s))
     ->filter(fn($s) => strlen($s) > 3)
-    ->inspect(fn($value) => echo "処理中: $value\n")
+    ->inspect(fn($value) => print("処理中: $value\n"))
     ->andThen(fn($s) => Some::of($s . " WORLD"))
     ->unwrapOr("デフォルト");
 echo $result; // "HELLO WORLD"
@@ -319,11 +319,11 @@ $result = new Err("ネットワークエラー")
 // メソッドチェーンでの段階的デバッグ
 $result = new Ok(100)
     ->map(fn($x) => $x / 2)
-    ->inspect(fn($value) => echo "Step 1: $value\n")
+    ->inspect(fn($value) => print("Step 1: $value\n"))
     ->map(fn($x) => $x - 10)
-    ->inspect(fn($value) => echo "Step 2: $value\n")
+    ->inspect(fn($value) => print("Step 2: $value\n"))
     ->andThen(fn($x) => $x > 0 ? new Ok($x) : new Err("負の値"))
-    ->inspectErr(fn($error) => echo "エラー: $error\n");
+    ->inspectErr(fn($error) => print("エラー: $error\n"));
 ```
 
 ### or/orElseメソッドの使用例

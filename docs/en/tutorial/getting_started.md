@@ -78,7 +78,7 @@ function findUser(int $id): Option
 $result = safeDivide(10, 0);  // Always Result type
 $user = findUser(999);        // Always Option type
 
-// Compile-time enforcement of handling
+// Runtime-enforced type safety (Result/Option always requires explicit handling)
 if ($result->isOk()) {
     echo "Result: " . $result->unwrap();
 } else {

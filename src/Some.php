@@ -33,7 +33,7 @@ final class Some implements Option
     }
 
     /**
-     * 値を持っているか確認する
+     * Checks if a value is present
      *
      * @return bool
      */
@@ -44,7 +44,7 @@ final class Some implements Option
     }
 
     /**
-     * 値を持っていないか確認する
+     * Checks if no value is present
      *
      * @return bool
      */
@@ -55,7 +55,7 @@ final class Some implements Option
     }
 
     /**
-     * 値を持っている場合に述語関数で値を検証する
+     * Validates the value with a predicate function if a value is present
      *
      * @param callable(T): bool $predicate
      *
@@ -68,7 +68,7 @@ final class Some implements Option
     }
 
     /**
-     * 値を持っている場合、中の値に関数を適用する
+     * Applies a function to the contained value if a value is present
      *
      * @template U
      *
@@ -83,7 +83,7 @@ final class Some implements Option
     }
 
     /**
-     * 値を持っている場合は関数を適用し、持っていない場合はデフォルト値を返す
+     * Applies a function if a value is present, returns default value if absent
      *
      * @template U
      *
@@ -99,7 +99,7 @@ final class Some implements Option
     }
 
     /**
-     * 値を持っている場合は関数を適用し、持っていない場合はクロージャの結果を返す
+     * Applies a function if a value is present, returns closure result if absent
      *
      * @template U
      *
@@ -115,7 +115,7 @@ final class Some implements Option
     }
 
     /**
-     * 値を持っている場合、中の値に関数を適用し、その結果を返す
+     * Applies a function to the contained value if a value is present and returns the result
      *
      * @template U
      *
@@ -130,7 +130,7 @@ final class Some implements Option
     }
 
     /**
-     * 値を持っている場合、述語関数を満たすかチェックする
+     * Checks if the value satisfies the predicate function if a value is present
      *
      * @param callable(T): bool $predicate
      *
@@ -143,7 +143,7 @@ final class Some implements Option
     }
 
     /**
-     * 値を持っていれば値を返し、持っていなければ例外をスローする
+     * Returns the value if present, throws exception if absent
      *
      * @return T
      */
@@ -154,7 +154,7 @@ final class Some implements Option
     }
 
     /**
-     * 値を持っていれば値を返し、持っていなければデフォルト値を返す
+     * Returns the value if present, returns default value if absent
      *
      * @template U
      *
@@ -169,7 +169,7 @@ final class Some implements Option
     }
 
     /**
-     * 値を持っていれば値を返し、持っていなければクロージャの結果を返す
+     * Returns the value if present, returns closure result if absent
      *
      * @template U
      *
@@ -184,7 +184,7 @@ final class Some implements Option
     }
 
     /**
-     * 値を持っていれば値を返し、持っていなければ指定されたメッセージで例外をスローする
+     * Returns the value if present, throws exception with specified message if absent
      *
      * @param string $message
      *
@@ -197,7 +197,7 @@ final class Some implements Option
     }
 
     /**
-     * 値を検査し、副作用を実行する（値は変更しない）
+     * Inspects the value and executes side effects (value remains unchanged)
      *
      * @param callable(T): void $fn
      *
@@ -212,7 +212,7 @@ final class Some implements Option
     }
 
     /**
-     * Noneの場合に代替のOptionを返す（即座評価）
+     * Returns alternative Option if None (eager evaluation)
      *
      * @template U
      *
@@ -227,7 +227,7 @@ final class Some implements Option
     }
 
     /**
-     * Noneの場合に代替のOptionを返す（遅延評価）
+     * Returns alternative Option if None (lazy evaluation)
      *
      * @template U
      *
@@ -242,7 +242,7 @@ final class Some implements Option
     }
 
     /**
-     * Someの場合に別のOptionを返し、Noneの場合は自身を返す（即座評価）
+     * Returns another Option if Some, returns self if None (eager evaluation)
      *
      * @template U
      *
@@ -257,11 +257,11 @@ final class Some implements Option
     }
 
     /**
-     * Some値が指定された値を含むかどうかを確認する
+     * Checks if the Some value contains the specified value
      *
-     * @param mixed $value 確認したい値
+     * @param mixed $value The value to check
      *
-     * @return bool Some値が指定値と厳密に等価な場合true、それ以外はfalse
+     * @return bool true if the Some value strictly equals the specified value, false otherwise
      */
     #[Override]
     public function contains(mixed $value): bool
@@ -270,14 +270,14 @@ final class Some implements Option
     }
 
     /**
-     * Option<Result<T, E>> → Result<Option<T>, E> への変換
+     * Converts Option<Result<T, E>> to Result<Option<T>, E>
      *
      * @return Result<mixed, mixed>
      */
     #[Override]
     public function transpose(): Result
     {
-        // Some(Result) の場合
+        // If Some(Result)
         if ($this->value instanceof Result) {
             if ($this->value->isOk()) {
                 // Some(Ok(value)) → Ok(Some(value))
@@ -293,7 +293,7 @@ final class Some implements Option
     }
 
     /**
-     * OptionをResultに変換する（Noneの場合は指定されたエラーでErr）
+     * Converts Option to Result (None becomes Err with the specified error)
      *
      * @param mixed $err
      *
@@ -306,7 +306,7 @@ final class Some implements Option
     }
 
     /**
-     * OptionをResultに変換する（Noneの場合はクロージャの結果でErr）
+     * Converts Option to Result (None becomes Err with the closure result)
      *
      * @param callable $fn
      *
@@ -319,7 +319,7 @@ final class Some implements Option
     }
 
     /**
-     * ネストしたOptionを一段階平坦化する
+     * Flattens a nested Option by one level
      *
      * @return Option<mixed>
      */
@@ -330,7 +330,7 @@ final class Some implements Option
     }
 
     /**
-     * 排他的OR操作：片方のみSomeの場合にSome、両方Some/両方Noneの場合にNone
+     * Exclusive OR operation: Some if only one is Some, None if both Some/both None
      *
      * @template U
      *
@@ -345,7 +345,7 @@ final class Some implements Option
     }
 
     /**
-     * 2つのOptionを結合：両方Someの場合にタプル、片方でもNoneの場合にNone
+     * Combines two Options: tuple if both Some, None if either is None
      *
      * @template U
      *

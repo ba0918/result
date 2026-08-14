@@ -659,7 +659,7 @@ function hotPath(array $data): ?array {
 
 // 低頻度処理ではResult/Option活用
 function businessLogic(array $input): Result {
-    return Option::of($input)
+    return Some::of($input)
         ->filter(fn($d) => !empty($d))
         ->map(fn($d) => $this->processBusinessRules($d))
         ->okOr('Invalid input');

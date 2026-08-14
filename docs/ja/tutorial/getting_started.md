@@ -78,7 +78,7 @@ function findUser(int $id): Option
 $result = safeDivide(10, 0);  // 必ずResult型
 $user = findUser(999);        // 必ずOption型
 
-// コンパイル時に処理を強制
+// 実行時強制の型安全性（Result/Optionは常に明示的な処理を要求）
 if ($result->isOk()) {
     echo "結果: " . $result->unwrap();
 } else {

@@ -1021,7 +1021,7 @@ $transposed = $result->transpose(); // Some(Err("エラー"))
 // データベースクエリの結果処理
 function findUser(int $id): Result {
     $userData = $this->database->find($id); // null | array
-    return Ok::of(Option::of($userData));
+    return Ok::of($userData === null ? None::instance() : Some::of($userData));
 }
 
 $users = [1, 2, 3];

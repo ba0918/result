@@ -185,7 +185,7 @@ public function debugComplexChain(array $input): Result
     // Step 1: Input verification
     error_log("Input: " . json_encode($input));
     
-    $step1 = Option::of($input)
+    $step1 = Some::of($input)
         ->filter(fn($data) => !empty($data));
     
     if ($step1->isNone()) {

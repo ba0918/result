@@ -223,7 +223,7 @@ Immutable singleton class representing an Option without a value.
 
 ### 1. Immutability
 
-- All properties are `readonly`
+- All instance properties are `readonly` (the singleton static property in None is an exception, as PHP does not allow `readonly` on static properties)
 - Method calls return new instances or return existing instances unchanged
 - No state modification occurs
 
@@ -291,7 +291,7 @@ echo $option->unwrapOr("Default value"); // "Default value"
 ```php
 $result = new Ok(10)
     ->map(fn($x) => $x * 2)
-    ->inspect(fn($value) => echo "Intermediate value: $value\n") // Debug output
+    ->inspect(fn($value) => print("Intermediate value: $value\n")) // Debug output
     ->andThen(fn($x) => $x > 15 ? new Ok($x) : new Err("Value too small"))
     ->unwrapOr(0);
 ```
@@ -301,7 +301,7 @@ $result = new Ok(10)
 $result = Some::of("hello")
     ->map(fn($s) => strtoupper($s))
     ->filter(fn($s) => strlen($s) > 3)
-    ->inspect(fn($value) => echo "Processing: $value\n")
+    ->inspect(fn($value) => print("Processing: $value\n"))
     ->andThen(fn($s) => Some::of($s . " WORLD"))
     ->unwrapOr("Default");
 echo $result; // "HELLO WORLD"
@@ -323,11 +323,11 @@ $result = new Err("Network error")
 // Stepwise debugging in method chains
 $result = new Ok(100)
     ->map(fn($x) => $x / 2)
-    ->inspect(fn($value) => echo "Step 1: $value\n")
+    ->inspect(fn($value) => print("Step 1: $value\n"))
     ->map(fn($x) => $x - 10)
-    ->inspect(fn($value) => echo "Step 2: $value\n")
+    ->inspect(fn($value) => print("Step 2: $value\n"))
     ->andThen(fn($x) => $x > 0 ? new Ok($x) : new Err("Negative value"))
-    ->inspectErr(fn($error) => echo "Error: $error\n");
+    ->inspectErr(fn($error) => print("Error: $error\n"));
 ```
 
 ### or/orElse Method Usage Examples

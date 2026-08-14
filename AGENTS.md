@@ -95,6 +95,7 @@ composer install
 - `inspect()` - デバッグ用副作用実行
 - `or()` / `orElse()` / `and()` - Option間の結合操作
 - `contains()` - 値の存在確認（厳密比較）
+- `flatten()` - ネストしたOptionの一段階平坦化
 - `transpose()` - Option<Result<T, E>> → Result<Option<T>, E>への変換
 - `okOr()` / `okOrElse()` - Option → Result変換
 - `xor()` - 排他的OR操作
@@ -105,7 +106,7 @@ composer install
 - すべてのクラスは`final`で継承不可
 - プロパティは`readonly`でimmutable
 - PHPDoc アノテーションでGenericsを表現
-- 日本語コメントを使用
+- コメントは英語を使用（i18n方針、Rust標準ライブラリとの用語統一）
 - `#[Override]`属性は`use Override;`のインポートを追加して使用
 - `declare(strict_types=1);`はファイル先頭に別行で配置
 - 文字列はシングルクォートで統一

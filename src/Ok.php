@@ -181,7 +181,7 @@ final class Ok implements Result
     #[Override]
     public function transpose(): Option
     {
-        // Ok(Option) の場合
+        // If Ok(Option)
         if ($this->value instanceof Option) {
             if ($this->value->isSome()) {
                 // Ok(Some(value)) → Some(Ok(value))

@@ -338,7 +338,7 @@ $result = filter(
 );
 
 // After (This Library)
-$result = Option::of($data)
+$result = Some::of($data)
     ->map(fn($items) => array_map(fn($x) => $x * 2, $items))
     ->map(fn($items) => array_filter($items, fn($x) => $x > 0))
     ->unwrapOr([]);
@@ -356,11 +356,11 @@ $result = collect($data)
     ->first();
 
 // After (This Library)
-$result = Option::of($data)
+$result = Some::of($data)
     ->filter(fn($d) => !empty($d))
     ->map(fn($items) => array_map(fn($x) => $x * 2, $items))
     ->map(fn($items) => array_filter($items, fn($x) => $x > 0))
-    ->andThen(fn($items) => Option::of(reset($items) ?: null));
+    ->andThen(fn($items) => reset($items) === false ? None::instance() : Some::of(reset($items)));
 ```
 
 ## Implementation Quality Evaluation
@@ -380,7 +380,7 @@ $result = Option::of($data)
 ```php
 // Security improvement through type safety
 function processUserInput(string $input): Result {
-    return Option::of($input)
+    return Some::of($input)
         ->filter(fn($i) => strlen($i) > 0)
         ->filter(fn($i) => preg_match('/^[a-zA-Z0-9]+$/', $i))
         ->map(fn($i) => strtolower($i))

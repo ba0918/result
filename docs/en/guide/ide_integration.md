@@ -168,7 +168,7 @@ if ($user !== null) {
 return 'Guest';
 
 // After: Option type conversion (after intention execution)
-return Option::of($user)
+return $user === null ? None::instance() : Some::of($user)
     ->map(fn($u) => $u->getName())
     ->unwrapOr('Guest');
 ```
