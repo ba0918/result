@@ -214,8 +214,8 @@ class ConfigServiceModern
         }
         
         $config = json_decode($content, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return Err::of("Invalid JSON format in configuration file: " . json_last_error_msg());
+        if (!is_array($config)) {
+            return Err::of('Configuration file must contain a JSON object or array: ' . $path);
         }
         
         return Ok::of($config);
@@ -307,7 +307,7 @@ class UserRepository
     private function getProfileData(int $userId): Option
     {
         // Profile data retrieval implementation
-        $profile = /* fetch from database */;
+        $profile = null; // replace with the actual database fetch
         return $profile ? Some::of($profile) : None::instance();
     }
 }
@@ -433,7 +433,7 @@ class PaymentService
     private function parseResponse(string $response): Result
     {
         $result = json_decode($response, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
+        if (!is_array($result)) {
             return Err::of('Invalid payment API response format');
         }
         

@@ -45,6 +45,8 @@ class ApiClient
      * @param string $endpoint Endpoint (e.g., "/users/123")
      * @param array $headers Additional headers
      *
+     * @throws RuntimeException Network failure (DNS, timeout, connection)
+     *
      * @return Result<array, string> Response data on success, error message on failure
      */
     public function get(string $endpoint, array $headers = []): Result
@@ -58,6 +60,8 @@ class ApiClient
      * @param string $endpoint Endpoint
      * @param array|null $data Request data
      * @param array $headers Additional headers
+     *
+     * @throws RuntimeException Network failure (DNS, timeout, connection)
      *
      * @return Result<array, string>
      */
@@ -73,6 +77,8 @@ class ApiClient
      * @param array|null $data Request data
      * @param array $headers Additional headers
      *
+     * @throws RuntimeException Network failure (DNS, timeout, connection)
+     *
      * @return Result<array, string>
      */
     public function put(string $endpoint, ?array $data = null, array $headers = []): Result
@@ -85,6 +91,8 @@ class ApiClient
      *
      * @param string $endpoint Endpoint
      * @param array $headers Additional headers
+     *
+     * @throws RuntimeException Network failure (DNS, timeout, connection)
      *
      * @return Result<array, string>
      */
@@ -299,6 +307,8 @@ class UserApiClient
      * @param int $page Page number
      * @param int $limit Items per page
      *
+     * @throws RuntimeException Network failure (DNS, timeout, connection)
+     *
      * @return Result<array, string>
      */
     public function getUsers(int $page = 1, int $limit = 20): Result
@@ -314,6 +324,8 @@ class UserApiClient
      *
      * @param int $userId User ID
      *
+     * @throws RuntimeException Network failure (DNS, timeout, connection)
+     *
      * @return Result<array, string>
      */
     public function getUser(int $userId): Result
@@ -326,6 +338,8 @@ class UserApiClient
      * Create user
      *
      * @param array $userData User data
+     *
+     * @throws RuntimeException Network failure (DNS, timeout, connection)
      *
      * @return Result<array, string>
      */
@@ -341,6 +355,8 @@ class UserApiClient
      * @param int $userId User ID
      * @param array $userData Update data
      *
+     * @throws RuntimeException Network failure (DNS, timeout, connection)
+     *
      * @return Result<array, string>
      */
     public function updateUser(int $userId, array $userData): Result
@@ -354,6 +370,8 @@ class UserApiClient
      * Delete user
      *
      * @param int $userId User ID
+     *
+     * @throws RuntimeException Network failure (DNS, timeout, connection)
      *
      * @return Result<array, string>
      */

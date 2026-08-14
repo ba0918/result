@@ -303,12 +303,12 @@ use ba0918\Result\{Ok, Err, Result};
 function readConfigFile(string $path): Result
 {
     if (!file_exists($path)) {
-        throw new RuntimeException("ファイルが存在しません: $path");
+        throw new RuntimeException('ファイルが存在しません: ' . $path);
     }
     
     $content = file_get_contents($path);
     if ($content === false) {
-        throw new RuntimeException("ファイルの読み込みに失敗しました: $path");
+        throw new RuntimeException('ファイルの読み込みに失敗しました: ' . $path);
     }
     
     $data = json_decode($content, true);
@@ -321,10 +321,10 @@ function readConfigFile(string $path): Result
 
 // 使用例 - 例外はインフラ障害、Errはデータの問題
 try {
-    $config = readConfigFile('config.json');
-    $settings = $config
+    // Err（JSON形式の不正）は同じ例外に変換し、両方を1つのハンドラで扱う
+    $settings = readConfigFile('config.json')
         ->map(fn($data) => array_merge(['debug' => false], $data))
-        ->unwrap(); // Errの分岐を処理した後なのでOkが保証される
+        ->unwrapOrElse(fn($error) => throw new RuntimeException($error));
     echo "アプリ名: " . $settings['app_name'];
 } catch (RuntimeException $e) {
     echo "設定の読み込みに失敗しました: " . $e->getMessage();

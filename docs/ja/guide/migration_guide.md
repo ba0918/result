@@ -214,8 +214,8 @@ class ConfigServiceModern
         }
         
         $config = json_decode($content, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return Err::of("設定ファイルのJSON形式が不正です: " . json_last_error_msg());
+        if (!is_array($config)) {
+            return Err::of('設定ファイルはJSONオブジェクトまたは配列である必要があります: ' . $path);
         }
         
         return Ok::of($config);
@@ -307,7 +307,7 @@ class UserRepository
     private function getProfileData(int $userId): Option
     {
         // プロフィールデータ取得の実装
-        $profile = /* データベースから取得 */;
+        $profile = null; // 実際のデータベース取得に置き換える
         return $profile ? Some::of($profile) : None::instance();
     }
 }
@@ -433,7 +433,7 @@ class PaymentService
     private function parseResponse(string $response): Result
     {
         $result = json_decode($response, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
+        if (!is_array($result)) {
             return Err::of('決済APIのレスポンス形式が不正です');
         }
         

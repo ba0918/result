@@ -44,17 +44,21 @@ function validateForm(array $input): Result
 
 // 2. 業務ルール違反 - 呼び出し側が種類ごとに処理する
 /** @return Result<User, UserAlreadyExists|InvalidPassword> */
-function addUser(...): Result
+function addUser(Username $user, string $password): Result
 {
     if ($this->userExists($user)) {
         return Err::of(new UserAlreadyExists($user));
     }
-    ...
+
+    // ... 残りのバリデーションと登録処理
 }
 
 // 3. 呼び出し側が区別する必要のある想定内の失敗群
 /** @return Result<Order, InsufficientBalance|OrderCancelled> */
-function placeOrder(...): Result
+function placeOrder(Order $order): Result
+{
+    // ... 注文処理ロジック
+}
 ```
 
 呼び出し側には、エラーバリアントごとに実際の分岐ができます。
@@ -108,8 +112,16 @@ function getConfig(): Result
 // ✅ 良い例: インフラ障害は例外のまま
 function readConfigFile(string $path): array
 {
-    // FileNotFoundException / PermissionDeniedException が例外として伝播する
-    return parse_ini_file($path, true);
+    if (!file_exists($path)) {
+        throw new RuntimeException('設定ファイルが見つかりません: ' . $path);
+    }
+    
+    $config = parse_ini_file($path, true);
+    if ($config === false) {
+        throw new RuntimeException('設定ファイルの解析に失敗しました: ' . $path);
+    }
+    
+    return $config;
 }
 ```
 
@@ -127,19 +139,22 @@ Result<User, ServiceUnavailable>
 ```
 
 ```php
-/**
- * この層はフォールバックを提供できるので、失敗が「分岐」になる。
- *
- * @throws InfrastructureException
- */
-public function fetchUser(int $id): Result
+class UserService
 {
-    try {
-        return Ok::of($this->repository->find($id));
-    } catch (UserNotFound $e) {
-        return Err::of($e);            // 想定内の不在 → Result
+    /**
+     * この層はフォールバックを提供できるので、失敗が「分岐」になる。
+     *
+     * @throws InfrastructureException
+     */
+    public function fetchUser(int $id): Result
+    {
+        try {
+            return Ok::of($this->repository->find($id));
+        } catch (UserNotFound $e) {
+            return Err::of($e);            // 想定内の不在 → Result
+        }
+        // InfrastructureException は伝播する - この層にはフォールバックがない
     }
-    // InfrastructureException は伝播する - この層にはフォールバックがない
 }
 ```
 
@@ -353,48 +368,56 @@ PHPにはRustの `?` 演算子に相当する構文がないため、チェー�
 
 ```php
 // ❌ 読みにくい: すべてのステップが同じに見える
-public function add(Username $user, string $password): Result
+class UnreadableAdd
 {
-    return $this->ensureHtpasswdAuth()
-        ->andThen(fn() => $this->validatePassword($password))
-        ->andThen(fn() => $this->readUsernames($path))
-        ->andThen(fn(array $names) => $this->lock->capture($path)
-            ->andThen(function (Fingerprint $fingerprint) use ($names, $user) {
-                if (in_array($user->value, $names, true)) {
-                    return Err::of(new UserAlreadyExists($user));
-                }
-                return Ok::of($fingerprint);
-            }))
-        ->andThen(fn(Fingerprint $f) => $this->lock->assertCurrent($path, $f))
-        ->andThen(fn() => $this->snapshots()->capture($path, $now))
-        ->andThen(fn(Snapshot $snapshot) => $this->executeAdd($path, $user, $password, $snapshot))
-        ->andThen(fn() => $this->audit->record($actor, 'user.add', $path, 'ok'))
-        ->orElse(fn(mixed $error) => $this->recordErrorAndReturn($actor, $error));
+    public function add(Username $user, string $password, string $actor, int $now): Result
+    {
+        $path = $this->config->htpasswdPath;
+
+        return $this->ensureHtpasswdAuth()
+            ->andThen(fn() => $this->validatePassword($password))
+            ->andThen(fn() => $this->readUsernames($path))
+            ->andThen(fn(array $names) => $this->lock->capture($path)
+                ->andThen(function (Fingerprint $fingerprint) use ($names, $user) {
+                    if (in_array($user->value, $names, true)) {
+                        return Err::of(new UserAlreadyExists($user));
+                    }
+                    return Ok::of($fingerprint);
+                }))
+            ->andThen(fn(Fingerprint $f) => $this->lock->assertCurrent($path, $f))
+            ->andThen(fn() => $this->snapshots()->capture($path, $now))
+            ->andThen(fn(Snapshot $snapshot) => $this->executeAdd($path, $user, $password, $snapshot))
+            ->andThen(fn() => $this->audit->record($actor, 'user.add', $path, 'ok'))
+            ->orElse(fn(mixed $error) => $this->recordErrorAndReturn($actor, $error));
+    }
 }
 
 // ✅ 読みやすい: 公開メソッドは業務フローを一目で示す
-public function add(Username $user, string $password): Result
+class ReadableAdd
 {
-    $path = $this->config->htpasswdPath;
+    public function add(Username $user, string $password, string $actor, int $now): Result
+    {
+        $path = $this->config->htpasswdPath;
 
-    return $this->validateAddRequest($password)
-        ->andThen(fn() => $this->prepareAdd($path, $user, $now))
-        ->andThen(fn(Snapshot $snapshot) => $this->executeAdd($path, $user, $password, $snapshot))
-        ->andThen(fn() => $this->recordAddSuccess($actor, $path, $user, $now))
-        ->orElse(fn(mixed $error) => $this->recordErrorAndReturn($actor, $error));
-}
+        return $this->validateAddRequest($password)
+            ->andThen(fn() => $this->prepareAdd($path, $user, $now))
+            ->andThen(fn(Snapshot $snapshot) => $this->executeAdd($path, $user, $password, $snapshot))
+            ->andThen(fn() => $this->recordAddSuccess($actor, $path, $user, $now))
+            ->orElse(fn(mixed $error) => $this->recordErrorAndReturn($actor, $error));
+    }
 
-private function validateAddRequest(string $password): Result
-{
-    return $this->ensureHtpasswdAuth()
-        ->andThen(fn() => $this->validatePassword($password));
-}
+    private function validateAddRequest(string $password): Result
+    {
+        return $this->ensureHtpasswdAuth()
+            ->andThen(fn() => $this->validatePassword($password));
+    }
 
-private function executeAdd(string $path, Username $user, string $password, Snapshot $snapshot): Result
-{
-    return $this->runHtpasswdAdd($path, $user, $password)
-        ->andThen(fn() => $this->lock->capture($path))
-        ->andThen(fn(Fingerprint $after) => $this->snapshots()->noteExpectedState($snapshot, $after));
+    private function executeAdd(string $path, Username $user, string $password, Snapshot $snapshot): Result
+    {
+        return $this->runHtpasswdAdd($path, $user, $password)
+            ->andThen(fn() => $this->lock->capture($path))
+            ->andThen(fn(Fingerprint $after) => $this->snapshots()->noteExpectedState($snapshot, $after));
+    }
 }
 ```
 
@@ -421,27 +444,30 @@ private function executeAdd(string $path, Username $user, string $password, Snap
 自然に命令的になるシーケンスでは素直なPHPの方が読みやすくなります。
 
 ```php
-/**
- * @return Result<null, UserAlreadyExists|InvalidPassword>
- *
- * @throws InfrastructureException
- */
-public function add(Username $user, string $password, string $actor, int $now): Result
+class UserManager
 {
-    $validation = $this->validatePassword($password);
-    if ($validation->isErr()) {
-        return $validation;
+    /**
+     * @return Result<null, UserAlreadyExists|InvalidPassword>
+     *
+     * @throws InfrastructureException
+     */
+    public function add(Username $user, string $password, string $actor, int $now): Result
+    {
+        $validation = $this->validatePassword($password);
+        if ($validation->isErr()) {
+            return $validation;
+        }
+
+        if ($this->userExists($path, $user)) {
+            return Err::of(new UserAlreadyExists($user));
+        }
+
+        // インフラ障害は例外として脱出する
+        $this->addUserAtomically($path, $user, $password);
+        $this->audit->record($actor, 'user.add', $path, 'ok', $user->value, $now);
+
+        return Ok::of(null);
     }
-
-    if ($this->userExists($path, $user)) {
-        return Err::of(new UserAlreadyExists($user));
-    }
-
-    // インフラ障害は例外として脱出する
-    $this->addUserAtomically($path, $user, $password);
-    $this->audit->record($actor, 'user.add', $path, 'ok', $user->value, $now);
-
-    return Ok::of(null);
 }
 ```
 
@@ -829,44 +855,53 @@ function complexNesting(array $data): Result
 }
 
 // ✅ 良い例 - フラットなチェーン。ただし責務が1つである間だけ
-function clearPipeline(array $data): Result
+class PipelineExample
 {
-    return $this->validateStep($data)
-        ->andThen(fn($d) => $this->enrichStep($d))
-        ->andThen(fn($d) => $this->processStep($d))
-        ->andThen(fn($d) => $this->saveStep($d))
-        ->andThen(fn($d) => $this->notifyStep($d));
-    // 5ステップは同じ責務（パイプライン処理）。
-    // これが快適な限界に近い - あと1ステップ増えたら分割する
+    public function clearPipeline(array $data): Result
+    {
+        return $this->validateStep($data)
+            ->andThen(fn($d) => $this->enrichStep($d))
+            ->andThen(fn($d) => $this->processStep($d))
+            ->andThen(fn($d) => $this->saveStep($d))
+            ->andThen(fn($d) => $this->notifyStep($d));
+        // 5ステップは同じ責務（パイプライン処理）。
+        // これが快適な限界に近い - あと1ステップ増えたら分割する
+    }
 }
 
 // ❌ 悪い例 - 1本のチェーンに複数の責務
-function registerUser(array $data): Result
+class BadRegister
 {
-    return $this->validateInput($data)              // 検証
-        ->andThen(fn($d) => $this->saveToDatabase($d))  // I/O
-        ->andThen(fn() => $this->sendWelcomeMail())     // 通知
-        ->andThen(fn() => $this->audit->record('registered'))
-        ->andThen(fn() => $this->notifyAdmins());       // また通知
+    public function registerUser(array $data): Result
+    {
+        return $this->validateInput($data)              // 検証
+            ->andThen(fn($d) => $this->saveToDatabase($d))  // I/O
+            ->andThen(fn() => $this->sendWelcomeMail())     // 通知
+            ->andThen(fn() => $this->audit->record('registered'))
+            ->andThen(fn() => $this->notifyAdmins());       // また通知
+    }
 }
 
 // ✅ 良い例 - 責務が変わるところで分割
-function registerUser(array $data): Result
+class GoodRegister
 {
-    return $this->validateAndCreate($data)
-        ->andThen(fn(User $user) => $this->announce($user));
-}
+    public function registerUser(array $data): Result
+    {
+        return $this->validateAndCreate($data)
+            ->andThen(fn(User $user) => $this->announce($user));
+    }
 
-private function validateAndCreate(array $data): Result
-{
-    return $this->validateInput($data)
-        ->andThen(fn($d) => $this->saveToDatabase($d));
-}
+    private function validateAndCreate(array $data): Result
+    {
+        return $this->validateInput($data)
+            ->andThen(fn($d) => $this->saveToDatabase($d));
+    }
 
-private function announce(User $user): Result
-{
-    return $this->sendWelcomeMail($user)
-        ->andThen(fn() => $this->audit->record('registered', $user));
+    private function announce(User $user): Result
+    {
+        return $this->sendWelcomeMail($user)
+            ->andThen(fn() => $this->audit->record('registered', $user));
+    }
 }
 ```
 

@@ -303,12 +303,12 @@ use ba0918\Result\{Ok, Err, Result};
 function readConfigFile(string $path): Result
 {
     if (!file_exists($path)) {
-        throw new RuntimeException("File does not exist: $path");
+        throw new RuntimeException('File does not exist: ' . $path);
     }
     
     $content = file_get_contents($path);
     if ($content === false) {
-        throw new RuntimeException("Failed to read file: $path");
+        throw new RuntimeException('Failed to read file: ' . $path);
     }
     
     $data = json_decode($content, true);
@@ -321,10 +321,10 @@ function readConfigFile(string $path): Result
 
 // Usage example - the exception is infrastructure, the Err is data
 try {
-    $config = readConfigFile('config.json');
-    $settings = $config
+    // Err (invalid JSON) is converted to the same exception so both share one handler
+    $settings = readConfigFile('config.json')
         ->map(fn($data) => array_merge(['debug' => false], $data))
-        ->unwrap(); // Ok is guaranteed after Err was handled
+        ->unwrapOrElse(fn($error) => throw new RuntimeException($error));
     echo "App name: " . $settings['app_name'];
 } catch (RuntimeException $e) {
     echo "Failed to load config: " . $e->getMessage();

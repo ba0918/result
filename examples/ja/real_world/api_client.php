@@ -45,6 +45,8 @@ class ApiClient
      * @param string $endpoint エンドポイント（例: "/users/123"）
      * @param array $headers 追加ヘッダー
      *
+     * @throws RuntimeException ネットワーク障害（DNS解決・タイムアウト・接続）
+     *
      * @return Result<array, string> 成功時はレスポンスデータ、失敗時はエラーメッセージ
      */
     public function get(string $endpoint, array $headers = []): Result
@@ -58,6 +60,8 @@ class ApiClient
      * @param string $endpoint エンドポイント
      * @param array|null $data 送信データ
      * @param array $headers 追加ヘッダー
+     *
+     * @throws RuntimeException ネットワーク障害（DNS解決・タイムアウト・接続）
      *
      * @return Result<array, string>
      */
@@ -73,6 +77,8 @@ class ApiClient
      * @param array|null $data 送信データ
      * @param array $headers 追加ヘッダー
      *
+     * @throws RuntimeException ネットワーク障害（DNS解決・タイムアウト・接続）
+     *
      * @return Result<array, string>
      */
     public function put(string $endpoint, ?array $data = null, array $headers = []): Result
@@ -85,6 +91,8 @@ class ApiClient
      *
      * @param string $endpoint エンドポイント
      * @param array $headers 追加ヘッダー
+     *
+     * @throws RuntimeException ネットワーク障害（DNS解決・タイムアウト・接続）
      *
      * @return Result<array, string>
      */
@@ -100,6 +108,8 @@ class ApiClient
      * @param string $endpoint エンドポイント
      * @param array|null $data 送信データ
      * @param array $headers 追加ヘッダー
+     *
+     * @throws RuntimeException ネットワーク障害（DNS解決・タイムアウト・接続）
      *
      * @return Result<array, string>
      */
@@ -299,6 +309,8 @@ class UserApiClient
      * @param int $page ページ番号
      * @param int $limit 1ページあたりの件数
      *
+     * @throws RuntimeException ネットワーク障害（DNS解決・タイムアウト・接続）
+     *
      * @return Result<array, string>
      */
     public function getUsers(int $page = 1, int $limit = 20): Result
@@ -314,6 +326,8 @@ class UserApiClient
      *
      * @param int $userId ユーザーID
      *
+     * @throws RuntimeException ネットワーク障害（DNS解決・タイムアウト・接続）
+     *
      * @return Result<array, string>
      */
     public function getUser(int $userId): Result
@@ -326,6 +340,8 @@ class UserApiClient
      * ユーザーの作成
      *
      * @param array $userData ユーザーデータ
+     *
+     * @throws RuntimeException ネットワーク障害（DNS解決・タイムアウト・接続）
      *
      * @return Result<array, string>
      */
@@ -341,6 +357,8 @@ class UserApiClient
      * @param int $userId ユーザーID
      * @param array $userData 更新データ
      *
+     * @throws RuntimeException ネットワーク障害（DNS解決・タイムアウト・接続）
+     *
      * @return Result<array, string>
      */
     public function updateUser(int $userId, array $userData): Result
@@ -354,6 +372,8 @@ class UserApiClient
      * ユーザーの削除
      *
      * @param int $userId ユーザーID
+     *
+     * @throws RuntimeException ネットワーク障害（DNS解決・タイムアウト・接続）
      *
      * @return Result<array, string>
      */

@@ -273,12 +273,12 @@ function loadConfiguration(string $configPath): Result
 {
     // インフラ障害（ファイルの不在・読み込み不能）は例外のまま
     if (!file_exists($configPath)) {
-        throw new RuntimeException("設定ファイルが見つかりません: $configPath");
+        throw new RuntimeException('設定ファイルが見つかりません: ' . $configPath);
     }
     
     $content = file_get_contents($configPath);
     if ($content === false) {
-        throw new RuntimeException("設定ファイルの読み込みに失敗しました: $configPath");
+        throw new RuntimeException('設定ファイルの読み込みに失敗しました: ' . $configPath);
     }
     
     // 呼び出し側が分岐したいデータの問題はErrにする
@@ -307,9 +307,11 @@ function getAppConfig(): array
     ];
     
     try {
+        // Err（JSON形式の不正・必須項目不足）は同じ例外に変換し、
+        // インフラ障害とデータの問題を1つのハンドラで扱う
         return loadConfiguration('config.json')
             ->map(fn($config) => array_merge($defaultConfig, $config))
-            ->unwrap(); // Errの分岐を処理した後なのでOkが保証される
+            ->unwrapOrElse(fn($error) => throw new RuntimeException($error));
     } catch (RuntimeException $e) {
         return $defaultConfig;
     }

@@ -45,17 +45,21 @@ function validateForm(array $input): Result
 
 // 2. Business rule violations - the caller handles each variant
 /** @return Result<User, UserAlreadyExists|InvalidPassword> */
-function addUser(...): Result
+function addUser(Username $user, string $password): Result
 {
     if ($this->userExists($user)) {
         return Err::of(new UserAlreadyExists($user));
     }
-    ...
+
+    // ... remaining validation and registration logic
 }
 
 // 3. A set of expected failures the caller must distinguish
 /** @return Result<Order, InsufficientBalance|OrderCancelled> */
-function placeOrder(...): Result
+function placeOrder(Order $order): Result
+{
+    // ... order placement logic
+}
 ```
 
 The caller then has a real branch for each error variant:
@@ -110,8 +114,16 @@ exception:
 // ✅ Good: infrastructure failure stays an exception
 function readConfigFile(string $path): array
 {
-    // FileNotFoundException / PermissionDeniedException propagate as exceptions
-    return parse_ini_file($path, true);
+    if (!file_exists($path)) {
+        throw new RuntimeException('Configuration file not found: ' . $path);
+    }
+    
+    $config = parse_ini_file($path, true);
+    if ($config === false) {
+        throw new RuntimeException('Failed to parse configuration file: ' . $path);
+    }
+    
+    return $config;
 }
 ```
 
@@ -130,19 +142,22 @@ Result<User, ServiceUnavailable>
 ```
 
 ```php
-/**
- * This layer can offer a fallback, so the failure becomes a branch.
- *
- * @throws InfrastructureException
- */
-public function fetchUser(int $id): Result
+class UserService
 {
-    try {
-        return Ok::of($this->repository->find($id));
-    } catch (UserNotFound $e) {
-        return Err::of($e);            // Expected absence → Result
+    /**
+     * This layer can offer a fallback, so the failure becomes a branch.
+     *
+     * @throws InfrastructureException
+     */
+    public function fetchUser(int $id): Result
+    {
+        try {
+            return Ok::of($this->repository->find($id));
+        } catch (UserNotFound $e) {
+            return Err::of($e);            // Expected absence → Result
+        }
+        // InfrastructureException propagates - the caller has no fallback here
     }
-    // InfrastructureException propagates - the caller has no fallback here
 }
 ```
 
@@ -358,8 +373,12 @@ update → audit):
 
 ```php
 // ❌ Hard to read: every step looks identical
-public function add(Username $user, string $password): Result
+class UnreadableAdd
 {
+    public function add(Username $user, string $password, string $actor, int $now): Result
+    {
+        $path = $this->config->htpasswdPath;
+
     return $this->ensureHtpasswdAuth()
         ->andThen(fn() => $this->validatePassword($password))
         ->andThen(fn() => $this->readUsernames($path))
@@ -375,31 +394,35 @@ public function add(Username $user, string $password): Result
         ->andThen(fn(Snapshot $snapshot) => $this->executeAdd($path, $user, $password, $snapshot))
         ->andThen(fn() => $this->audit->record($actor, 'user.add', $path, 'ok'))
         ->orElse(fn(mixed $error) => $this->recordErrorAndReturn($actor, $error));
+    }
 }
 
 // ✅ Readable: the public method states the business flow at one glance
-public function add(Username $user, string $password): Result
+class ReadableAdd
 {
-    $path = $this->config->htpasswdPath;
+    public function add(Username $user, string $password, string $actor, int $now): Result
+    {
+        $path = $this->config->htpasswdPath;
 
-    return $this->validateAddRequest($password)
-        ->andThen(fn() => $this->prepareAdd($path, $user, $now))
-        ->andThen(fn(Snapshot $snapshot) => $this->executeAdd($path, $user, $password, $snapshot))
-        ->andThen(fn() => $this->recordAddSuccess($actor, $path, $user, $now))
-        ->orElse(fn(mixed $error) => $this->recordErrorAndReturn($actor, $error));
-}
+        return $this->validateAddRequest($password)
+            ->andThen(fn() => $this->prepareAdd($path, $user, $now))
+            ->andThen(fn(Snapshot $snapshot) => $this->executeAdd($path, $user, $password, $snapshot))
+            ->andThen(fn() => $this->recordAddSuccess($actor, $path, $user, $now))
+            ->orElse(fn(mixed $error) => $this->recordErrorAndReturn($actor, $error));
+    }
 
-private function validateAddRequest(string $password): Result
-{
-    return $this->ensureHtpasswdAuth()
-        ->andThen(fn() => $this->validatePassword($password));
-}
+    private function validateAddRequest(string $password): Result
+    {
+        return $this->ensureHtpasswdAuth()
+            ->andThen(fn() => $this->validatePassword($password));
+    }
 
-private function executeAdd(string $path, Username $user, string $password, Snapshot $snapshot): Result
-{
-    return $this->runHtpasswdAdd($path, $user, $password)
-        ->andThen(fn() => $this->lock->capture($path))
-        ->andThen(fn(Fingerprint $after) => $this->snapshots()->noteExpectedState($snapshot, $after));
+    private function executeAdd(string $path, Username $user, string $password, Snapshot $snapshot): Result
+    {
+        return $this->runHtpasswdAdd($path, $user, $password)
+            ->andThen(fn() => $this->lock->capture($path))
+            ->andThen(fn(Fingerprint $after) => $this->snapshots()->noteExpectedState($snapshot, $after));
+    }
 }
 ```
 
@@ -430,27 +453,30 @@ receives. Inside the method, plain PHP reads better for sequences that are
 naturally imperative:
 
 ```php
-/**
- * @return Result<null, UserAlreadyExists|InvalidPassword>
- *
- * @throws InfrastructureException
- */
-public function add(Username $user, string $password, string $actor, int $now): Result
+class UserManager
 {
-    $validation = $this->validatePassword($password);
-    if ($validation->isErr()) {
-        return $validation;
+    /**
+     * @return Result<null, UserAlreadyExists|InvalidPassword>
+     *
+     * @throws InfrastructureException
+     */
+    public function add(Username $user, string $password, string $actor, int $now): Result
+    {
+        $validation = $this->validatePassword($password);
+        if ($validation->isErr()) {
+            return $validation;
+        }
+
+        if ($this->userExists($path, $user)) {
+            return Err::of(new UserAlreadyExists($user));
+        }
+
+        // Infrastructure failures escape as exceptions
+        $this->addUserAtomically($path, $user, $password);
+        $this->audit->record($actor, 'user.add', $path, 'ok', $user->value, $now);
+
+        return Ok::of(null);
     }
-
-    if ($this->userExists($path, $user)) {
-        return Err::of(new UserAlreadyExists($user));
-    }
-
-    // Infrastructure failures escape as exceptions
-    $this->addUserAtomically($path, $user, $password);
-    $this->audit->record($actor, 'user.add', $path, 'ok', $user->value, $now);
-
-    return Ok::of(null);
 }
 ```
 
@@ -839,44 +865,53 @@ function complexNesting(array $data): Result
 }
 
 // ✅ Good example - flat chain, but only while the responsibility is one
-function clearPipeline(array $data): Result
+class PipelineExample
 {
-    return $this->validateStep($data)
-        ->andThen(fn($d) => $this->enrichStep($d))
-        ->andThen(fn($d) => $this->processStep($d))
-        ->andThen(fn($d) => $this->saveStep($d))
-        ->andThen(fn($d) => $this->notifyStep($d));
-    // All five steps are the same responsibility (pipeline processing).
-    // This is near the comfortable limit - one more step means split.
+    public function clearPipeline(array $data): Result
+    {
+        return $this->validateStep($data)
+            ->andThen(fn($d) => $this->enrichStep($d))
+            ->andThen(fn($d) => $this->processStep($d))
+            ->andThen(fn($d) => $this->saveStep($d))
+            ->andThen(fn($d) => $this->notifyStep($d));
+        // All five steps are the same responsibility (pipeline processing).
+        // This is near the comfortable limit - one more step means split.
+    }
 }
 
 // ❌ Bad example - one chain, many responsibilities
-function registerUser(array $data): Result
+class BadRegister
 {
-    return $this->validateInput($data)              // validation
-        ->andThen(fn($d) => $this->saveToDatabase($d))  // I/O
-        ->andThen(fn() => $this->sendWelcomeMail())     // notification
-        ->andThen(fn() => $this->audit->record('registered'))
-        ->andThen(fn() => $this->notifyAdmins());       // another notification
+    public function registerUser(array $data): Result
+    {
+        return $this->validateInput($data)              // validation
+            ->andThen(fn($d) => $this->saveToDatabase($d))  // I/O
+            ->andThen(fn() => $this->sendWelcomeMail())     // notification
+            ->andThen(fn() => $this->audit->record('registered'))
+            ->andThen(fn() => $this->notifyAdmins());       // another notification
+    }
 }
 
 // ✅ Good example - split where the responsibility changes
-function registerUser(array $data): Result
+class GoodRegister
 {
-    return $this->validateAndCreate($data)
-        ->andThen(fn(User $user) => $this->announce($user));
-}
+    public function registerUser(array $data): Result
+    {
+        return $this->validateAndCreate($data)
+            ->andThen(fn(User $user) => $this->announce($user));
+    }
 
-private function validateAndCreate(array $data): Result
-{
-    return $this->validateInput($data)
-        ->andThen(fn($d) => $this->saveToDatabase($d));
-}
+    private function validateAndCreate(array $data): Result
+    {
+        return $this->validateInput($data)
+            ->andThen(fn($d) => $this->saveToDatabase($d));
+    }
 
-private function announce(User $user): Result
-{
-    return $this->sendWelcomeMail($user)
-        ->andThen(fn() => $this->audit->record('registered', $user));
+    private function announce(User $user): Result
+    {
+        return $this->sendWelcomeMail($user)
+            ->andThen(fn() => $this->audit->record('registered', $user));
+    }
 }
 ```
 

@@ -273,12 +273,12 @@ function loadConfiguration(string $configPath): Result
 {
     // Infrastructure failures (missing file, unreadable file) stay exceptions
     if (!file_exists($configPath)) {
-        throw new RuntimeException("Configuration file not found: $configPath");
+        throw new RuntimeException('Configuration file not found: ' . $configPath);
     }
     
     $content = file_get_contents($configPath);
     if ($content === false) {
-        throw new RuntimeException("Failed to read configuration file: $configPath");
+        throw new RuntimeException('Failed to read configuration file: ' . $configPath);
     }
     
     // Data problems the caller may want to branch on become Err
@@ -307,13 +307,14 @@ function getAppConfig(): array
     ];
     
     try {
+        // Err (invalid JSON, missing keys) is converted to the same exception
+        // so infrastructure and data failures share one handler
         return loadConfiguration('config.json')
             ->map(fn($config) => array_merge($defaultConfig, $config))
-            ->unwrap(); // Ok is guaranteed after Err was handled
+            ->unwrapOrElse(fn($error) => throw new RuntimeException($error));
     } catch (RuntimeException $e) {
         return $defaultConfig;
     }
-}
 }
 ```
 
