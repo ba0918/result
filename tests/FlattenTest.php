@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class FlattenTest extends TestCase
 {
-    // 基本的なflatten()メソッドの動作テスト
+    // Basic tests for the flatten() method
 
     public function testOkOkFlattensToOk(): void
     {
@@ -50,7 +50,7 @@ class FlattenTest extends TestCase
         $this->assertSame('simple value', $flattened->unwrap());
     }
 
-    // 型別テスト
+    // Tests by value type
 
     public function testFlattenWithStringValue(): void
     {
@@ -95,7 +95,7 @@ class FlattenTest extends TestCase
         $this->assertSame($obj, $flattened->unwrap());
     }
 
-    // エラー型別テスト
+    // Tests by error type
 
     public function testFlattenWithStringError(): void
     {
@@ -128,7 +128,7 @@ class FlattenTest extends TestCase
         $this->assertSame($errorArray, $flattened->unwrapErr());
     }
 
-    // エッジケーステスト
+    // Edge case tests
 
     public function testFlattenWithNullValue(): void
     {
@@ -159,7 +159,7 @@ class FlattenTest extends TestCase
         $this->assertSame(null, $flattened->unwrap());
     }
 
-    // 多重ネストテスト（一段階のみ平坦化されることを確認）
+    // Multiple nesting test (confirming only one level is flattened)
 
     public function testFlattenOnlyRemovesOneLevel(): void
     {
@@ -189,7 +189,7 @@ class FlattenTest extends TestCase
         $this->assertSame(42, $secondFlatten->unwrap());
     }
 
-    // 型安全性テスト
+    // Type safety tests
 
     public function testFlattenReturnTypeIsResult(): void
     {
@@ -208,7 +208,7 @@ class FlattenTest extends TestCase
         $this->assertInstanceOf(\ba0918\Result\Result::class, $flattened);
     }
 
-    // メソッドチェーンテスト
+    // Method chain tests
 
     public function testFlattenInMethodChain(): void
     {
@@ -241,11 +241,11 @@ class FlattenTest extends TestCase
         $this->assertSame('default', $result);
     }
 
-    // 実用的なユースケーステスト
+    // Practical use case tests
 
     public function testFlattenInValidationScenario(): void
     {
-        // バリデーション結果がネストしている場合
+        // When validation results are nested
         $validationResult = function ($input): \ba0918\Result\Result {
             if ($input > 0) {
                 return new Ok(new Ok($input));
@@ -254,18 +254,18 @@ class FlattenTest extends TestCase
             return new Ok(new Err('Value must be positive'));
         };
 
-        // 正常ケース
+        // Normal case
         $result1 = $validationResult(10)->flatten();
         $this->assertInstanceOf(Ok::class, $result1);
         $this->assertSame(10, $result1->unwrap());
 
-        // エラーケース
+        // Error case
         $result2 = $validationResult(-5)->flatten();
         $this->assertInstanceOf(Err::class, $result2);
         $this->assertSame('Value must be positive', $result2->unwrapErr());
     }
 
-    // パフォーマンステスト
+    // Performance tests
 
     public function testFlattenPerformanceWithLargeData(): void
     {
@@ -282,7 +282,7 @@ class FlattenTest extends TestCase
         $this->assertLessThan(0.01, $endTime - $startTime, 'flatten() should be fast for large data');
     }
 
-    // 参照の整合性テスト
+    // Reference consistency tests
 
     public function testFlattenPreservesObjectReferences(): void
     {
@@ -295,22 +295,22 @@ class FlattenTest extends TestCase
 
         $this->assertSame($sharedObject, $flattened->unwrap());
 
-        // オブジェクトの変更が反映されることを確認
+        // Confirm that object mutations are reflected
         $sharedObject->modified = true;
         $this->assertTrue($flattened->unwrap()->modified ?? false);
     }
 
-    // 境界値テスト
+    // Boundary value tests
 
     public function testFlattenWithBooleanValues(): void
     {
-        // true値
+        // true value
         $trueInner = new Ok(true);
         $trueOuter = new Ok($trueInner);
         $trueFlattened = $trueOuter->flatten();
         $this->assertTrue($trueFlattened->unwrap());
 
-        // false値
+        // false value
         $falseInner = new Ok(false);
         $falseOuter = new Ok($falseInner);
         $falseFlattened = $falseOuter->flatten();
@@ -319,13 +319,13 @@ class FlattenTest extends TestCase
 
     public function testFlattenWithEmptyArrayAndString(): void
     {
-        // 空配列
+        // Empty array
         $emptyArrayInner = new Ok([]);
         $emptyArrayOuter = new Ok($emptyArrayInner);
         $emptyArrayFlattened = $emptyArrayOuter->flatten();
         $this->assertSame([], $emptyArrayFlattened->unwrap());
 
-        // 空文字列
+        // Empty string
         $emptyStringInner = new Ok('');
         $emptyStringOuter = new Ok($emptyStringInner);
         $emptyStringFlattened = $emptyStringOuter->flatten();

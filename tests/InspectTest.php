@@ -114,7 +114,7 @@ class InspectTest extends TestCase
         $result = new Ok($originalValue);
 
         $result->inspect(function ($value): void {
-            // 値を変更しようとしても効果がないことを確認するため
+            // Confirm that attempting to change the value has no effect
             $value = 'modified';
         });
 
@@ -127,7 +127,7 @@ class InspectTest extends TestCase
         $result = new Err($originalError);
 
         $result->inspectErr(function ($error): void {
-            // エラーを変更しようとしても効果がないことを確認するため
+            // Confirm that attempting to change the error has no effect
             $error = 'modified error';
         });
 

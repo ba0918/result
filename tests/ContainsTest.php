@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class ContainsTest extends TestCase
 {
-    // contains()メソッドの基本動作テスト
+    // Basic behavior tests for the contains() method
 
     public function testOkContainsWithEqualValue(): void
     {
@@ -41,7 +41,7 @@ class ContainsTest extends TestCase
         $this->assertFalse($ok->contains(null));
     }
 
-    // containsErr()メソッドの基本動作テスト
+    // Basic behavior tests for the containsErr() method
 
     public function testErrContainsErrWithEqualError(): void
     {
@@ -65,7 +65,7 @@ class ContainsTest extends TestCase
         $this->assertFalse($err->containsErr('404'));
     }
 
-    // 交差テスト
+    // Cross tests
 
     public function testOkContainsErrAlwaysFalse(): void
     {
@@ -85,7 +85,7 @@ class ContainsTest extends TestCase
         $this->assertFalse($err->contains(null));
     }
 
-    // エッジケーステスト: null値
+    // Edge case tests: null values
 
     public function testOkContainsWithNull(): void
     {
@@ -107,7 +107,7 @@ class ContainsTest extends TestCase
         $this->assertFalse($err->containsErr(false));
     }
 
-    // エッジケーステスト: オブジェクト参照比較
+    // Edge case tests: object reference comparison
 
     public function testOkContainsWithObjectReference(): void
     {
@@ -135,7 +135,7 @@ class ContainsTest extends TestCase
         $this->assertFalse($err->containsErr($differentErrorObj));
     }
 
-    // エッジケーステスト: 配列の厳密比較
+    // Edge case tests: strict array comparison
 
     public function testOkContainsWithArray(): void
     {
@@ -158,7 +158,7 @@ class ContainsTest extends TestCase
         $this->assertFalse($err->containsErr(['message' => 'server error', 'code' => 500]));
     }
 
-    // エッジケーステスト: 数値型の厳密比較
+    // Edge case tests: strict numeric type comparison
 
     public function testOkContainsWithNumericTypes(): void
     {
@@ -173,7 +173,7 @@ class ContainsTest extends TestCase
         $this->assertFalse($floatOk->contains('42.5'));
     }
 
-    // エッジケーステスト: bool値の厳密比較
+    // Edge case tests: strict bool comparison
 
     public function testOkContainsWithBooleanTypes(): void
     {
@@ -189,7 +189,7 @@ class ContainsTest extends TestCase
         $this->assertFalse($falseOk->contains(null));
     }
 
-    // 複合テスト: 複雑なデータ構造
+    // Composite tests: complex data structures
 
     public function testOkContainsWithComplexData(): void
     {
@@ -217,7 +217,7 @@ class ContainsTest extends TestCase
         $this->assertFalse($ok->contains($differentData));
     }
 
-    // パフォーマンステスト: 大きなデータ構造
+    // Performance tests: large data structures
 
     public function testContainsPerformanceWithLargeData(): void
     {
@@ -232,14 +232,14 @@ class ContainsTest extends TestCase
         $this->assertLessThan(0.01, $endTime - $startTime, 'contains() should be fast for large data');
     }
 
-    // 型安全性テスト
+    // Type safety tests
 
     public function testContainsReturnType(): void
     {
         $ok = new Ok('test');
         $err = new Err('error');
 
-        // 戻り値の型が適切に bool として動作することを確認
+        // Confirm that the return value behaves correctly as a bool
         $this->assertTrue($ok->contains('test'));
         $this->assertFalse($ok->containsErr('error'));
         $this->assertFalse($err->contains('test'));

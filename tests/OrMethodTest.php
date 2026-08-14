@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class OrMethodTest extends TestCase
 {
-    // or()メソッドのテスト
+    // Tests for the or() method
 
     public function testOrWithOkAndOk(): void
     {
@@ -54,7 +54,7 @@ class OrMethodTest extends TestCase
         $this->assertSame('second error', $result->unwrapErr());
     }
 
-    // orElse()メソッドのテスト
+    // Tests for the orElse() method
 
     public function testOrElseWithOk(): void
     {
@@ -113,7 +113,7 @@ class OrMethodTest extends TestCase
         $this->assertSame('recovered', $result->unwrap());
     }
 
-    // チェーンテスト
+    // Chain tests
 
     public function testOrChaining(): void
     {
@@ -135,7 +135,7 @@ class OrMethodTest extends TestCase
         $this->assertSame('recovered from: second: first', $result->unwrap());
     }
 
-    // 型の異なるエラーとの組み合わせテスト
+    // Tests with different error types combined
 
     public function testOrWithDifferentErrorTypes(): void
     {
@@ -153,7 +153,7 @@ class OrMethodTest extends TestCase
         $stringErr = new Err('string error');
 
         $result = $stringErr->orElse(function () {
-            return new Err(500); // 異なる型のエラーを返す
+            return new Err(500); // returns a different error type
         });
 
         $this->assertTrue($result->isErr());

@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class AndMethodTest extends TestCase
 {
-    // and()メソッドの基本動作テスト
+    // Basic tests for the and() method
 
     public function testAndWithOkAndOk(): void
     {
@@ -54,7 +54,7 @@ class AndMethodTest extends TestCase
         $this->assertSame('first error', $result->unwrapErr());
     }
 
-    // 型の異なるResult間でのテスト
+    // Tests between Results of different types
 
     public function testAndWithDifferentTypes(): void
     {
@@ -78,7 +78,7 @@ class AndMethodTest extends TestCase
         $this->assertSame('text error', $result->unwrapErr());
     }
 
-    // チェーン操作テスト
+    // Chain operation tests
 
     public function testAndChaining(): void
     {
@@ -122,7 +122,7 @@ class AndMethodTest extends TestCase
         $this->assertSame('recovered', $result->unwrap());
     }
 
-    // 複雑な型変換テスト
+    // Complex type conversion tests
 
     public function testAndWithComplexTypes(): void
     {
@@ -147,7 +147,7 @@ class AndMethodTest extends TestCase
         $this->assertSame(['code' => 404, 'message' => 'Not found'], $result->unwrapErr());
     }
 
-    // エッジケースのテスト
+    // Edge case tests
 
     public function testAndWithNullValues(): void
     {

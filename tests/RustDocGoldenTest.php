@@ -14,18 +14,19 @@ use ba0918\Result\Some;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Rust標準ライブラリのdoc exampleを正準仕様として移植したゴールデンテスト
+ * Golden tests ported from the Rust standard library doc examples as the canonical spec
  *
- * 各テストはRustのResult/Option型の公式ドキュメント（std::result / std::option）に
- * 記載されている実行例をPHPに翻訳したもの。自己参照的なテスト記述から脱却し、
- * 実装がRustの仕様と一致することを独立に検証する。
+ * Each test translates the runnable examples from the official Result/Option
+ * documentation (std::result / std::option) into PHP. They break away from
+ * self-referential test descriptions and independently verify that the
+ * implementation matches the Rust specification.
  *
  * @see https://doc.rust-lang.org/std/result/
  * @see https://doc.rust-lang.org/std/option/
  */
 final class RustDocGoldenTest extends TestCase
 {
-    // Result型のdoc example
+    // Result type doc examples
 
     public function testResultIsOkAndIsErr(): void
     {
@@ -162,7 +163,7 @@ final class RustDocGoldenTest extends TestCase
     {
         // Rust: fn sq_then_to_string(x: u32) -> Result<String, Never> { ... }
         //       assert_eq!(Ok(2).and_then(sq_then_to_string), Ok(4.to_string()));
-        // 注記: PHPでは文字列化（to_string()）を省略し、数値4をそのまま検証する
+        // Note: PHP omits the string conversion (to_string()); the integer 4 is asserted directly
         $result = (Ok::of(2))
             ->andThen(function ($x) {
                 assert(is_int($x));
@@ -305,7 +306,7 @@ final class RustDocGoldenTest extends TestCase
                 return Ok::of($x * $x);
             })
             ->orElse(function ($x) {
-                // 1段目でOkに戻るため、このクロージャの引数は型上 never
+                // The first stage returns Ok, so this closure's argument is never in type terms
                 return Ok::of($x * $x);
             });
 
@@ -395,7 +396,7 @@ final class RustDocGoldenTest extends TestCase
         $this->assertSame($x, $returned);
     }
 
-    // Option型のdoc example
+    // Option type doc examples
 
     public function testOptionIsSomeAndIsNone(): void
     {
@@ -566,7 +567,7 @@ final class RustDocGoldenTest extends TestCase
 
         // Rust: assert_eq!(None.filter(is_even), None);
         $result = None::instance()->filter(function ($n) {
-            // Noneでは述語は呼ばれないため、is_even相当の判定は型上 unreachable
+            // The predicate is never called on None, so the is_even check is unreachable in type terms
             // @phpstan-ignore identical.alwaysFalse
             return $n % 2 === 0;
         });

@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 
 class ResultConversionTest extends TestCase
 {
-    // ok()メソッドのテスト
+    // Tests for the ok() method
     public function testOkMethodOnOkReturnsOptionWithValue(): void
     {
         $ok = new Ok(42);
@@ -51,7 +51,7 @@ class ResultConversionTest extends TestCase
         $this->assertNull($option->unwrap());
     }
 
-    // err()メソッドのテスト
+    // Tests for the err() method
     public function testErrMethodOnErrReturnsOptionWithError(): void
     {
         $err = new Err('error message');
@@ -91,7 +91,7 @@ class ResultConversionTest extends TestCase
         $this->assertNull($option->unwrap());
     }
 
-    // expectErr()メソッドのテスト
+    // Tests for the expectErr() method
     public function testExpectErrOnErrReturnsError(): void
     {
         $errorValue = 'test error';
@@ -132,10 +132,10 @@ class ResultConversionTest extends TestCase
         $ok->expectErr($message);
     }
 
-    // 統合テスト
+    // Integration tests
     public function testResultToOptionConversionChain(): void
     {
-        // Ok値からのチェーン変換
+        // Chain conversion from an Ok value
         $ok = new Ok(100);
         $okOption = $ok->ok();
         $errOption = $ok->err();
@@ -144,7 +144,7 @@ class ResultConversionTest extends TestCase
         $this->assertSame(100, $okOption->unwrap());
         $this->assertTrue($errOption->isNone());
 
-        // Err値からのチェーン変換
+        // Chain conversion from an Err value
         $err = new Err('failure');
         $okOption2 = $err->ok();
         $errOption2 = $err->err();
@@ -158,11 +158,11 @@ class ResultConversionTest extends TestCase
     {
         $err = new Err('test');
 
-        // 正常系
+        // Normal cases
         $this->assertSame('test', $err->expectErr(''));
         $this->assertSame('test', $err->expectErr('Custom message'));
 
-        // Ok値での例外系
+        // Exception case with an Ok value
         $ok = new Ok('value');
 
         $this->expectException(UnwrapException::class);

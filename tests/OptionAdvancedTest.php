@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class OptionAdvancedTest extends TestCase
 {
-    // xor()メソッドのテスト
+    // Tests for the xor() method
     public function testXorSomeSome(): void
     {
         $some1 = new Some(1);
@@ -81,7 +81,7 @@ class OptionAdvancedTest extends TestCase
         $this->assertNull($result->unwrap());
     }
 
-    // zip()メソッドのテスト
+    // Tests for the zip() method
     public function testZipSomeSome(): void
     {
         $some1 = new Some(1);
@@ -160,7 +160,7 @@ class OptionAdvancedTest extends TestCase
         $this->assertSame([123, true], $result->unwrap());
     }
 
-    // 統合テスト
+    // Integration tests
     public function testXorChaining(): void
     {
         $some1 = new Some(1);
@@ -216,7 +216,7 @@ class OptionAdvancedTest extends TestCase
 
     public function testComplexScenario(): void
     {
-        // 複雑なシナリオ：配列の値を持つOption同士の操作
+        // Complex scenario: operations between Options holding array values
         $users = new Some([
             ['name' => 'Alice', 'age' => 25],
             ['name' => 'Bob', 'age' => 30],

@@ -14,7 +14,7 @@ use stdClass;
  */
 final class OptionFlattenTest extends TestCase
 {
-    // 基本動作テスト
+    // Basic behavior tests
 
     public function testSomeSomeFlattensToSome(): void
     {
@@ -58,11 +58,11 @@ final class OptionFlattenTest extends TestCase
         $this->assertSame('string_value', $flattened->unwrap());
     }
 
-    // エッジケーステスト
+    // Edge case tests
 
     public function testDeepNesting(): void
     {
-        // 深いネスト: Some(Some(Some(value))) は一段階のみ平坦化
+        // Deep nesting: Some(Some(Some(value))) flattens only one level
         $deepest = Some::of(42);
         $middle = Some::of($deepest);
         $outer = Some::of($middle);
@@ -70,14 +70,14 @@ final class OptionFlattenTest extends TestCase
 
         $this->assertInstanceOf(Some::class, $flattened);
         $this->assertSame($middle, $flattened);
-        // さらにflatten()すると最深層まで到達
+        // Further flatten() calls reach the deepest level
         $this->assertSame($deepest, $flattened->flatten());
         $this->assertSame(42, $flattened->flatten()->unwrap());
     }
 
     public function testSomeWithNullValue(): void
     {
-        // null値の処理: Some(null)
+        // Handling a null value: Some(null)
         $someNull = Some::of(null);
         $flattened = $someNull->flatten();
 
@@ -87,7 +87,7 @@ final class OptionFlattenTest extends TestCase
 
     public function testSomeWithZeroValue(): void
     {
-        // ゼロ値の処理: Some(0)
+        // Handling a zero value: Some(0)
         $someZero = Some::of(0);
         $flattened = $someZero->flatten();
 
@@ -97,7 +97,7 @@ final class OptionFlattenTest extends TestCase
 
     public function testSomeWithEmptyString(): void
     {
-        // 空文字列の処理: Some("")
+        // Handling an empty string: Some("")
         $someEmpty = Some::of('');
         $flattened = $someEmpty->flatten();
 
@@ -107,7 +107,7 @@ final class OptionFlattenTest extends TestCase
 
     public function testSomeWithFalseValue(): void
     {
-        // false値の処理: Some(false)
+        // Handling a false value: Some(false)
         $someFalse = Some::of(false);
         $flattened = $someFalse->flatten();
 
@@ -117,7 +117,7 @@ final class OptionFlattenTest extends TestCase
 
     public function testSomeWithArrayValue(): void
     {
-        // 配列値の処理: Some([1, 2, 3])
+        // Handling an array value: Some([1, 2, 3])
         $array = [1, 2, 3];
         $someArray = Some::of($array);
         $flattened = $someArray->flatten();
@@ -128,7 +128,7 @@ final class OptionFlattenTest extends TestCase
 
     public function testSomeWithObjectValue(): void
     {
-        // オブジェクト値の処理
+        // Handling an object value
         $object = new stdClass();
         $object->name = 'test';
         $someObject = Some::of($object);
@@ -138,11 +138,11 @@ final class OptionFlattenTest extends TestCase
         $this->assertSame($object, $flattened->unwrap());
     }
 
-    // 型安全性テスト
+    // Type safety tests
 
     public function testFlattenReturnType(): void
     {
-        // 戻り値の型確認
+        // Confirm the return type
         $someOption = Some::of(Some::of('test'));
         $result = $someOption->flatten();
 
@@ -153,29 +153,29 @@ final class OptionFlattenTest extends TestCase
 
     public function testChainedFlatten(): void
     {
-        // flatten()の連鎖テスト
+        // Chained flatten() tests
         $triplyNested = Some::of(Some::of(Some::of('value')));
 
-        // 1回目のflatten
+        // First flatten
         $onceFlattened = $triplyNested->flatten();
         $this->assertInstanceOf(Some::class, $onceFlattened);
         $this->assertSame('value', $onceFlattened->flatten()->unwrap());
 
-        // 2回目のflatten
+        // Second flatten
         $twiceFlattened = $onceFlattened->flatten();
         $this->assertInstanceOf(Some::class, $twiceFlattened);
         $this->assertSame('value', $twiceFlattened->unwrap());
 
-        // 3回目のflatten（効果なし）
+        // Third flatten (no effect)
         $thriceFlattened = $twiceFlattened->flatten();
         $this->assertSame($twiceFlattened, $thriceFlattened);
     }
 
-    // パフォーマンステスト（基本的なケース）
+    // Performance tests (basic case)
 
     public function testFlattenPerformance(): void
     {
-        // 大量のネストでもパフォーマンスが安定していることを確認
+        // Confirm performance stays stable even with heavy nesting
         $start = microtime(true);
 
         for ($i = 0; $i < 1000; $i++) {
@@ -185,17 +185,17 @@ final class OptionFlattenTest extends TestCase
         }
 
         $end = microtime(true);
-        $this->assertLessThan(1.0, $end - $start, 'flatten操作は1秒以内に完了する必要があります');
+        $this->assertLessThan(1.0, $end - $start, 'flatten operation must complete within 1 second');
     }
 
-    // 実用的なユースケーステスト
+    // Practical use case tests
 
     public function testPracticalUseCaseWithMapAndFlatten(): void
     {
-        // map操作でOptionが二重にネストした場合のflatten
+        // Flattening when map produces a doubly nested Option
         $option = Some::of(5);
 
-        // mapでSome(Some(value))を作成
+        // map creates Some(Some(value))
         $mapped = $option->map(function ($x) {
             assert(is_int($x));
 
@@ -204,7 +204,7 @@ final class OptionFlattenTest extends TestCase
         $this->assertTrue($mapped->isSome());
         $this->assertInstanceOf(Some::class, $mapped->unwrap());
 
-        // flattenで平坦化
+        // Flatten with flatten()
         $flattened = $mapped->flatten();
         $this->assertTrue($flattened->isSome());
         $this->assertSame(10, $flattened->unwrap());

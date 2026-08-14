@@ -16,7 +16,7 @@ use stdClass;
  */
 final class ShorthandMethodsTest extends TestCase
 {
-    // ===== Result型 isOkAnd/isErrAnd テスト =====
+    // ===== Result type isOkAnd/isErrAnd tests =====
 
     public function testIsOkAndWithOkValueReturnsTrueWhenPredicateIsTrue(): void
     {
@@ -95,7 +95,7 @@ final class ShorthandMethodsTest extends TestCase
         }));
     }
 
-    // ===== Result型 mapOr/mapOrElse テスト =====
+    // ===== Result type mapOr/mapOrElse tests =====
 
     public function testMapOrWithOkValueAppliesFunction(): void
     {
@@ -239,7 +239,7 @@ final class ShorthandMethodsTest extends TestCase
         $this->assertSame('client error', $mapped);
     }
 
-    // ===== Option型 isSomeAnd テスト =====
+    // ===== Option type isSomeAnd tests =====
 
     public function testIsSomeAndWithSomeValueReturnsTrueWhenPredicateIsTrue(): void
     {
@@ -315,11 +315,11 @@ final class ShorthandMethodsTest extends TestCase
         $this->assertFalse($outOfRangeOption->isSomeAnd(fn ($x) => $x >= 0 && $x <= 100));
     }
 
-    // ===== 統合テスト & エッジケース =====
+    // ===== Integration tests & edge cases =====
 
     public function testShorthandMethodsChaining(): void
     {
-        // Result → Option → 判定の複合例
+        // Combined example: Result -> Option -> judgment
         $result = Ok::of(Some::of(42));
 
         $hasValidValue = $result->isOkAnd(function ($opt) {
@@ -349,14 +349,14 @@ final class ShorthandMethodsTest extends TestCase
         $end = microtime(true);
 
         $this->assertTrue($isValid);
-        $this->assertLessThan(0.01, $end - $start, 'パフォーマンステスト: 大量データでの処理は0.01秒以内');
+        $this->assertLessThan(0.01, $end - $start, 'Performance test: processing large data should complete within 0.01 seconds');
     }
 
     public function testErrorHandlingInPredicates(): void
     {
         $result = Ok::of('not a number');
 
-        // 型エラーが起きないことを確認
+        // Confirm that no type error occurs
         $this->assertFalse($result->isOkAnd(function ($x) {
             return is_numeric($x) ? (int) $x > 10 : false;
         }));
@@ -366,7 +366,7 @@ final class ShorthandMethodsTest extends TestCase
     {
         $option = Some::of(42);
 
-        // 同じ述語を複数回実行してもメモリリークしないことを確認
+        // Confirm that running the same predicate repeatedly does not leak memory
         for ($i = 0; $i < 100; $i++) {
             $result = $option->isSomeAnd(function ($x) {
                 assert(is_int($x));
@@ -376,7 +376,7 @@ final class ShorthandMethodsTest extends TestCase
             $this->assertTrue($result);
         }
 
-        // メモリ使用量の大幅な増加がないことを暗黙的に確認
+        // Implicitly confirm that memory usage does not grow significantly
         $this->addToAssertionCount(1);
     }
 }

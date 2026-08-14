@@ -117,7 +117,7 @@ final class TransposeTest extends TestCase
 
     public function testDoubleTranspose(): void
     {
-        // transpose()の相互変換性をテスト
+        // Test the mutual convertibility of transpose()
         $original = Some::of(Ok::of('value'));
         $transposed = $original->transpose(); // Ok(Some(value))
         $doubleTransposed = $transposed->transpose(); // Some(Ok(value))
@@ -132,7 +132,7 @@ final class TransposeTest extends TestCase
 
     public function testComplexNestedTranspose(): void
     {
-        // より複雑なケース
+        // More complex case
         $nested = Some::of(Ok::of(Some::of('nested')));
         $result = $nested->transpose(); // Ok(Some(Some('nested')))
 
@@ -148,7 +148,7 @@ final class TransposeTest extends TestCase
 
     public function testTransposeWithNullValue(): void
     {
-        // null値のテスト
+        // Test with a null value
         $option = Some::of(Ok::of(null));
         $result = $option->transpose();
 
@@ -161,7 +161,7 @@ final class TransposeTest extends TestCase
 
     public function testTransposeWithArrayValue(): void
     {
-        // 配列値のテスト
+        // Test with an array value
         $array = ['a', 'b', 'c'];
         $option = Some::of(Ok::of($array));
         $result = $option->transpose();
@@ -175,7 +175,7 @@ final class TransposeTest extends TestCase
 
     public function testTransposeWithObjectValue(): void
     {
-        // オブジェクト値のテスト
+        // Test with an object value
         $obj = new stdClass();
         $obj->prop = 'value';
 
@@ -191,7 +191,7 @@ final class TransposeTest extends TestCase
 
     public function testTransposeErrorPropagation(): void
     {
-        // エラーの伝播テスト
+        // Test error propagation
         $errors = ['error1', 'error2', new Exception('exception')];
 
         foreach ($errors as $error) {
@@ -205,7 +205,7 @@ final class TransposeTest extends TestCase
 
     public function testTransposeChaining(): void
     {
-        // メソッドチェーンでのtranspose()テスト
+        // Test transpose() in a method chain
         $transposed = Some::of(Ok::of(42))->transpose();
 
         $mapped = $transposed->map(function (mixed $opt) {

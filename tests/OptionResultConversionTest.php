@@ -37,7 +37,7 @@ final class OptionResultConversionTest extends TestCase
 
     public function testSomeOkOrElse(): void
     {
-        // Some(value) → Ok(value) （クロージャは呼ばれない）
+        // Some(value) → Ok(value) (the closure is not called)
         $called = false;
         $option = Some::of('value');
         $result = $option->okOrElse(function () use (&$called) {
@@ -63,7 +63,7 @@ final class OptionResultConversionTest extends TestCase
 
     public function testOkOrWithDifferentErrorTypes(): void
     {
-        // 異なる型のエラーテスト
+        // Tests with different error types
         $errors = [
             'string_error',
             42,
@@ -83,7 +83,7 @@ final class OptionResultConversionTest extends TestCase
 
     public function testOkOrElseWithDifferentReturnTypes(): void
     {
-        // 異なる戻り値型のクロージャテスト
+        // Tests with closures of different return types
         $testCases = [
             ['generator' => fn () => 'string', 'expected' => 'string'],
             ['generator' => fn () => 123, 'expected' => 123],
@@ -99,7 +99,7 @@ final class OptionResultConversionTest extends TestCase
             $this->assertSame($testCase['expected'], $result->unwrapErr());
         }
 
-        // オブジェクトは別途テスト
+        // Objects are tested separately
         $option = None::instance();
         $result = $option->okOrElse(fn () => new stdClass());
 
@@ -109,7 +109,7 @@ final class OptionResultConversionTest extends TestCase
 
     public function testOkOrWithComplexValues(): void
     {
-        // 複雑な値のテスト
+        // Tests with complex values
         $complexValue = [
             'nested' => [
                 'object' => new stdClass(),
@@ -126,7 +126,7 @@ final class OptionResultConversionTest extends TestCase
 
     public function testOkOrElseWithClosureState(): void
     {
-        // クロージャの状態テスト
+        // Tests with closure state
         $counter = 0;
         $option = None::instance();
 
@@ -143,7 +143,7 @@ final class OptionResultConversionTest extends TestCase
 
     public function testChainedOkOrOperations(): void
     {
-        // メソッドチェーンテスト
+        // Method chain tests
         $value = Some::of(42)
             ->okOr('error')
             ->map(function (mixed $x): int {
@@ -169,26 +169,26 @@ final class OptionResultConversionTest extends TestCase
 
     public function testOkOrPreservesOriginalValue(): void
     {
-        // 元の値の保持テスト
+        // Tests that the original value is preserved
         $original = 'original';
         $option = Some::of($original);
         $result = $option->okOr('error');
 
-        // 参照の同一性確認
+        // Confirm identity of the reference
         $this->assertTrue($result->isOk());
         $this->assertSame($original, $result->unwrap());
     }
 
     public function testOkOrElseLazyEvaluation(): void
     {
-        // 遅延評価のテスト
+        // Tests for lazy evaluation
         $expensiveOperationCalled = false;
 
         $option = Some::of('value');
         $result = $option->okOrElse(function () use (&$expensiveOperationCalled) {
             $expensiveOperationCalled = true;
 
-            // 重い処理のシミュレーション
+            // Simulation of an expensive operation
             return 'expensive_result';
         });
 
