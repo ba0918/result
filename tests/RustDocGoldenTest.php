@@ -129,6 +129,7 @@ final class RustDocGoldenTest extends TestCase
     {
         // Rust: fn sq_then_to_string(x: u32) -> Result<String, Never> { ... }
         //       assert_eq!(Ok(2).and_then(sq_then_to_string), Ok(4.to_string()));
+        // 注記: PHPでは文字列化（to_string()）を省略し、数値4をそのまま検証する
         $result = (Ok::of(2))
             ->andThen(function ($x) {
                 assert(is_int($x));
