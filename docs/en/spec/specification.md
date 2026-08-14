@@ -975,10 +975,10 @@ class ValidationError implements ErrorType {
 - Native null checking is faster for performance-critical processing
 - Value inspection more complex than Result type during debugging
 
-## Shorthand Methods (Implementation Planned)
+## Shorthand Methods
 
 ### Overview
-Shorthand method groups are planned for implementation to improve code conciseness and readability. These methods realize combinations of existing methods in a single method, streamlining common patterns.
+Shorthand method groups that improve code conciseness and readability. These methods realize combinations of existing methods in a single method, streamlining common patterns.
 
 ### Result Type Shorthand Methods
 

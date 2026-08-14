@@ -45,7 +45,7 @@ jobs:
         run: composer check
       
       - name: Run infection (mutation testing)
-        run: composer exec infection -- --no-interaction --min-msi=100
+        run: composer infection -- --no-interaction --min-msi=100
       
       - name: Upload coverage reports
         if: success()

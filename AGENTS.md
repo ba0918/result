@@ -27,7 +27,7 @@ composer cs-check
 composer check
 
 # Mutation Testing（MSI 100%を回帰ガードとして検証）
-composer exec infection -- --no-interaction --min-msi=100
+composer infection
 
 # コード自動修正
 composer fix
@@ -40,7 +40,7 @@ composer install
 
 - `tests/RustDocGoldenTest.php`はRust標準ライブラリのdoc exampleを正準仕様として移植したゴールデンテスト
 - 新規メソッド追加時は、自作のテストを先に書くのではなくRustのdoc exampleの移植を優先する
-- Mutation Testing（Infection）はMSI 100%を回帰ガードとして使用する（`composer exec infection -- --no-interaction --min-msi=100`）
+- Mutation Testing（Infection）はMSI 100%を回帰ガードとして使用する（`composer infection`）
 
 ## アーキテクチャ
 
