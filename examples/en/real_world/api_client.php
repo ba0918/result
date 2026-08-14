@@ -9,7 +9,7 @@ declare(strict_types=1);
  * Can be copied and pasted for use in actual projects.
  */
 
-require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../../../vendor/autoload.php';
 
 use ba0918\Result\{Err, Ok, Result};
 
@@ -107,8 +107,21 @@ class ApiClient
     {
         return $this->validateEndpoint($endpoint)
             ->andThen(fn ($ep) => $this->buildUrl($ep))
-            ->andThen(fn ($url) => $this->executeRequest($method, $url, $data, $headers))
-            ->andThen(fn ($response) => $this->parseResponse($response));
+            ->andThen(function (string $url) use ($method, $data, $headers) {
+                // JSON encoding failure is a data problem the caller can branch on
+                if ($data !== null && in_array($method, ['POST', 'PUT', 'PATCH'])) {
+                    $jsonData = json_encode($data);
+                    if (json_last_error() !== JSON_ERROR_NONE) {
+                        return Err::of('Failed to JSON encode request data: ' . json_last_error_msg());
+                    }
+                    $data = $jsonData;
+                }
+
+                // Network failures escape as exceptions
+                $response = $this->executeRequest($method, $url, $data, $headers);
+
+                return $this->parseResponse($response);
+            });
     }
 
     /**
@@ -143,13 +156,17 @@ class ApiClient
 
     /**
      * Execute HTTP request
+     *
+     * @param string|array|null $data JSON-encoded body or raw data
+     *
+     * @throws RuntimeException cURL unavailable / network failure
      */
-    private function executeRequest(string $method, string $url, ?array $data, array $headers): Result
+    private function executeRequest(string $method, string $url, string|array|null $data, array $headers): array
     {
         $ch = curl_init();
 
         if ($ch === false) {
-            return Err::of('Failed to initialize cURL session');
+            throw new RuntimeException('Failed to initialize cURL session');
         }
 
         $allHeaders = array_merge($this->defaultHeaders, $headers);
@@ -169,13 +186,7 @@ class ApiClient
         ]);
 
         if ($data !== null && in_array($method, ['POST', 'PUT', 'PATCH'])) {
-            $jsonData = json_encode($data);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                curl_close($ch);
-
-                return Err::of('Failed to JSON encode request data: ' . json_last_error_msg());
-            }
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, is_array($data) ? json_encode($data) : $data);
         }
 
         $response = curl_exec($ch);
@@ -184,14 +195,14 @@ class ApiClient
         curl_close($ch);
 
         if ($response === false) {
-            return Err::of("HTTP request failed: $error");
+            throw new RuntimeException("HTTP request failed: $error");
         }
 
-        return Ok::of([
+        return [
             'body' => $response,
             'status_code' => $httpCode,
             'url' => $url,
-        ]);
+        ];
     }
 
     /**
@@ -402,7 +413,7 @@ class UserApiClient
 }
 
 // Usage examples
-if ($_SERVER['SCRIPT_NAME'] === __FILE__) {
+if (PHP_SAPI === 'cli' && isset($argv[0]) && realpath($argv[0]) === __FILE__) {
     // Basic API client usage example
     echo "=== API Client Example ===\n";
 
@@ -464,12 +475,14 @@ if ($_SERVER['SCRIPT_NAME'] === __FILE__) {
 
     echo "\n=== Error Handling Example ===\n";
 
-    // Error handling example
-    $invalidClient = new ApiClient('https://invalid-domain-that-does-not-exist.com');
-    $errorResult = $invalidClient->get('/test');
-
-    if ($errorResult->isErr()) {
-        echo 'Error handling successful: ' . $errorResult->unwrapErr() . "\n";
+    // Network failures are exceptions - the caller has no branch for
+    // "host unreachable", so it propagates instead of becoming Err.
+    try {
+        $invalidClient = new ApiClient('https://invalid-domain-that-does-not-exist.com');
+        $invalidClient->get('/test');
+        echo "Unexpected success\n";
+    } catch (RuntimeException $e) {
+        echo 'Error handling successful: ' . $e->getMessage() . "\n";
     }
 
     // Validation error example

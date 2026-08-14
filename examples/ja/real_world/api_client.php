@@ -9,7 +9,7 @@ declare(strict_types=1);
  * 実際のプロジェクトでコピー&ペーストして使用できます。
  */
 
-require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../../../vendor/autoload.php';
 
 use ba0918\Result\{Err, Ok, Result};
 
@@ -107,8 +107,21 @@ class ApiClient
     {
         return $this->validateEndpoint($endpoint)
             ->andThen(fn ($ep) => $this->buildUrl($ep))
-            ->andThen(fn ($url) => $this->executeRequest($method, $url, $data, $headers))
-            ->andThen(fn ($response) => $this->parseResponse($response));
+            ->andThen(function (string $url) use ($method, $data, $headers) {
+                // JSON変換の失敗は、呼び出し側が分岐できるデータの問題
+                if ($data !== null && in_array($method, ['POST', 'PUT', 'PATCH'])) {
+                    $jsonData = json_encode($data);
+                    if (json_last_error() !== JSON_ERROR_NONE) {
+                        return Err::of('リクエストデータのJSON変換に失敗: ' . json_last_error_msg());
+                    }
+                    $data = $jsonData;
+                }
+
+                // ネットワーク障害は例外として脱出する
+                $response = $this->executeRequest($method, $url, $data, $headers);
+
+                return $this->parseResponse($response);
+            });
     }
 
     /**
@@ -143,13 +156,17 @@ class ApiClient
 
     /**
      * HTTP リクエストの実行
+     *
+     * @param string|array|null $data JSONエンコード済みボディまたは生データ
+     *
+     * @throws RuntimeException cURLが利用できない/ネットワーク障害
      */
-    private function executeRequest(string $method, string $url, ?array $data, array $headers): Result
+    private function executeRequest(string $method, string $url, string|array|null $data, array $headers): array
     {
         $ch = curl_init();
 
         if ($ch === false) {
-            return Err::of('cURLセッションの初期化に失敗しました');
+            throw new RuntimeException('cURLセッションの初期化に失敗しました');
         }
 
         $allHeaders = array_merge($this->defaultHeaders, $headers);
@@ -169,13 +186,7 @@ class ApiClient
         ]);
 
         if ($data !== null && in_array($method, ['POST', 'PUT', 'PATCH'])) {
-            $jsonData = json_encode($data);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                curl_close($ch);
-
-                return Err::of('リクエストデータのJSON変換に失敗: ' . json_last_error_msg());
-            }
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, is_array($data) ? json_encode($data) : $data);
         }
 
         $response = curl_exec($ch);
@@ -184,14 +195,14 @@ class ApiClient
         curl_close($ch);
 
         if ($response === false) {
-            return Err::of("HTTP リクエストに失敗: $error");
+            throw new RuntimeException("HTTP リクエストに失敗: $error");
         }
 
-        return Ok::of([
+        return [
             'body' => $response,
             'status_code' => $httpCode,
             'url' => $url,
-        ]);
+        ];
     }
 
     /**
@@ -402,7 +413,7 @@ class UserApiClient
 }
 
 // 使用例
-if ($_SERVER['SCRIPT_NAME'] === __FILE__) {
+if (PHP_SAPI === 'cli' && isset($argv[0]) && realpath($argv[0]) === __FILE__) {
     // 基本的なAPIクライアントの使用例
     echo "=== API Client Example ===\n";
 
@@ -464,12 +475,14 @@ if ($_SERVER['SCRIPT_NAME'] === __FILE__) {
 
     echo "\n=== Error Handling Example ===\n";
 
-    // エラーハンドリングの例
-    $invalidClient = new ApiClient('https://invalid-domain-that-does-not-exist.com');
-    $errorResult = $invalidClient->get('/test');
-
-    if ($errorResult->isErr()) {
-        echo 'エラーハンドリング成功: ' . $errorResult->unwrapErr() . "\n";
+    // ネットワーク障害は例外 - 「ホストに到達できない」への分岐は呼び出し側に
+    // ないため、Errにせず例外として伝播させる。
+    try {
+        $invalidClient = new ApiClient('https://invalid-domain-that-does-not-exist.com');
+        $invalidClient->get('/test');
+        echo "予期しない成功\n";
+    } catch (RuntimeException $e) {
+        echo 'エラーハンドリング成功: ' . $e->getMessage() . "\n";
     }
 
     // バリデーションエラーの例

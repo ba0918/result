@@ -9,7 +9,7 @@ declare(strict_types=1);
  * 安全に管理する実用的な例です。実際のプロジェクトでコピー&ペーストして使用できます。
  */
 
-require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../../../vendor/autoload.php';
 
 use ba0918\Result\{Err, Ok, Result};
 
@@ -91,12 +91,12 @@ class ErrorCollector
 
     public function getCriticalErrors(): array
     {
-        return array_filter($this->errors, fn ($e) => $e->isCritical());
+        return array_values(array_filter($this->errors, fn ($e) => $e->isCritical()));
     }
 
     public function getErrorsByLevel(ErrorLevel $level): array
     {
-        return array_filter($this->errors, fn ($e) => $e->level === $level);
+        return array_values(array_filter($this->errors, fn ($e) => $e->level === $level));
     }
 
     public function clear(): void
@@ -652,7 +652,7 @@ class CircuitBreaker
 }
 
 // 使用例
-if ($_SERVER['SCRIPT_NAME'] === __FILE__) {
+if (PHP_SAPI === 'cli' && isset($argv[0]) && realpath($argv[0]) === __FILE__) {
     echo "=== Complex Error Handling Example ===\n";
 
     // バッチ処理の例

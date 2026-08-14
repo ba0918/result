@@ -9,7 +9,7 @@ declare(strict_types=1);
  * 実際のプロジェクトでコピー&ペーストして使用できます。
  */
 
-require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../../../vendor/autoload.php';
 
 use ba0918\Result\{Err, None, Ok, Option, Result, Some};
 
@@ -522,7 +522,7 @@ class MultiStepValidator
 }
 
 // 使用例
-if ($_SERVER['SCRIPT_NAME'] === __FILE__) {
+if (PHP_SAPI === 'cli' && isset($argv[0]) && realpath($argv[0]) === __FILE__) {
     echo "=== Form Validation Example ===\n";
 
     // ユーザー登録フォームのバリデーション例
