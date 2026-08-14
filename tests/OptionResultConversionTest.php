@@ -96,7 +96,7 @@ final class OptionResultConversionTest extends TestCase
             $result = $option->okOrElse($testCase['generator']);
 
             $this->assertTrue($result->isErr());
-            $this->assertEquals($testCase['expected'], $result->unwrapErr());
+            $this->assertSame($testCase['expected'], $result->unwrapErr());
         }
 
         // オブジェクトは別途テスト

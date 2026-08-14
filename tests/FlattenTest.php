@@ -18,7 +18,7 @@ class FlattenTest extends TestCase
 
         $this->assertInstanceOf(Ok::class, $flattened);
         $this->assertSame($inner, $flattened);
-        $this->assertEquals(42, $flattened->unwrap());
+        $this->assertSame(42, $flattened->unwrap());
     }
 
     public function testOkErrFlattensToErr(): void
@@ -29,7 +29,7 @@ class FlattenTest extends TestCase
 
         $this->assertInstanceOf(Err::class, $flattened);
         $this->assertSame($inner, $flattened);
-        $this->assertEquals('inner error', $flattened->unwrapErr());
+        $this->assertSame('inner error', $flattened->unwrapErr());
     }
 
     public function testErrFlattensToSelf(): void
@@ -38,7 +38,7 @@ class FlattenTest extends TestCase
         $flattened = $err->flatten();
 
         $this->assertSame($err, $flattened);
-        $this->assertEquals('original error', $flattened->unwrapErr());
+        $this->assertSame('original error', $flattened->unwrapErr());
     }
 
     public function testOkWithNonResultFlattensToSelf(): void
@@ -47,7 +47,7 @@ class FlattenTest extends TestCase
         $flattened = $ok->flatten();
 
         $this->assertSame($ok, $flattened);
-        $this->assertEquals('simple value', $flattened->unwrap());
+        $this->assertSame('simple value', $flattened->unwrap());
     }
 
     // 型別テスト
@@ -59,7 +59,7 @@ class FlattenTest extends TestCase
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(Ok::class, $flattened);
-        $this->assertEquals('hello world', $flattened->unwrap());
+        $this->assertSame('hello world', $flattened->unwrap());
     }
 
     public function testFlattenWithIntegerValue(): void
@@ -69,7 +69,7 @@ class FlattenTest extends TestCase
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(Ok::class, $flattened);
-        $this->assertEquals(123, $flattened->unwrap());
+        $this->assertSame(123, $flattened->unwrap());
     }
 
     public function testFlattenWithArrayValue(): void
@@ -80,7 +80,7 @@ class FlattenTest extends TestCase
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(Ok::class, $flattened);
-        $this->assertEquals($array, $flattened->unwrap());
+        $this->assertSame($array, $flattened->unwrap());
     }
 
     public function testFlattenWithObjectValue(): void
@@ -104,7 +104,7 @@ class FlattenTest extends TestCase
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(Err::class, $flattened);
-        $this->assertEquals('string error', $flattened->unwrapErr());
+        $this->assertSame('string error', $flattened->unwrapErr());
     }
 
     public function testFlattenWithIntegerError(): void
@@ -114,7 +114,7 @@ class FlattenTest extends TestCase
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(Err::class, $flattened);
-        $this->assertEquals(404, $flattened->unwrapErr());
+        $this->assertSame(404, $flattened->unwrapErr());
     }
 
     public function testFlattenWithArrayError(): void
@@ -125,7 +125,7 @@ class FlattenTest extends TestCase
         $flattened = $outer->flatten();
 
         $this->assertInstanceOf(Err::class, $flattened);
-        $this->assertEquals($errorArray, $flattened->unwrapErr());
+        $this->assertSame($errorArray, $flattened->unwrapErr());
     }
 
     // エッジケーステスト
@@ -172,7 +172,7 @@ class FlattenTest extends TestCase
         $this->assertInstanceOf(Ok::class, $flattened);
         $this->assertSame($middle, $flattened);
         $this->assertInstanceOf(Ok::class, $flattened->unwrap());
-        $this->assertEquals(42, $flattened->unwrap()->unwrap());
+        $this->assertSame(42, $flattened->unwrap()->unwrap());
     }
 
     public function testMultipleFlattenCalls(): void
@@ -186,7 +186,7 @@ class FlattenTest extends TestCase
 
         $this->assertInstanceOf(Ok::class, $secondFlatten);
         $this->assertSame($innermost, $secondFlatten);
-        $this->assertEquals(42, $secondFlatten->unwrap());
+        $this->assertSame(42, $secondFlatten->unwrap());
     }
 
     // 型安全性テスト
@@ -218,12 +218,12 @@ class FlattenTest extends TestCase
 
         $flattened = $outer->flatten();
         $this->assertInstanceOf(Ok::class, $flattened);
-        $this->assertEquals(42, $flattened->unwrap());
+        $this->assertSame(42, $flattened->unwrap());
 
         $mapped = $flattened->map(fn (mixed $x): string => 'Value: ' . print_r($x, true));
         $result = $mapped->unwrap();
 
-        $this->assertEquals('Value: 42', $result);
+        $this->assertSame('Value: 42', $result);
     }
 
     public function testFlattenWithErrorInMethodChain(): void
@@ -233,12 +233,12 @@ class FlattenTest extends TestCase
 
         $flattened = $outer->flatten();
         $this->assertInstanceOf(Err::class, $flattened);
-        $this->assertEquals('calculation failed', $flattened->unwrapErr());
+        $this->assertSame('calculation failed', $flattened->unwrapErr());
 
         $mapped = $flattened->map(fn (mixed $x): string => 'Value: ' . print_r($x, true));
         $result = $mapped->unwrapOr('default');
 
-        $this->assertEquals('default', $result);
+        $this->assertSame('default', $result);
     }
 
     // 実用的なユースケーステスト
@@ -257,12 +257,12 @@ class FlattenTest extends TestCase
         // 正常ケース
         $result1 = $validationResult(10)->flatten();
         $this->assertInstanceOf(Ok::class, $result1);
-        $this->assertEquals(10, $result1->unwrap());
+        $this->assertSame(10, $result1->unwrap());
 
         // エラーケース
         $result2 = $validationResult(-5)->flatten();
         $this->assertInstanceOf(Err::class, $result2);
-        $this->assertEquals('Value must be positive', $result2->unwrapErr());
+        $this->assertSame('Value must be positive', $result2->unwrapErr());
     }
 
     // パフォーマンステスト
@@ -278,7 +278,7 @@ class FlattenTest extends TestCase
         $endTime = microtime(true);
 
         $this->assertInstanceOf(Ok::class, $flattened);
-        $this->assertEquals($largeArray, $flattened->unwrap());
+        $this->assertSame($largeArray, $flattened->unwrap());
         $this->assertLessThan(0.01, $endTime - $startTime, 'flatten() should be fast for large data');
     }
 
@@ -323,12 +323,12 @@ class FlattenTest extends TestCase
         $emptyArrayInner = new Ok([]);
         $emptyArrayOuter = new Ok($emptyArrayInner);
         $emptyArrayFlattened = $emptyArrayOuter->flatten();
-        $this->assertEquals([], $emptyArrayFlattened->unwrap());
+        $this->assertSame([], $emptyArrayFlattened->unwrap());
 
         // 空文字列
         $emptyStringInner = new Ok('');
         $emptyStringOuter = new Ok($emptyStringInner);
         $emptyStringFlattened = $emptyStringOuter->flatten();
-        $this->assertEquals('', $emptyStringFlattened->unwrap());
+        $this->assertSame('', $emptyStringFlattened->unwrap());
     }
 }

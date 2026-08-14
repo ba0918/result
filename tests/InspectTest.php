@@ -20,7 +20,7 @@ class InspectTest extends TestCase
         });
 
         $this->assertTrue($sideEffectExecuted, 'inspect() should execute function on Ok');
-        $this->assertEquals(42, $inspectedValue, 'inspect() should pass the value to the function');
+        $this->assertSame(42, $inspectedValue, 'inspect() should pass the value to the function');
         $this->assertSame($result, $returnedResult, 'inspect() should return the same instance');
     }
 
@@ -62,7 +62,7 @@ class InspectTest extends TestCase
         });
 
         $this->assertTrue($sideEffectExecuted, 'inspectErr() should execute function on Err');
-        $this->assertEquals('error message', $inspectedError, 'inspectErr() should pass the error to the function');
+        $this->assertSame('error message', $inspectedError, 'inspectErr() should pass the error to the function');
         $this->assertSame($result, $returnedResult, 'inspectErr() should return the same instance');
     }
 
@@ -104,8 +104,8 @@ class InspectTest extends TestCase
                 $inspectedValues[] = $value;
             });
 
-        $this->assertEquals([20, 25], $inspectedValues, 'inspect() should work correctly in method chains');
-        $this->assertEquals(25, $result->unwrap(), 'Method chain should continue normally after inspect()');
+        $this->assertSame([20, 25], $inspectedValues, 'inspect() should work correctly in method chains');
+        $this->assertSame(25, $result->unwrap(), 'Method chain should continue normally after inspect()');
     }
 
     public function testInspectDoesNotModifyValue(): void
@@ -118,7 +118,7 @@ class InspectTest extends TestCase
             $value = 'modified';
         });
 
-        $this->assertEquals($originalValue, $result->unwrap(), 'inspect() should not modify the original value');
+        $this->assertSame($originalValue, $result->unwrap(), 'inspect() should not modify the original value');
     }
 
     public function testInspectErrDoesNotModifyError(): void
@@ -131,7 +131,7 @@ class InspectTest extends TestCase
             $error = 'modified error';
         });
 
-        $this->assertEquals($originalError, $result->unwrapErr(), 'inspectErr() should not modify the original error');
+        $this->assertSame($originalError, $result->unwrapErr(), 'inspectErr() should not modify the original error');
     }
 
     public function testInspectSideEffectExecution(): void
@@ -151,6 +151,6 @@ class InspectTest extends TestCase
             'Inspected error: test error',
         ];
 
-        $this->assertEquals($expectedLog, $log, 'inspect methods should execute side effects correctly');
+        $this->assertSame($expectedLog, $log, 'inspect methods should execute side effects correctly');
     }
 }

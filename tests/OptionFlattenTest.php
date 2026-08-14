@@ -25,7 +25,7 @@ final class OptionFlattenTest extends TestCase
 
         $this->assertInstanceOf(Some::class, $flattened);
         $this->assertSame($inner, $flattened);
-        $this->assertEquals(42, $flattened->unwrap());
+        $this->assertSame(42, $flattened->unwrap());
     }
 
     public function testSomeNoneFlattensToNone(): void
@@ -55,7 +55,7 @@ final class OptionFlattenTest extends TestCase
         $flattened = $someString->flatten();
 
         $this->assertSame($someString, $flattened);
-        $this->assertEquals('string_value', $flattened->unwrap());
+        $this->assertSame('string_value', $flattened->unwrap());
     }
 
     // エッジケーステスト
@@ -72,7 +72,7 @@ final class OptionFlattenTest extends TestCase
         $this->assertSame($middle, $flattened);
         // さらにflatten()すると最深層まで到達
         $this->assertSame($deepest, $flattened->flatten());
-        $this->assertEquals(42, $flattened->flatten()->unwrap());
+        $this->assertSame(42, $flattened->flatten()->unwrap());
     }
 
     public function testSomeWithNullValue(): void
@@ -92,7 +92,7 @@ final class OptionFlattenTest extends TestCase
         $flattened = $someZero->flatten();
 
         $this->assertSame($someZero, $flattened);
-        $this->assertEquals(0, $flattened->unwrap());
+        $this->assertSame(0, $flattened->unwrap());
     }
 
     public function testSomeWithEmptyString(): void
@@ -102,7 +102,7 @@ final class OptionFlattenTest extends TestCase
         $flattened = $someEmpty->flatten();
 
         $this->assertSame($someEmpty, $flattened);
-        $this->assertEquals('', $flattened->unwrap());
+        $this->assertSame('', $flattened->unwrap());
     }
 
     public function testSomeWithFalseValue(): void
@@ -123,7 +123,7 @@ final class OptionFlattenTest extends TestCase
         $flattened = $someArray->flatten();
 
         $this->assertSame($someArray, $flattened);
-        $this->assertEquals($array, $flattened->unwrap());
+        $this->assertSame($array, $flattened->unwrap());
     }
 
     public function testSomeWithObjectValue(): void
@@ -148,7 +148,7 @@ final class OptionFlattenTest extends TestCase
 
         $this->assertInstanceOf(Some::class, $result);
         $this->assertTrue($result->isSome());
-        $this->assertEquals('test', $result->unwrap());
+        $this->assertSame('test', $result->unwrap());
     }
 
     public function testChainedFlatten(): void
@@ -159,12 +159,12 @@ final class OptionFlattenTest extends TestCase
         // 1回目のflatten
         $onceFlattened = $triplyNested->flatten();
         $this->assertInstanceOf(Some::class, $onceFlattened);
-        $this->assertEquals('value', $onceFlattened->flatten()->unwrap());
+        $this->assertSame('value', $onceFlattened->flatten()->unwrap());
 
         // 2回目のflatten
         $twiceFlattened = $onceFlattened->flatten();
         $this->assertInstanceOf(Some::class, $twiceFlattened);
-        $this->assertEquals('value', $twiceFlattened->unwrap());
+        $this->assertSame('value', $twiceFlattened->unwrap());
 
         // 3回目のflatten（効果なし）
         $thriceFlattened = $twiceFlattened->flatten();
@@ -181,7 +181,7 @@ final class OptionFlattenTest extends TestCase
         for ($i = 0; $i < 1000; $i++) {
             $some = Some::of(Some::of($i));
             $flattened = $some->flatten();
-            $this->assertEquals($i, $flattened->unwrap());
+            $this->assertSame($i, $flattened->unwrap());
         }
 
         $end = microtime(true);
@@ -207,6 +207,6 @@ final class OptionFlattenTest extends TestCase
         // flattenで平坦化
         $flattened = $mapped->flatten();
         $this->assertTrue($flattened->isSome());
-        $this->assertEquals(10, $flattened->unwrap());
+        $this->assertSame(10, $flattened->unwrap());
     }
 }

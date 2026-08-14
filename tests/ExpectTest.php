@@ -12,7 +12,7 @@ class ExpectTest extends TestCase
     public function testExpectOnOk(): void
     {
         $ok = new Ok(10);
-        $this->assertEquals(10, $ok->expect('This should not fail'));
+        $this->assertSame(10, $ok->expect('This should not fail'));
     }
 
     public function testExpectOnErrThrowsExceptionWithMessage(): void

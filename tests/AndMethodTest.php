@@ -18,7 +18,7 @@ class AndMethodTest extends TestCase
         $result = $first->and($second);
 
         $this->assertTrue($result->isOk());
-        $this->assertEquals(20, $result->unwrap());
+        $this->assertSame(20, $result->unwrap());
     }
 
     public function testAndWithOkAndErr(): void
@@ -29,7 +29,7 @@ class AndMethodTest extends TestCase
         $result = $ok->and($err);
 
         $this->assertTrue($result->isErr());
-        $this->assertEquals('error', $result->unwrapErr());
+        $this->assertSame('error', $result->unwrapErr());
     }
 
     public function testAndWithErrAndOk(): void
@@ -40,7 +40,7 @@ class AndMethodTest extends TestCase
         $result = $err->and($ok);
 
         $this->assertTrue($result->isErr());
-        $this->assertEquals('error', $result->unwrapErr());
+        $this->assertSame('error', $result->unwrapErr());
     }
 
     public function testAndWithErrAndErr(): void
@@ -51,7 +51,7 @@ class AndMethodTest extends TestCase
         $result = $firstErr->and($secondErr);
 
         $this->assertTrue($result->isErr());
-        $this->assertEquals('first error', $result->unwrapErr());
+        $this->assertSame('first error', $result->unwrapErr());
     }
 
     // 型の異なるResult間でのテスト
@@ -64,7 +64,7 @@ class AndMethodTest extends TestCase
         $result = $intOk->and($stringOk);
 
         $this->assertTrue($result->isOk());
-        $this->assertEquals('text', $result->unwrap());
+        $this->assertSame('text', $result->unwrap());
     }
 
     public function testAndWithDifferentErrorTypes(): void
@@ -75,7 +75,7 @@ class AndMethodTest extends TestCase
         $result = $stringErr->and($intErr);
 
         $this->assertTrue($result->isErr());
-        $this->assertEquals('text error', $result->unwrapErr());
+        $this->assertSame('text error', $result->unwrapErr());
     }
 
     // チェーン操作テスト
@@ -87,7 +87,7 @@ class AndMethodTest extends TestCase
             ->and(new Ok('end'));
 
         $this->assertTrue($result->isOk());
-        $this->assertEquals('end', $result->unwrap());
+        $this->assertSame('end', $result->unwrap());
     }
 
     public function testAndChainingWithError(): void
@@ -97,7 +97,7 @@ class AndMethodTest extends TestCase
             ->and(new Ok('never reached'));
 
         $this->assertTrue($result->isErr());
-        $this->assertEquals('failed', $result->unwrapErr());
+        $this->assertSame('failed', $result->unwrapErr());
     }
 
     public function testAndWithOtherMethods(): void
@@ -108,7 +108,7 @@ class AndMethodTest extends TestCase
             ->or(new Ok('fallback')); // Ok('success')
 
         $this->assertTrue($result->isOk());
-        $this->assertEquals('success', $result->unwrap());
+        $this->assertSame('success', $result->unwrap());
     }
 
     public function testAndWithOtherMethodsError(): void
@@ -119,7 +119,7 @@ class AndMethodTest extends TestCase
             ->or(new Ok('recovered'));           // Ok('recovered')
 
         $this->assertTrue($result->isOk());
-        $this->assertEquals('recovered', $result->unwrap());
+        $this->assertSame('recovered', $result->unwrap());
     }
 
     // 複雑な型変換テスト
@@ -127,12 +127,13 @@ class AndMethodTest extends TestCase
     public function testAndWithComplexTypes(): void
     {
         $arrayOk = new Ok(['key' => 'value']);
-        $objectOk = new Ok((object) ['prop' => 'data']);
+        $objectValue = (object) ['prop' => 'data'];
+        $objectOk = new Ok($objectValue);
 
         $result = $arrayOk->and($objectOk);
 
         $this->assertTrue($result->isOk());
-        $this->assertEquals((object) ['prop' => 'data'], $result->unwrap());
+        $this->assertSame($objectValue, $result->unwrap());
     }
 
     public function testAndWithComplexErrorTypes(): void
@@ -143,7 +144,7 @@ class AndMethodTest extends TestCase
         $result = $arrayErr->and($exceptionErr);
 
         $this->assertTrue($result->isErr());
-        $this->assertEquals(['code' => 404, 'message' => 'Not found'], $result->unwrapErr());
+        $this->assertSame(['code' => 404, 'message' => 'Not found'], $result->unwrapErr());
     }
 
     // エッジケースのテスト
@@ -156,7 +157,7 @@ class AndMethodTest extends TestCase
         $result = $nullOk->and($valueOk);
 
         $this->assertTrue($result->isOk());
-        $this->assertEquals('value', $result->unwrap());
+        $this->assertSame('value', $result->unwrap());
     }
 
     public function testAndWithNullErrors(): void

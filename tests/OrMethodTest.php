@@ -18,7 +18,7 @@ class OrMethodTest extends TestCase
         $result = $first->or($second);
 
         $this->assertTrue($result->isOk());
-        $this->assertEquals(10, $result->unwrap());
+        $this->assertSame(10, $result->unwrap());
     }
 
     public function testOrWithOkAndErr(): void
@@ -29,7 +29,7 @@ class OrMethodTest extends TestCase
         $result = $ok->or($err);
 
         $this->assertTrue($result->isOk());
-        $this->assertEquals(10, $result->unwrap());
+        $this->assertSame(10, $result->unwrap());
     }
 
     public function testOrWithErrAndOk(): void
@@ -40,7 +40,7 @@ class OrMethodTest extends TestCase
         $result = $err->or($ok);
 
         $this->assertTrue($result->isOk());
-        $this->assertEquals(20, $result->unwrap());
+        $this->assertSame(20, $result->unwrap());
     }
 
     public function testOrWithErrAndErr(): void
@@ -51,7 +51,7 @@ class OrMethodTest extends TestCase
         $result = $firstErr->or($secondErr);
 
         $this->assertTrue($result->isErr());
-        $this->assertEquals('second error', $result->unwrapErr());
+        $this->assertSame('second error', $result->unwrapErr());
     }
 
     // orElse()メソッドのテスト
@@ -68,7 +68,7 @@ class OrMethodTest extends TestCase
         });
 
         $this->assertTrue($result->isOk());
-        $this->assertEquals(10, $result->unwrap());
+        $this->assertSame(10, $result->unwrap());
         $this->assertFalse($called, 'Function should not be called for Ok values');
     }
 
@@ -77,13 +77,13 @@ class OrMethodTest extends TestCase
         $err = new Err('original error');
 
         $result = $err->orElse(function ($error) {
-            $this->assertEquals('original error', $error);
+            $this->assertSame('original error', $error);
 
             return new Ok(42);
         });
 
         $this->assertTrue($result->isOk());
-        $this->assertEquals(42, $result->unwrap());
+        $this->assertSame(42, $result->unwrap());
     }
 
     public function testOrElseWithErrReturningErr(): void
@@ -95,7 +95,7 @@ class OrMethodTest extends TestCase
         });
 
         $this->assertTrue($result->isErr());
-        $this->assertEquals('transformed: original error', $result->unwrapErr());
+        $this->assertSame('transformed: original error', $result->unwrapErr());
     }
 
     public function testOrElseErrorValuePassedCorrectly(): void
@@ -104,13 +104,13 @@ class OrMethodTest extends TestCase
         $err = new Err($originalError);
 
         $result = $err->orElse(function ($error) use ($originalError) {
-            $this->assertEquals($originalError, $error);
+            $this->assertSame($originalError, $error);
 
             return new Ok('recovered');
         });
 
         $this->assertTrue($result->isOk());
-        $this->assertEquals('recovered', $result->unwrap());
+        $this->assertSame('recovered', $result->unwrap());
     }
 
     // チェーンテスト
@@ -122,7 +122,7 @@ class OrMethodTest extends TestCase
             ->or(new Ok('success'));
 
         $this->assertTrue($result->isOk());
-        $this->assertEquals('success', $result->unwrap());
+        $this->assertSame('success', $result->unwrap());
     }
 
     public function testOrElseChaining(): void
@@ -132,7 +132,7 @@ class OrMethodTest extends TestCase
             ->orElse(fn ($e) => new Ok('recovered from: ' . $e));
 
         $this->assertTrue($result->isOk());
-        $this->assertEquals('recovered from: second: first', $result->unwrap());
+        $this->assertSame('recovered from: second: first', $result->unwrap());
     }
 
     // 型の異なるエラーとの組み合わせテスト
@@ -145,7 +145,7 @@ class OrMethodTest extends TestCase
         $result = $stringErr->or($intErr);
 
         $this->assertTrue($result->isErr());
-        $this->assertEquals(404, $result->unwrapErr());
+        $this->assertSame(404, $result->unwrapErr());
     }
 
     public function testOrElseWithDifferentErrorTypes(): void
@@ -157,6 +157,6 @@ class OrMethodTest extends TestCase
         });
 
         $this->assertTrue($result->isErr());
-        $this->assertEquals(500, $result->unwrapErr());
+        $this->assertSame(500, $result->unwrapErr());
     }
 }

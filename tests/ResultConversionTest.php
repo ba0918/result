@@ -19,7 +19,7 @@ class ResultConversionTest extends TestCase
 
         $this->assertInstanceOf(Some::class, $option);
         $this->assertTrue($option->isSome());
-        $this->assertEquals(42, $option->unwrap());
+        $this->assertSame(42, $option->unwrap());
     }
 
     public function testOkMethodOnErrReturnsNone(): void
@@ -38,7 +38,7 @@ class ResultConversionTest extends TestCase
         $option = $ok->ok();
 
         $this->assertTrue($option->isSome());
-        $this->assertEquals($complexValue, $option->unwrap());
+        $this->assertSame($complexValue, $option->unwrap());
     }
 
     public function testOkMethodWithNullValue(): void
@@ -59,7 +59,7 @@ class ResultConversionTest extends TestCase
 
         $this->assertInstanceOf(Some::class, $option);
         $this->assertTrue($option->isSome());
-        $this->assertEquals('error message', $option->unwrap());
+        $this->assertSame('error message', $option->unwrap());
     }
 
     public function testErrMethodOnOkReturnsNone(): void
@@ -98,7 +98,7 @@ class ResultConversionTest extends TestCase
         $err = new Err($errorValue);
 
         $result = $err->expectErr('This should not fail');
-        $this->assertEquals($errorValue, $result);
+        $this->assertSame($errorValue, $result);
     }
 
     public function testExpectErrOnOkThrowsExceptionWithMessage(): void
@@ -118,7 +118,7 @@ class ResultConversionTest extends TestCase
         $err = new Err($complexError);
 
         $result = $err->expectErr('Should return complex error');
-        $this->assertEquals($complexError, $result);
+        $this->assertSame($complexError, $result);
     }
 
     public function testExpectErrOnOkWithComplexValueThrowsException(): void
@@ -141,7 +141,7 @@ class ResultConversionTest extends TestCase
         $errOption = $ok->err();
 
         $this->assertTrue($okOption->isSome());
-        $this->assertEquals(100, $okOption->unwrap());
+        $this->assertSame(100, $okOption->unwrap());
         $this->assertTrue($errOption->isNone());
 
         // Err値からのチェーン変換
@@ -151,7 +151,7 @@ class ResultConversionTest extends TestCase
 
         $this->assertTrue($okOption2->isNone());
         $this->assertTrue($errOption2->isSome());
-        $this->assertEquals('failure', $errOption2->unwrap());
+        $this->assertSame('failure', $errOption2->unwrap());
     }
 
     public function testExpectErrWithDifferentMessageFormats(): void
@@ -159,8 +159,8 @@ class ResultConversionTest extends TestCase
         $err = new Err('test');
 
         // 正常系
-        $this->assertEquals('test', $err->expectErr(''));
-        $this->assertEquals('test', $err->expectErr('Custom message'));
+        $this->assertSame('test', $err->expectErr(''));
+        $this->assertSame('test', $err->expectErr('Custom message'));
 
         // Ok値での例外系
         $ok = new Ok('value');

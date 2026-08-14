@@ -105,14 +105,14 @@ final class ShorthandMethodsTest extends TestCase
 
             return $x * 2;
         }, 0);
-        $this->assertEquals(10, $mapped);
+        $this->assertSame(10, $mapped);
     }
 
     public function testMapOrWithErrValueReturnsDefault(): void
     {
         $result = Err::of('error');
         $mapped = $result->mapOr(fn ($x) => $x * 2, 0);
-        $this->assertEquals(0, $mapped);
+        $this->assertSame(0, $mapped);
     }
 
     public function testMapOrWithTypeConversion(): void
@@ -123,14 +123,14 @@ final class ShorthandMethodsTest extends TestCase
 
             return "number: $x";
         }, 'default');
-        $this->assertEquals('number: 42', $mapped);
+        $this->assertSame('number: 42', $mapped);
     }
 
     public function testMapOrWithNullValues(): void
     {
         $result = Ok::of(null);
         $mapped = $result->mapOr(fn ($x) => $x ?? 'was null', 'default');
-        $this->assertEquals('was null', $mapped);
+        $this->assertSame('was null', $mapped);
     }
 
     public function testMapOrWithObjectTransformation(): void
@@ -144,7 +144,7 @@ final class ShorthandMethodsTest extends TestCase
 
             return $o->name;
         }, 'no name');
-        $this->assertEquals('test', $mapped);
+        $this->assertSame('test', $mapped);
     }
 
     public function testMapOrElseWithOkValueAppliesFunction(): void
@@ -155,14 +155,14 @@ final class ShorthandMethodsTest extends TestCase
 
             return $x / 2;
         }, fn ($err) => 0);
-        $this->assertEquals(5, $mapped);
+        $this->assertSame(5, $mapped);
     }
 
     public function testMapOrElseWithErrValueAppliesDefaultFunction(): void
     {
         $result = Err::of('division by zero');
         $mapped = $result->mapOrElse(fn ($x) => $x / 2, fn ($err) => -1);
-        $this->assertEquals(-1, $mapped);
+        $this->assertSame(-1, $mapped);
     }
 
     public function testMapOrElseWithLazyEvaluation(): void
@@ -183,7 +183,7 @@ final class ShorthandMethodsTest extends TestCase
             },
         );
 
-        $this->assertEquals(15, $mapped);
+        $this->assertSame(15, $mapped);
         $this->assertFalse($sideEffect, 'Default function should not be called for Ok');
     }
 
@@ -201,7 +201,7 @@ final class ShorthandMethodsTest extends TestCase
                 return "Error {$code}: {$message}";
             },
         );
-        $this->assertEquals('Error 500: Server Error', $mapped);
+        $this->assertSame('Error 500: Server Error', $mapped);
     }
 
     public function testMapOrElseWithComplexTransformation(): void
@@ -215,14 +215,14 @@ final class ShorthandMethodsTest extends TestCase
             },
             fn ($err) => 0,
         );
-        $this->assertEquals(15, $mapped);
+        $this->assertSame(15, $mapped);
     }
 
     public function testMapOrWithArrayDefault(): void
     {
         $result = Err::of('error');
         $mapped = $result->mapOr(fn ($x) => [$x], []);
-        $this->assertEquals([], $mapped);
+        $this->assertSame([], $mapped);
     }
 
     public function testMapOrElseWithComplexDefaultLogic(): void
@@ -236,7 +236,7 @@ final class ShorthandMethodsTest extends TestCase
                 return $code >= 400 && $code < 500 ? 'client error' : 'server error';
             },
         );
-        $this->assertEquals('client error', $mapped);
+        $this->assertSame('client error', $mapped);
     }
 
     // ===== Option型 isSomeAnd テスト =====

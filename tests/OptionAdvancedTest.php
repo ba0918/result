@@ -27,7 +27,7 @@ class OptionAdvancedTest extends TestCase
 
         $this->assertInstanceOf(Some::class, $result);
         $this->assertTrue($result->isSome());
-        $this->assertEquals(42, $result->unwrap());
+        $this->assertSame(42, $result->unwrap());
     }
 
     public function testXorNoneSome(): void
@@ -38,7 +38,7 @@ class OptionAdvancedTest extends TestCase
 
         $this->assertInstanceOf(Some::class, $result);
         $this->assertTrue($result->isSome());
-        $this->assertEquals(100, $result->unwrap());
+        $this->assertSame(100, $result->unwrap());
     }
 
     public function testXorNoneNone(): void
@@ -68,7 +68,7 @@ class OptionAdvancedTest extends TestCase
         $result = $arrayOption->xor($none);
 
         $this->assertInstanceOf(Some::class, $result);
-        $this->assertEquals(['key' => 'value'], $result->unwrap());
+        $this->assertSame(['key' => 'value'], $result->unwrap());
     }
 
     public function testXorWithNullValue(): void
@@ -90,7 +90,7 @@ class OptionAdvancedTest extends TestCase
 
         $this->assertInstanceOf(Some::class, $result);
         $this->assertTrue($result->isSome());
-        $this->assertEquals([1, 'hello'], $result->unwrap());
+        $this->assertSame([1, 'hello'], $result->unwrap());
     }
 
     public function testZipSomeNone(): void
@@ -125,8 +125,10 @@ class OptionAdvancedTest extends TestCase
 
     public function testZipWithComplexValues(): void
     {
-        $arrayOption = new Some(['a' => 1, 'b' => 2]);
-        $objectOption = new Some((object) ['x' => 10, 'y' => 20]);
+        $arrayValue = ['a' => 1, 'b' => 2];
+        $objectValue = (object) ['x' => 10, 'y' => 20];
+        $arrayOption = new Some($arrayValue);
+        $objectOption = new Some($objectValue);
         $result = $arrayOption->zip($objectOption);
 
         $this->assertTrue($result->isSome());
@@ -134,8 +136,8 @@ class OptionAdvancedTest extends TestCase
         /** @phpstan-ignore method.alreadyNarrowedType */
         $this->assertIsArray($resultValue);
         $this->assertCount(2, $resultValue);
-        $this->assertEquals(['a' => 1, 'b' => 2], $resultValue[0]);
-        $this->assertEquals((object) ['x' => 10, 'y' => 20], $resultValue[1]);
+        $this->assertSame($arrayValue, $resultValue[0]);
+        $this->assertSame($objectValue, $resultValue[1]);
     }
 
     public function testZipWithNullValues(): void
@@ -145,7 +147,7 @@ class OptionAdvancedTest extends TestCase
         $result = $nullOption1->zip($nullOption2);
 
         $this->assertTrue($result->isSome());
-        $this->assertEquals([null, null], $result->unwrap());
+        $this->assertSame([null, null], $result->unwrap());
     }
 
     public function testZipWithMixedTypes(): void
@@ -155,7 +157,7 @@ class OptionAdvancedTest extends TestCase
         $result = $intOption->zip($boolOption);
 
         $this->assertTrue($result->isSome());
-        $this->assertEquals([123, true], $result->unwrap());
+        $this->assertSame([123, true], $result->unwrap());
     }
 
     // 統合テスト
@@ -172,7 +174,7 @@ class OptionAdvancedTest extends TestCase
         // None.xor(Some) -> Some
         $result2 = $result1->xor($some1);
         $this->assertTrue($result2->isSome());
-        $this->assertEquals(1, $result2->unwrap());
+        $this->assertSame(1, $result2->unwrap());
     }
 
     public function testZipChaining(): void
@@ -183,10 +185,10 @@ class OptionAdvancedTest extends TestCase
 
         // zip creates tuple, then zip with another value
         $result1 = $some1->zip($some2);
-        $this->assertEquals([1, 2], $result1->unwrap());
+        $this->assertSame([1, 2], $result1->unwrap());
 
         $result2 = $result1->zip($some3);
-        $this->assertEquals([[1, 2], 3], $result2->unwrap());
+        $this->assertSame([[1, 2], 3], $result2->unwrap());
     }
 
     public function testXorZipCombination(): void
@@ -209,7 +211,7 @@ class OptionAdvancedTest extends TestCase
 
         $zipResult2 = $xorResult2->zip($some3);
         $this->assertTrue($zipResult2->isSome());
-        $this->assertEquals([10, 30], $zipResult2->unwrap());
+        $this->assertSame([10, 30], $zipResult2->unwrap());
     }
 
     public function testComplexScenario(): void
@@ -239,6 +241,6 @@ class OptionAdvancedTest extends TestCase
         // xor with None keeps the data
         $xorResult = $combined->xor($none);
         $this->assertTrue($xorResult->isSome());
-        $this->assertEquals($result, $xorResult->unwrap());
+        $this->assertSame($result, $xorResult->unwrap());
     }
 }

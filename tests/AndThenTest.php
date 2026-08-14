@@ -26,33 +26,52 @@ class AndThenTest extends TestCase
 {
     public function testAndThenWithSuccess(): void
     {
-        $result = (new Ok(10.0))
+        $single = (new Ok(10.0))
             ->andThen(fn (float $x) => safe_divide($x, 2.0));
 
-        $result = (new Ok(10))
-            ->andThen(fn ($x) => safe_divide($x, 2)) // 10 / 2 = 5
-            ->andThen(fn ($x) => safe_divide($x, 5)); // 5 / 5 = 1
+        $this->assertTrue($single->isOk());
+        $this->assertSame(5.0, $single->unwrap());
 
-        $this->assertTrue($result->isOk());
-        $this->assertEquals(1, $result->unwrap());
+        $chained = (new Ok(10.0))
+            ->andThen(fn (float $x) => safe_divide($x, 2.0)) // 10 / 2 = 5
+            ->andThen(fn (float $x) => safe_divide($x, 5.0)); // 5 / 5 = 1
+
+        $this->assertTrue($chained->isOk());
+        $this->assertSame(1.0, $chained->unwrap());
     }
 
     public function testAndThenWithFailure(): void
     {
+        $executionCount = 0;
         $result = (new Ok(10))
-            ->andThen(fn ($x) => safe_divide($x, 0)) // Fails here
-            ->andThen(fn ($x) => safe_divide($x, 5)); // This is not executed
+            ->andThen(function ($x) use (&$executionCount): Result {
+                $executionCount++;
+
+                return safe_divide($x, 0);
+            }) // Fails here
+            ->andThen(function ($x) use (&$executionCount): Result {
+                $executionCount++;
+
+                return safe_divide($x, 5); // This is not executed
+            });
 
         $this->assertTrue($result->isErr());
-        $this->assertEquals('Division by zero', $result->unwrapErr());
+        $this->assertSame('Division by zero', $result->unwrapErr());
+        $this->assertSame(1, $executionCount, 'andThen after failure must not be executed');
     }
 
     public function testAndThenOnErr(): void
     {
+        $executionCount = 0;
         $result = (new Err('Initial error'))
-            ->andThen(fn ($x) => safe_divide($x, 5)); // This is not executed
+            ->andThen(function ($x) use (&$executionCount): Result {
+                $executionCount++;
+
+                return safe_divide($x, 5); // This is not executed
+            });
 
         $this->assertTrue($result->isErr());
-        $this->assertEquals('Initial error', $result->unwrapErr());
+        $this->assertSame('Initial error', $result->unwrapErr());
+        $this->assertSame(0, $executionCount, 'andThen on Err must not be executed');
     }
 }
