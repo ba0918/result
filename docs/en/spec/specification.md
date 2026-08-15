@@ -261,6 +261,8 @@ the [Best Practices Guide](../guide/best_practices.md).
   - Security support for 8.3 continues until the end of December 2027
   - PHP 8.4-specific features (such as property hooks) are mutually exclusive with the readonly design and have no room for application in this library
   - The code uses only readonly from 8.1 and `#[Override]` from 8.3
+  - The Pipe operator API (`ba0918\Result\Pipe`) works on 8.3+ without `|>`;
+    using the `|>` syntax at call sites requires PHP 8.5 or later
 - **Re-evaluation condition**: Review supported versions when 8.3 reaches EOL (December 2027)
 
 ## Usage Examples
@@ -316,6 +318,58 @@ $result = Some::of("hello")
     ->unwrapOr("Default");
 echo $result; // "HELLO WORLD"
 ```
+
+### Pipe Operator Usage (PHP 8.5+)
+
+The `ba0918\Result\Pipe` namespace provides function adapters for the
+PHP 8.5 pipe operator (`|>`). Each function takes the business callable and
+returns a `Closure(Result): Result` that delegates to the corresponding
+Result method:
+
+```php
+use ba0918\Result\Ok;
+use function ba0918\Result\Pipe\andThen;
+use function ba0918\Result\Pipe\map;
+use function ba0918\Result\Pipe\orElse;
+
+$response = $this->doSomething()
+    |> andThen(fn ($value) => $this->transform($value))
+    |> orElse(fn ($error) => $this->recover($error))
+    |> andThen(fn ($value) => $this->respond($value));
+```
+
+Available functions: `map`, `mapErr`, `andThen`, `orElse`, `inspect`, `inspectErr`.
+They are thin adapters over the same-named methods, so the semantics are identical
+to the method chain API.
+
+**The returned closure's input type is bound to the callable's parameter type.**
+`map()`, `andThen()` and `inspect()` accept a `Result` whose success type matches
+the callable's parameter (e.g. `map(fn (int $v) ...)` accepts `Result<int, E>`).
+`mapErr()` and `orElse()` bind the error type the same way
+(e.g. `orElse(fn (string $e) ...)` accepts `Result<T, string>`).
+Piping a mismatched `Result` into a stage is a static error under PHPStan.
+
+**The pipe operator does not short-circuit.** `|>` only evaluates each right-hand
+side callable and applies it to the left-hand side value:
+
+- Each operator factory (e.g. `andThen(fn ...)`) is always invoked
+- Only the business callable passed to `andThen()`/`map()` is skipped when the
+  result is `Err` (and conversely for `orElse()`/`mapErr()` when it is `Ok`)
+
+When `orElse()` returns `Ok`, the recovery succeeds and subsequent `andThen()`
+stages execute normally:
+
+```php
+$response = $this->doSomething()      // Err
+    |> andThen(fn ($value) => $this->transform($value))   // skipped
+    |> orElse(fn ($error) => $this->recover($error))      // returns Ok
+    |> andThen(fn ($value) => $this->respond($value));    // executed
+```
+
+The adapters are usable without `|>` as well, by calling the returned Closure
+directly (`andThen($op)($result)`), which works on PHP 8.3 and 8.4.
+Call sites using the `|>` syntax require PHP 8.5 or later.
+
 
 ### inspect/inspectErr Method Usage Examples
 
@@ -745,6 +799,26 @@ final class Some implements Option { }
  */
 final class None implements Option { }
 ```
+
+Both interfaces declare covariant type parameters:
+
+```php
+/**
+ * @template-covariant T The type of the success value
+ * @template-covariant E The type of the error value
+ */
+interface Result
+
+/**
+ * @template-covariant T The type of the value
+ */
+interface Option
+```
+
+Covariance lets a `Result` with a narrower value/error type be used where a
+wider one is expected (e.g. `Result<never, string>` flows into an
+`orElse(fn (string $e) ...)` stage), which is what makes the Pipe operator
+adapters type-check in chained pipelines.
 
 ### never Type Usage
 

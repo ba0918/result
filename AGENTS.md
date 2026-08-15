@@ -17,6 +17,9 @@ composer test-coverage
 # PHPStanでの静的解析（最大レベル）
 composer phpstan
 
+# PHPStanで|>を含むtests/Pipe85もPHP 8.5文法で解析（phpstan-php85.neon.dist）
+composer phpstan:php85
+
 # コードフォーマット（修正）
 composer cs-fix
 
@@ -55,6 +58,9 @@ composer install
 - `ba0918\Result\Option` - 値の有無を表現するためのインターフェース（Generics対応）
 - `ba0918\Result\Some` - 値を持つimmutableクラス
 - `ba0918\Result\None` - 値を持たないimmutableクラス（シングルトン）
+
+**Pipe Operator対応API（PHP 8.5の`|>`用）**
+- `ba0918\Result\Pipe\functions.php` - 既存Resultメソッドへ委譲する関数アダプター群（`map`/`mapErr`/`andThen`/`orElse`/`inspect`/`inspectErr`）。composerの`autoload.files`で読み込まれる。`|>`を使うテストは`tests/Pipe85/`に置き、`composer test:php85`（phpunit-php85.xml.dist）で実行する（PHP 8.3/8.4ではパース不可のためデフォルトスイートから除外）
 
 **共通**
 - `ba0918\Result\Exception\UnwrapException` - unwrap系メソッドの失敗時にスローされる例外

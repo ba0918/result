@@ -7,9 +7,9 @@ namespace ba0918\Result;
 use ba0918\Result\Exception\UnwrapException;
 
 /**
- * Type for representing presence/absence of a value
+ * Type for representing the presence/absence of a value
  *
- * @template T The type of the value
+ * @template-covariant T The type of the value
  */
 interface Option
 {

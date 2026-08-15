@@ -153,9 +153,26 @@ $option->zip($other)                         // 2つのOptionを結合
 $option->xor($other)                         // 排他的OR
 ```
 
+### Pipe Operator対応API（PHP 8.5+）
+
+```php
+use function ba0918\Result\Pipe\{andThen, map, mapErr, orElse};
+
+$response = $this->doSomething()
+    |> andThen(fn ($value) => $this->transform($value))
+    |> orElse(fn ($error) => $this->recover($error))
+    |> andThen(fn ($value) => $this->respond($value));
+```
+
+`ba0918\Result\Pipe` の各関数は同名のResultメソッドへの薄いアダプターです。
+各関数が返すClosureの入力型はcallableのパラメータ型に束縛され（`map(fn (int $v) ...)` は `Result<int, E>` を受け付ける）、
+型の合わない`Result`をパイプに流すとPHPStanで静的エラーになります。
+Pipe Operator自体は短絡評価をせず、短絡されるのは各演算子へ渡した業務callableのみです。
+`|>` を使わず `andThen($op)($result)` のように直接呼び出せばPHP 8.3/8.4でも動作します。
+
 ## 要件
 
-- PHP 8.3+
+- PHP 8.3+（呼び出し側で`|>`構文を使う場合はPHP 8.5以降が必要）
 - Composer
 
 ## 開発

@@ -3,5 +3,9 @@ parameters:
     paths:
         - src
         - tests
+    # tests/Pipe85 uses the PHP 8.5 pipe operator (|>), which cannot be parsed
+    # on PHP 8.3/8.4. It is analyzed with the PHP 8.5 grammar via phpstan-php85.neon.dist
+    excludePaths:
+        - tests/Pipe85
     bootstrapFiles:
         - vendor/autoload.php

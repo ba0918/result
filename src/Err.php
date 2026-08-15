@@ -184,7 +184,6 @@ final class Err implements Result
     public function transpose(): Option
     {
         // Err(error) → Some(Err(error))
-        /** @phpstan-ignore return.type */
         return Some::of($this);
     }
 

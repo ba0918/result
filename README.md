@@ -153,9 +153,28 @@ $option->zip($other)                         // Combine two Options
 $option->xor($other)                         // Exclusive OR
 ```
 
+### Pipe Operator API (PHP 8.5+)
+
+```php
+use function ba0918\Result\Pipe\{andThen, map, mapErr, orElse};
+
+$response = $this->doSomething()
+    |> andThen(fn ($value) => $this->transform($value))
+    |> orElse(fn ($error) => $this->recover($error))
+    |> andThen(fn ($value) => $this->respond($value));
+```
+
+The `ba0918\Result\Pipe` functions are thin adapters over the same-named Result
+methods. Each returned closure's input type is bound to the callable's parameter
+type (`map(fn (int $v) ...)` accepts `Result<int, E>`), so piping a mismatched
+`Result` into a stage is a static error under PHPStan. The pipe operator itself
+does not short-circuit — only the business callable passed to each operator is
+skipped on `Ok`/`Err`. The adapters also work without `|>` (`andThen($op)($result)`)
+on PHP 8.3/8.4.
+
 ## Requirements
 
-- PHP 8.3+
+- PHP 8.3+ (the `|>` syntax at call sites requires PHP 8.5 or later)
 - Composer
 
 ## Development

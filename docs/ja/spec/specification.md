@@ -257,6 +257,8 @@ andThenの入れ子禁止）は[ベストプラクティス集](../guide/best_pr
   - 8.3のセキュリティサポートは2027年12月末まで継続している
   - 8.4固有機能（property hooks等）はreadonly設計と排他で、本ライブラリに適用余地がない
   - コードは8.1のreadonlyと8.3の`#[Override]`のみを使用している
+  - Pipe Operator対応API（`ba0918\Result\Pipe`）は`|>`なしなら8.3+で動作する。
+    `|>`構文を使う呼び出し側はPHP 8.5以降が必要
 - **再評価条件**: 8.3のEOL（2027年12月）時点で対応バージョンの見直しを検討する
 
 ## 使用例
@@ -312,6 +314,50 @@ $result = Some::of("hello")
     ->unwrapOr("デフォルト");
 echo $result; // "HELLO WORLD"
 ```
+
+### Pipe Operator対応API（PHP 8.5+）
+
+`ba0918\Result\Pipe` 名前空間は、PHP 8.5のPipe Operator（`|>`）用の関数アダプターを提供します。
+各関数は業務用callableを受け取り、対応するResultメソッドへ委譲する `Closure(Result): Result` を返します:
+
+```php
+use ba0918\Result\Ok;
+use function ba0918\Result\Pipe\andThen;
+use function ba0918\Result\Pipe\map;
+use function ba0918\Result\Pipe\orElse;
+
+$response = $this->doSomething()
+    |> andThen(fn ($value) => $this->transform($value))
+    |> orElse(fn ($error) => $this->recover($error))
+    |> andThen(fn ($value) => $this->respond($value));
+```
+
+利用可能な関数: `map` / `mapErr` / `andThen` / `orElse` / `inspect` / `inspectErr`。
+いずれも同名メソッドへの薄いアダプターであり、意味論はメソッドチェーンAPIと同一です。
+
+**返却されるClosureの入力型はcallableのパラメータ型に束縛されます。**
+`map()` / `andThen()` / `inspect()` は、成功型がcallableのパラメータ型と一致する`Result`を受け取ります
+（例: `map(fn (int $v) ...)` は `Result<int, E>` を受け付ける）。
+`mapErr()` / `orElse()` はエラー型を同様に束縛します（例: `orElse(fn (string $e) ...)` は `Result<T, string>` を受け付ける）。
+型の合わない`Result`をパイプに流すと、PHPStanで静的エラーになります。
+
+**Pipe Operator自体は短絡評価をしません。** `|>` は右辺のcallableを評価して左辺の値へ適用するだけです:
+
+- 各演算子のファクトリ（例: `andThen(fn ...)`）は常に呼び出される
+- 短絡されるのは `andThen()` / `map()` に渡した業務callableのみ（`Err`のとき。
+  逆に `orElse()` / `mapErr()` は `Ok` のとき業務callableが呼ばれない）
+
+`orElse()` が `Ok` を返して回復した場合、後続の `andThen()` は通常どおり実行されます:
+
+```php
+$response = $this->doSomething()      // Err
+    |> andThen(fn ($value) => $this->transform($value))   // スキップされる
+    |> orElse(fn ($error) => $this->recover($error))      // Okを返して回復
+    |> andThen(fn ($value) => $this->respond($value));    // 実行される
+```
+
+アダプターは `|>` を使わず、返されたClosureを直接呼び出すこと（`andThen($op)($result)`）でも
+利用可能で、その場合はPHP 8.3/8.4でも動作します。`|>` 構文を使う呼び出し側はPHP 8.5以降が必要です。
 
 ### inspect/inspectErrメソッドの使用例
 
@@ -741,6 +787,25 @@ final class Some implements Option { }
  */
 final class None implements Option { }
 ```
+
+両インターフェースは共変（covariant）型パラメータを宣言しています：
+
+```php
+/**
+ * @template-covariant T 成功値の型
+ * @template-covariant E エラー値の型
+ */
+interface Result
+
+/**
+ * @template-covariant T 値の型
+ */
+interface Option
+```
+
+共変性により、より狭い値/エラー型の`Result`をより広い型が期待される場所で
+使えます（例: `Result<never, string>` が `orElse(fn (string $e) ...)` の段に流れる）。
+これがPipe Operatorアダプターのチェーンが型検査を通る仕組みです。
 
 ### never型の使用
 

@@ -1,0 +1,10 @@
+parameters:
+    level: max
+    paths:
+        - src
+        - tests
+    # Analyze with the PHP 8.5 grammar so tests/Pipe85 (|> operator) can be
+    # type-checked. Run with: composer phpstan:php85
+    phpVersion: 80500
+    bootstrapFiles:
+        - vendor/autoload.php

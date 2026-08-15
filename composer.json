@@ -13,7 +13,10 @@
     "autoload": {
         "psr-4": {
             "ba0918\\Result\\": "src/"
-        }
+        },
+        "files": [
+            "src/Pipe/functions.php"
+        ]
     },
     "require-dev": {
         "phpstan/phpstan": "^2.1",
@@ -23,8 +26,10 @@
     },
     "scripts": {
         "test": "phpunit",
+        "test:php85": "phpunit --configuration phpunit-php85.xml.dist",
         "test-coverage": "phpunit --coverage-html coverage",
         "phpstan": "phpstan analyse",
+        "phpstan:php85": "phpstan analyse --configuration phpstan-php85.neon.dist",
         "cs-fix": "php-cs-fixer fix",
         "cs-check": "php-cs-fixer fix --dry-run --diff",
         "infection": "infection --no-interaction",
