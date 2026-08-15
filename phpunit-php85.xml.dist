@@ -14,9 +14,8 @@
          failOnRisky="true"
          failOnWarning="true">
     <testsuites>
-        <testsuite name="default">
-            <directory>tests</directory>
-            <exclude>tests/Pipe85</exclude>
+        <testsuite name="php85">
+            <directory>tests/Pipe85</directory>
         </testsuite>
     </testsuites>
 

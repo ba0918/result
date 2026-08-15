@@ -3,5 +3,8 @@ parameters:
     paths:
         - src
         - tests
+    # Analyze with PHP 8.5 grammar so tests/Pipe85 (|> operator) can be
+    # checked on every CI PHP version
+    phpVersion: 80500
     bootstrapFiles:
         - vendor/autoload.php

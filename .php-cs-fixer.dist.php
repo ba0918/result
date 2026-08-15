@@ -10,6 +10,8 @@ $finder = Finder::create()
     ->in(__DIR__ . '/examples')
     ->name('*.php')
     ->notPath('vendor')
+    // tests/Pipe85 uses the PHP 8.5 pipe operator (|>), which php-cs-fixer cannot parse
+    ->exclude('Pipe85')
     ->notPath('.phpunit.cache')
     ->notPath('.php-cs-fixer.cache');
 

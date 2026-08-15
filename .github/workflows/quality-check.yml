@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version: ['8.3', '8.4']
+        php-version: ['8.3', '8.4', '8.5']
     
     steps:
       - name: Checkout code
@@ -43,6 +43,10 @@ jobs:
       
       - name: Run all quality checks
         run: composer check
+      
+      - name: Run pipe operator integration tests (PHP 8.5 only)
+        if: matrix.php-version == '8.5'
+        run: composer test:php85
       
       - name: Run infection (mutation testing)
         if: matrix.php-version == '8.4'
