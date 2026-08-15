@@ -143,6 +143,12 @@ if ($result->isOk()) {
 }
 ```
 
+> **Note**: This example mechanically mirrors Rust's standard library, where
+> file I/O failures are represented as `Result`. Whether a failure should be a
+> `Result` or an `Exception` in your PHP code is a separate design decision -
+> as a rule of thumb, only failures the caller wants to branch on belong in
+> `Result`. See the [Best Practices Guide](../guide/best_practices.md).
+
 #### Option Type for Null Safety
 
 **Rust:**
@@ -618,6 +624,12 @@ function fetchUser(int $id): Result {
     }
 }
 ```
+
+> **Note**: The same rule applies here - network failures are infrastructure
+> problems. This example shows the mechanical Rust correspondence; converting
+> exceptions to `Err` at a boundary is only useful when the caller has a
+> meaningful branch for that failure. See the
+> [Best Practices Guide](../guide/best_practices.md).
 
 ## Migration Best Practices
 

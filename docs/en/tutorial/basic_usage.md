@@ -265,26 +265,28 @@ if ($userWithSettings->isSome()) {
 ```php
 use ba0918\Result\{Ok, Err, Result};
 
+/**
+ * @throws RuntimeException  Config file missing / read failure
+ * @return Result<array, string>  Invalid JSON / missing required keys become Err
+ */
 function loadConfiguration(string $configPath): Result
 {
-    // Check file existence
+    // Infrastructure failures (missing file, unreadable file) stay exceptions
     if (!file_exists($configPath)) {
-        return Err::of("Configuration file not found: $configPath");
+        throw new RuntimeException('Configuration file not found: ' . $configPath);
     }
     
-    // Read file
     $content = file_get_contents($configPath);
     if ($content === false) {
-        return Err::of("Failed to read configuration file: $configPath");
+        throw new RuntimeException('Failed to read configuration file: ' . $configPath);
     }
     
-    // Parse JSON
+    // Data problems the caller may want to branch on become Err
     $config = json_decode($content, true);
     if (json_last_error() !== JSON_ERROR_NONE) {
         return Err::of("Invalid JSON format in configuration file: " . json_last_error_msg());
     }
     
-    // Check required fields
     $required = ['app_name', 'database'];
     foreach ($required as $key) {
         if (!isset($config[$key])) {
@@ -304,9 +306,15 @@ function getAppConfig(): array
         'database' => ['host' => 'localhost']
     ];
     
-    return loadConfiguration('config.json')
-        ->map(fn($config) => array_merge($defaultConfig, $config))
-        ->unwrapOr($defaultConfig);
+    try {
+        // Err (invalid JSON, missing keys) is converted to the same exception
+        // so infrastructure and data failures share one handler
+        return loadConfiguration('config.json')
+            ->map(fn($config) => array_merge($defaultConfig, $config))
+            ->unwrapOrElse(fn($error) => throw new RuntimeException($error));
+    } catch (RuntimeException $e) {
+        return $defaultConfig;
+    }
 }
 ```
 

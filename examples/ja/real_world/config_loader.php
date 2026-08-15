@@ -9,7 +9,7 @@ declare(strict_types=1);
  * 実際のプロジェクトでコピー&ペーストして使用できます。
  */
 
-require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../../../vendor/autoload.php';
 
 use ba0918\Result\{Err, None, Ok, Option, Result, Some};
 
@@ -131,15 +131,24 @@ interface ConfigLoader
 }
 
 /**
- * JSON設定ローダー
+ * JSON configuration loader
+ *
+ * Infrastructure failures (missing file, unreadable file) stay exceptions
+ * inside the loader and are converted to Err at the load() boundary, because
+ * the caller wants to branch on "config could not be loaded".
  */
 class JsonConfigLoader implements ConfigLoader
 {
     public function load(string $path): Result
     {
-        return $this->validatePath($path)
-            ->andThen(fn ($p) => $this->readFile($p))
-            ->andThen(fn ($content) => $this->parseJson($content));
+        try {
+            $content = $this->readFile($path);
+        } catch (RuntimeException $e) {
+            // Boundary conversion: infra failure becomes a branch for the caller
+            return Err::of($e->getMessage());
+        }
+
+        return $this->parseJson($content);
     }
 
     public function supports(string $path): bool
@@ -147,28 +156,26 @@ class JsonConfigLoader implements ConfigLoader
         return str_ends_with(strtolower($path), '.json');
     }
 
-    private function validatePath(string $path): Result
+    /**
+     * @throws RuntimeException Config file missing / unreadable
+     */
+    private function readFile(string $path): string
     {
         if (!file_exists($path)) {
-            return Err::of("設定ファイルが見つかりません: $path");
+            throw new RuntimeException("設定ファイルが見つかりません: $path");
         }
 
         if (!is_readable($path)) {
-            return Err::of("設定ファイルが読み込めません: $path");
+            throw new RuntimeException("設定ファイルが読み込めません: $path");
         }
 
-        return Ok::of($path);
-    }
-
-    private function readFile(string $path): Result
-    {
         $content = file_get_contents($path);
 
         if ($content === false) {
-            return Err::of("ファイルの読み込みに失敗しました: $path");
+            throw new RuntimeException("ファイルの読み込みに失敗しました: $path");
         }
 
-        return Ok::of($content);
+        return $content;
     }
 
     private function parseJson(string $content): Result
@@ -194,8 +201,12 @@ class PhpConfigLoader implements ConfigLoader
 {
     public function load(string $path): Result
     {
-        return $this->validatePath($path)
-            ->andThen(fn ($p) => $this->loadPhpFile($p));
+        try {
+            return $this->loadPhpFile($path);
+        } catch (Throwable $e) {
+            // A broken include is a data problem the caller may want to branch on
+            return Err::of('PHP設定ファイルの読み込みエラー: ' . $e->getMessage());
+        }
     }
 
     public function supports(string $path): bool
@@ -203,32 +214,26 @@ class PhpConfigLoader implements ConfigLoader
         return str_ends_with(strtolower($path), '.php');
     }
 
-    private function validatePath(string $path): Result
+    /**
+     * @throws RuntimeException Config file missing / unreadable
+     */
+    private function loadPhpFile(string $path): Result
     {
         if (!file_exists($path)) {
-            return Err::of("設定ファイルが見つかりません: $path");
+            throw new RuntimeException("設定ファイルが見つかりません: $path");
         }
 
         if (!is_readable($path)) {
-            return Err::of("設定ファイルが読み込めません: $path");
+            throw new RuntimeException("設定ファイルが読み込めません: $path");
         }
 
-        return Ok::of($path);
-    }
+        $config = include $path;
 
-    private function loadPhpFile(string $path): Result
-    {
-        try {
-            $config = include $path;
-
-            if (!is_array($config)) {
-                return Err::of("PHP設定ファイルは配列を返す必要があります: $path");
-            }
-
-            return Ok::of($config);
-        } catch (Throwable $e) {
-            return Err::of('PHP設定ファイルの読み込みエラー: ' . $e->getMessage());
+        if (!is_array($config)) {
+            return Err::of("PHP設定ファイルは配列を返す必要があります: $path");
         }
+
+        return Ok::of($config);
     }
 }
 
@@ -239,9 +244,14 @@ class EnvConfigLoader implements ConfigLoader
 {
     public function load(string $path): Result
     {
-        return $this->validatePath($path)
-            ->andThen(fn ($p) => $this->readFile($p))
-            ->andThen(fn ($content) => $this->parseEnv($content));
+        try {
+            $content = $this->readFile($path);
+        } catch (RuntimeException $e) {
+            // Boundary conversion: infra failure becomes a branch for the caller
+            return Err::of($e->getMessage());
+        }
+
+        return $this->parseEnv($content);
     }
 
     public function supports(string $path): bool
@@ -249,24 +259,22 @@ class EnvConfigLoader implements ConfigLoader
         return str_ends_with(strtolower($path), '.env');
     }
 
-    private function validatePath(string $path): Result
+    /**
+     * @throws RuntimeException Env file missing / unreadable
+     */
+    private function readFile(string $path): string
     {
         if (!file_exists($path)) {
-            return Err::of("環境変数ファイルが見つかりません: $path");
+            throw new RuntimeException("環境変数ファイルが見つかりません: $path");
         }
 
-        return Ok::of($path);
-    }
-
-    private function readFile(string $path): Result
-    {
         $content = file_get_contents($path);
 
         if ($content === false) {
-            return Err::of("環境変数ファイルの読み込みに失敗しました: $path");
+            throw new RuntimeException("環境変数ファイルの読み込みに失敗しました: $path");
         }
 
-        return Ok::of($content);
+        return $content;
     }
 
     private function parseEnv(string $content): Result
@@ -636,7 +644,7 @@ class ConfigManager
 }
 
 // 使用例
-if ($_SERVER['SCRIPT_NAME'] === __FILE__) {
+if (PHP_SAPI === 'cli' && isset($argv[0]) && realpath($argv[0]) === __FILE__) {
     echo "=== Config Loader Example ===\n";
 
     // サンプル設定ファイルを作成

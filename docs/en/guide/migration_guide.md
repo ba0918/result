@@ -193,22 +193,29 @@ class ConfigServiceLegacy
 }
 
 // After: Result type implementation
+// Only the failures the caller branches on move to Result.
+// File absence and read failures are infrastructure failures - they stay
+// exceptions. Invalid JSON is a format problem the caller may want to handle.
 class ConfigServiceModern
 {
+    /**
+     * @throws RuntimeException  Config file not found / read failure
+     * @return Result<array, string>  Invalid JSON becomes Err
+     */
     public function loadConfig(string $path): Result
     {
         if (!file_exists($path)) {
-            return Err::of("Configuration file not found: $path");
+            throw new RuntimeException("Config file not found: $path");
         }
         
         $content = file_get_contents($path);
         if ($content === false) {
-            return Err::of("Failed to read configuration file: $path");
+            throw new RuntimeException("Failed to read config file: $path");
         }
         
         $config = json_decode($content, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return Err::of("Invalid JSON format in configuration file: " . json_last_error_msg());
+        if (!is_array($config)) {
+            return Err::of('Configuration file must contain a JSON object or array: ' . $path);
         }
         
         return Ok::of($config);
@@ -300,7 +307,7 @@ class UserRepository
     private function getProfileData(int $userId): Option
     {
         // Profile data retrieval implementation
-        $profile = /* fetch from database */;
+        $profile = null; // replace with the actual database fetch
         return $profile ? Some::of($profile) : None::instance();
     }
 }
@@ -373,6 +380,9 @@ try {
 ```php
 class PaymentService
 {
+    /**
+     * @throws RuntimeException  Payment API unreachable / server outage
+     */
     public function processPayment(array $paymentData): Result
     {
         return $this->validatePaymentData($paymentData)
@@ -393,6 +403,13 @@ class PaymentService
         return Ok::of($data);
     }
     
+    /**
+     * Network failures stay exceptions - the caller has no meaningful
+     * branch for "API unreachable". An HTTP error response, on the other
+     * hand, is a business outcome the caller branches on, so it becomes Err.
+     *
+     * @throws RuntimeException  Payment API unreachable
+     */
     private function callPaymentAPI(array $data): Result
     {
         $ch = curl_init();
@@ -406,11 +423,34 @@ class PaymentService
         curl_close($ch);
         
         if ($response === false) {
-            return Err::of('Payment API call failed');
+            throw new RuntimeException('Payment API unreachable');
         }
         
-        if ($httpCode !== 200) {
-            return Err::of("Payment processing failed (HTTP status: $httpCode)");
+        if ($httpCode >= 500) {
+            // Server outages are infrastructure failures - the caller needs
+            // retry or outage handling, not a business decision
+            throw new RuntimeException("Payment API server error (HTTP status: $httpCode)");
+        }
+        
+        if ($httpCode === 429) {
+            // Rate limiting is a retryable infrastructure condition
+            throw new RuntimeException('Payment API rate limited - retry later');
+        }
+        
+        if (in_array($httpCode, [401, 403, 404], true)) {
+            // Credentials or endpoint problems are configuration errors
+            throw new RuntimeException("Payment API configuration error (HTTP status: $httpCode)");
+        }
+        
+        if ($httpCode >= 400) {
+            // Business declines the caller branches on
+            return Err::of("Payment declined (HTTP status: $httpCode)");
+        }
+        
+        if ($httpCode < 200 || $httpCode >= 300) {
+            // Redirects and other unexpected statuses are not a successful
+            // payment response (follow_location is not enabled here)
+            throw new RuntimeException("Unexpected payment API status (HTTP status: $httpCode)");
         }
         
         return Ok::of($response);
@@ -419,7 +459,7 @@ class PaymentService
     private function parseResponse(string $response): Result
     {
         $result = json_decode($response, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
+        if (!is_array($result)) {
             return Err::of('Invalid payment API response format');
         }
         
@@ -483,6 +523,9 @@ class MixedUserService
 
 ```php
 // Wrap existing libraries
+// Exceptions are converted to Result at this boundary because the caller
+// wants to branch on these failures (e.g. fall back to a default config).
+// A failure the caller has no branch for should stay an exception instead.
 class SafeFileOperations
 {
     private FileOperations $fileOps;

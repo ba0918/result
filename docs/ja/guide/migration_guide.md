@@ -193,22 +193,29 @@ class ConfigServiceLegacy
 }
 
 // After: Result型の実装
+// Resultに載せるのは「呼び出し側が分岐する失敗」だけ。
+// ファイルの不在や読み込み失敗はインフラ障害なので例外のまま。
+// JSON形式の不正は、呼び出し側が対処したいかもしれないのでResultに載せる。
 class ConfigServiceModern
 {
+    /**
+     * @throws RuntimeException  設定ファイルが見つからない/読み込み失敗
+     * @return Result<array, string>  JSON形式の不正がErrになる
+     */
     public function loadConfig(string $path): Result
     {
         if (!file_exists($path)) {
-            return Err::of("設定ファイルが見つかりません: $path");
+            throw new RuntimeException("設定ファイルが見つかりません: $path");
         }
         
         $content = file_get_contents($path);
         if ($content === false) {
-            return Err::of("設定ファイルの読み込みに失敗しました: $path");
+            throw new RuntimeException("設定ファイルの読み込みに失敗しました: $path");
         }
         
         $config = json_decode($content, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return Err::of("設定ファイルのJSON形式が不正です: " . json_last_error_msg());
+        if (!is_array($config)) {
+            return Err::of('設定ファイルはJSONオブジェクトまたは配列である必要があります: ' . $path);
         }
         
         return Ok::of($config);
@@ -300,7 +307,7 @@ class UserRepository
     private function getProfileData(int $userId): Option
     {
         // プロフィールデータ取得の実装
-        $profile = /* データベースから取得 */;
+        $profile = null; // 実際のデータベース取得に置き換える
         return $profile ? Some::of($profile) : None::instance();
     }
 }
@@ -373,6 +380,9 @@ try {
 ```php
 class PaymentService
 {
+    /**
+     * @throws RuntimeException  決済APIに到達できない/サーバ障害
+     */
     public function processPayment(array $paymentData): Result
     {
         return $this->validatePaymentData($paymentData)
@@ -393,6 +403,13 @@ class PaymentService
         return Ok::of($data);
     }
     
+    /**
+     * ネットワーク障害は例外のまま - 呼び出し側に「APIに到達できない」への
+     * 意味のある分岐がないため。一方、HTTPエラーレスポンスは呼び出し側が
+     * 分岐する業務的な結果なのでErrにする。
+     *
+     * @throws RuntimeException  決済APIに到達できない
+     */
     private function callPaymentAPI(array $data): Result
     {
         $ch = curl_init();
@@ -406,11 +423,34 @@ class PaymentService
         curl_close($ch);
         
         if ($response === false) {
-            return Err::of('決済APIの呼び出しに失敗しました');
+            throw new RuntimeException('決済APIに到達できません');
         }
         
-        if ($httpCode !== 200) {
-            return Err::of("決済処理に失敗しました (HTTPステータス: $httpCode)");
+        if ($httpCode >= 500) {
+            // Server outages are infrastructure failures - the caller needs
+            // retry or outage handling, not a business decision
+            throw new RuntimeException("決済APIのサーバエラー (HTTPステータス: $httpCode)");
+        }
+        
+        if ($httpCode === 429) {
+            // Rate limiting is a retryable infrastructure condition
+            throw new RuntimeException('決済APIのレート制限 - 後で再試行してください');
+        }
+        
+        if (in_array($httpCode, [401, 403, 404], true)) {
+            // Credentials or endpoint problems are configuration errors
+            throw new RuntimeException("決済APIの設定エラー (HTTPステータス: $httpCode)");
+        }
+        
+        if ($httpCode >= 400) {
+            // Business declines the caller branches on
+            return Err::of("決済が拒否されました (HTTPステータス: $httpCode)");
+        }
+        
+        if ($httpCode < 200 || $httpCode >= 300) {
+            // Redirects and other unexpected statuses are not a successful
+            // payment response (follow_location is not enabled here)
+            throw new RuntimeException("予期しない決済APIのステータス (HTTPステータス: $httpCode)");
         }
         
         return Ok::of($response);
@@ -419,7 +459,7 @@ class PaymentService
     private function parseResponse(string $response): Result
     {
         $result = json_decode($response, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
+        if (!is_array($result)) {
             return Err::of('決済APIのレスポンス形式が不正です');
         }
         
@@ -483,6 +523,9 @@ class MixedUserService
 
 ```php
 // 既存のライブラリをラップ
+// この境界で例外をResultに変換するのは、呼び出し側がこれらの失敗で
+// 分岐したい（例: デフォルト設定にフォールバック）ため。
+// 呼び出し側に分岐がない失敗は、例外のままにする。
 class SafeFileOperations
 {
     private FileOperations $fileOps;
