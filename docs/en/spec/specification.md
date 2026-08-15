@@ -265,6 +265,15 @@ the [Best Practices Guide](../guide/best_practices.md).
     using the `|>` syntax at call sites requires PHP 8.5 or later
 - **Re-evaluation condition**: Review supported versions when 8.3 reaches EOL (December 2027)
 
+## Versioning
+
+- The canonical version is the git tag (e.g. `v1.1.0`); `composer.json` does not
+  declare a `version` field, so Composer derives the version from the tag
+- `CHANGELOG.md` headings must match the tag exactly, and each release is issued
+  as one operation: the version heading, the comparison link, and the tag
+- Changes that alter the meaning of an existing behavior are marked **Breaking**
+  in the changelog and move the major version
+
 ## Usage Examples
 
 ### Basic Usage
