@@ -187,7 +187,6 @@ final class Ok implements Result
         if ($this->value instanceof Option) {
             if ($this->value->isSome()) {
                 // Ok(Some(value)) → Some(Ok(value))
-                /** @phpstan-ignore return.type */
                 return Some::of(Ok::of($this->value->unwrap()));
             }
 
@@ -196,7 +195,6 @@ final class Ok implements Result
         }
 
         // Ok(non-Option) → Some(Ok(value))
-        /** @phpstan-ignore return.type */
         return Some::of($this);
     }
 

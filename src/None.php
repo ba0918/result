@@ -282,7 +282,6 @@ final class None implements Option
     public function transpose(): Result
     {
         // None → Ok(None)
-        /** @phpstan-ignore return.type */
         return Ok::of($this);
     }
 

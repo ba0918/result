@@ -9,8 +9,8 @@ use ba0918\Result\Exception\UnwrapException;
 /**
  * Type for representing success/failure states
  *
- * @template T The type of the success value
- * @template E The type of the error value
+ * @template-covariant T The type of the success value
+ * @template-covariant E The type of the error value
  */
 interface Result
 {
