@@ -29,6 +29,7 @@
         "test:php85": "phpunit --configuration phpunit-php85.xml.dist",
         "test-coverage": "phpunit --coverage-html coverage",
         "phpstan": "phpstan analyse",
+        "phpstan:php85": "phpstan analyse --configuration phpstan-php85.neon.dist",
         "cs-fix": "php-cs-fixer fix",
         "cs-check": "php-cs-fixer fix --dry-run --diff",
         "infection": "infection --no-interaction",

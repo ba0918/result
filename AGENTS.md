@@ -17,6 +17,9 @@ composer test-coverage
 # PHPStanでの静的解析（最大レベル）
 composer phpstan
 
+# PHPStanで|>を含むtests/Pipe85もPHP 8.5文法で解析（phpstan-php85.neon.dist）
+composer phpstan:php85
+
 # コードフォーマット（修正）
 composer cs-fix
 
