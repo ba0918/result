@@ -123,7 +123,7 @@ final class PipeIntegrationTest extends TestCase
     public function testFullRecoveryFlow(): void
     {
         $result = Ok::of(10)
-            |> andThen(fn (int $v): Result => Err::of("failed at $v"))
+            |> andThen(fn (int $v): Result => Err::of('failed at ' . $v))
             |> orElse(fn (string $e): Result => Ok::of(strlen($e)))
             |> andThen(fn (int $v): Result => Ok::of($v * 2));
 

@@ -20,7 +20,7 @@ use function ba0918\Result\Pipe\orElse;
  * These functions return Closures, so PHP 8.3/8.4 users can apply them
  * without the PHP 8.5 pipe operator: map($fn)($result).
  */
-class PipeFunctionsTest extends TestCase
+final class PipeFunctionsTest extends TestCase
 {
     // map
 
